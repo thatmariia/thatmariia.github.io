@@ -1,26 +1,30 @@
 ---
 // The figure at the top of a page. A page names the figures that suit its data; while choosing,
 // pill buttons (plain radio inputs, no JavaScript) switch between them when there is more than one.
-import ActionPotentials from "./figures/ActionPotentials.astro";
+import AwardPeaks from "./figures/AwardPeaks.astro";
 import Collaborators from "./figures/Collaborators.astro";
 import Dendrite from "./figures/Dendrite.astro";
+import Metro from "./figures/Metro.astro";
+import NeuronGame from "./figures/NeuronGame.astro";
 import Places from "./figures/Places.astro";
-import Projects from "./figures/Projects.astro";
-import Raster from "./figures/Raster.astro";
+import Rosettes from "./figures/Rosettes.astro";
 import Spiral from "./figures/Spiral.astro";
 import Travels from "./figures/Travels.astro";
-import World from "./figures/World.astro";
+import TreeRings from "./figures/TreeRings.astro";
+import Volleyball from "./figures/Volleyball.astro";
 
 const FIGURES = {
-  spiral: { label: "Spiral", Figure: Spiral, seed: 2 },
-  potentials: { label: "Action potentials", Figure: ActionPotentials, seed: 5 },
-  raster: { label: "Raster", Figure: Raster, seed: 5 },
-  projects: { label: "Projects", Figure: Projects, seed: 3 },
+  spiral: { label: "Spiral explorer", Figure: Spiral, seed: 2 },
+  game: { label: "Neuron game", Figure: NeuronGame, seed: 1 },
   collaborators: { label: "Collaborators", Figure: Collaborators, seed: 7 },
-  world: { label: "World", Figure: World, seed: 4 },
+  metro: { label: "Metro", Figure: Metro, seed: 1 },
+  rings: { label: "Tree rings", Figure: TreeRings, seed: 3 },
   dendrite: { label: "Dendrite", Figure: Dendrite, seed: 4 },
   places: { label: "Places", Figure: Places, seed: 4 },
   travels: { label: "Travels", Figure: Travels, seed: 2 },
+  peaks: { label: "Evoked potential", Figure: AwardPeaks, seed: 6 },
+  rosettes: { label: "Rosettes", Figure: Rosettes, seed: 1 },
+  volleyball: { label: "Volleyball", Figure: Volleyball, seed: 3 },
 };
 interface Props { show: (keyof typeof FIGURES)[] }
 const { show } = Astro.props;

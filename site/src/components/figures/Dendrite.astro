@@ -17,7 +17,7 @@ const trunkX = (t: number) => width / 2 + Math.sin((t - start) / 14) * width * 0
 const f = (v: number) => v.toFixed(1);
 
 // Branches: one per role entry, spanning its earliest start to its latest end.
-const SECTIONS = ["research", "teaching", "leadership", "service", "other", "beyond"];
+const SECTIONS = ["research", "teaching", "leadership", "service", "other"];
 const branches = SECTIONS.flatMap((section) => (data as any)[section] as Entry[]).map((e, k) => {
   const section = SECTIONS.find((s) => ((data as any)[s] as Entry[]).includes(e))!;
   const from = Math.min(...e.periods.map((p) => month(p.start!)));

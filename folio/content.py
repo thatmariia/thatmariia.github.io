@@ -23,18 +23,19 @@ class Model(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
 
+class Link(Model):
+    label: str
+    url: Url
+
+
 class Item(Model):
     """Fields shared by every listed item."""
 
     id: Id | None = None  # needed to be linked to, or to link from
-    related: list[Id] = []  # links are shown in both directions
+    related: list[Id] = []  # other items; links are shown in both directions
+    links: list[Link] = []  # external pages: event site, slides, repository, ...
     web: bool = True
     cv: bool = True
-
-
-class Link(Model):
-    label: str
-    url: Url
 
 
 class Profile(Model):
@@ -71,17 +72,13 @@ class Entry(Item):
 
 
 class Work(Item):
-    """A publication or research output."""
+    """A publication or research output; its category is the file it is in."""
 
-    type: Literal[
-        "article", "preprint", "workshop-paper",
-        "software", "dataset", "website", "thesis", "poster", "presentation",
-    ]
     title: Text
     authors: list[str] = Field(min_length=1)
     year: int
     venue: str | None = None  # journal, repository, conference
-    status: Literal["published", "in-progress"] = "published"
+    status: Literal["in-progress", "submitted", "published"] = "published"
     doi: Annotated[str, Field(pattern=r"^10\.\d{4,9}/\S+$")] | None = None
     url: Url | None = None
 
@@ -94,16 +91,32 @@ class SkillGroup(Model):
 
 
 class Content(Model):
+    """One field per YAML file; a missing file is an empty section.
+
+    Sections follow the ORCID record (employment, education, distinctions,
+    funding, service) and works follow DataCite resource types.
+    """
+
     profile: Profile
     education: list[Entry] = []
     research: list[Entry] = []
     teaching: list[Entry] = []
     leadership: list[Entry] = []
-    other: list[Entry] = []
+    service: list[Entry] = []  # peer review, committees, memberships
+    awards: list[Entry] = []
+    funding: list[Entry] = []
     events: list[Entry] = []
     outreach: list[Entry] = []
-    publications: list[Work] = []
-    outputs: list[Work] = []
+    other: list[Entry] = []
+    publications: list[Work] = []  # peer-reviewed articles and papers
+    preprints: list[Work] = []
+    software: list[Work] = []
+    datasets: list[Work] = []
+    posters: list[Work] = []
+    presentations: list[Work] = []
+    reports: list[Work] = []
+    websites: list[Work] = []
+    theses: list[Work] = []
     skills: list[SkillGroup] = []
 
     def items(self) -> list[Item]:

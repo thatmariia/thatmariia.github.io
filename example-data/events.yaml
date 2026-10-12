@@ -2,6 +2,8 @@
   title: Neuro Conference 2025
   location: Lyon, FR
   related: [oscillation-poster]
+  links:
+    - {label: Conference site, url: "https://example.org/neuro-2025"}
   periods:
     - start: 2025-06
       notes:

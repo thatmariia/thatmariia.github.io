@@ -968,33 +968,6 @@
   ],
   "beyond": [
     {
-      "title": "De Beachvolleybalschool",
-      "location": "The Hague, NL",
-      "periods": [
-        {
-          "title": "Beach Volleyball Coach",
-          "start": "2026-03",
-          "end": "present"
-        }
-      ]
-    },
-    {
-      "title": "Support Initiatives for Ukraine",
-      "location": "Global / Virtual",
-      "periods": [
-        {
-          "start": "2022-02",
-          "end": "present",
-          "notes": [
-            "Collaborated with an international volunteer team to build and maintain a global map of donation drop-off points for humanitarian aid (featured by BBC)",
-            "Created visual materials for “Dance for Ukraine”, a series of charity dance events to raise funds and awareness for Ukraine"
-          ]
-        }
-      ]
-    }
-  ],
-  "publications": [
-    {
       "id": "software-curation-loop",
       "title": "Completing the software curation loop across registries and repositories",
       "authors": [

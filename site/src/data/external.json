@@ -1,0 +1,414 @@
+{
+ "institutions": [
+  {
+   "name": "Leiden University Medical Center",
+   "country": "NL",
+   "city": "Leiden",
+   "lat": 52.158,
+   "lon": 4.493,
+   "works": 6
+  },
+  {
+   "name": "University of Amsterdam",
+   "country": "NL",
+   "city": "Amsterdam",
+   "lat": 52.374,
+   "lon": 4.89,
+   "works": 4
+  },
+  {
+   "name": "University of California, Irvine",
+   "country": "US",
+   "city": "Irvine",
+   "lat": 33.669,
+   "lon": -117.823,
+   "works": 3
+  },
+  {
+   "name": "St Petersburg University",
+   "country": "RU",
+   "city": "St Petersburg",
+   "lat": 59.939,
+   "lon": 30.314,
+   "works": 2
+  },
+  {
+   "name": "Erasmus University Rotterdam",
+   "country": "NL",
+   "city": "Rotterdam",
+   "lat": 51.922,
+   "lon": 4.479,
+   "works": 2
+  },
+  {
+   "name": "Ioffe Institute",
+   "country": "RU",
+   "city": "St Petersburg",
+   "lat": 59.939,
+   "lon": 30.314,
+   "works": 2
+  },
+  {
+   "name": "ITMO University",
+   "country": "RU",
+   "city": "St Petersburg",
+   "lat": 59.939,
+   "lon": 30.314,
+   "works": 2
+  },
+  {
+   "name": "Saint Petersburg Academic University",
+   "country": "RU",
+   "city": "Saint Petersburg",
+   "lat": 60.002,
+   "lon": 30.374,
+   "works": 2
+  },
+  {
+   "name": "Centre National de la Recherche Scientifique",
+   "country": "FR",
+   "city": "Paris",
+   "lat": 48.853,
+   "lon": 2.349,
+   "works": 1
+  },
+  {
+   "name": "Russian Academy of Sciences",
+   "country": "RU",
+   "city": "Moscow",
+   "lat": 55.752,
+   "lon": 37.618,
+   "works": 1
+  },
+  {
+   "name": "Inserm",
+   "country": "FR",
+   "city": "Paris",
+   "lat": 48.853,
+   "lon": 2.349,
+   "works": 1
+  },
+  {
+   "name": "The University of Melbourne",
+   "country": "AU",
+   "city": "Melbourne",
+   "lat": -37.814,
+   "lon": 144.963,
+   "works": 1
+  },
+  {
+   "name": "University of Copenhagen",
+   "country": "DK",
+   "city": "Copenhagen",
+   "lat": 55.676,
+   "lon": 12.566,
+   "works": 1
+  },
+  {
+   "name": "University of Manchester",
+   "country": "GB",
+   "city": "Manchester",
+   "lat": 53.481,
+   "lon": -2.237,
+   "works": 1
+  },
+  {
+   "name": "Institut National de Recherche pour l'Agriculture, l'Alimentation et l'Environnement",
+   "country": "FR",
+   "city": "Paris",
+   "lat": 48.853,
+   "lon": 2.349,
+   "works": 1
+  },
+  {
+   "name": "Commissariat à l'Énergie Atomique et aux Énergies Alternatives",
+   "country": "FR",
+   "city": "Paris",
+   "lat": 48.853,
+   "lon": 2.349,
+   "works": 1
+  },
+  {
+   "name": "University of Bergen",
+   "country": "NO",
+   "city": "Bergen",
+   "lat": 60.393,
+   "lon": 5.324,
+   "works": 1
+  },
+  {
+   "name": "Université Paris Cité",
+   "country": "FR",
+   "city": "Paris",
+   "lat": 48.853,
+   "lon": 2.349,
+   "works": 1
+  },
+  {
+   "name": "Aristotle University of Thessaloniki",
+   "country": "GR",
+   "city": "Thessaloniki",
+   "lat": 40.644,
+   "lon": 22.931,
+   "works": 1
+  },
+  {
+   "name": "University of Southern Denmark",
+   "country": "DK",
+   "city": "Odense",
+   "lat": 55.396,
+   "lon": 10.388,
+   "works": 1
+  },
+  {
+   "name": "Forschungszentrum Jülich",
+   "country": "DE",
+   "city": "Jülich",
+   "lat": 50.921,
+   "lon": 6.363,
+   "works": 1
+  },
+  {
+   "name": "Universidad Politécnica de Madrid",
+   "country": "ES",
+   "city": "Madrid",
+   "lat": 40.416,
+   "lon": -3.703,
+   "works": 1
+  },
+  {
+   "name": "University of California, Santa Cruz",
+   "country": "US",
+   "city": "Santa Cruz",
+   "lat": 36.974,
+   "lon": -122.031,
+   "works": 1
+  },
+  {
+   "name": "UiT The Arctic University of Norway",
+   "country": "NO",
+   "city": "Tromsø",
+   "lat": 69.649,
+   "lon": 18.955,
+   "works": 1
+  },
+  {
+   "name": "Institut Pasteur",
+   "country": "FR",
+   "city": "Paris",
+   "lat": 48.853,
+   "lon": 2.349,
+   "works": 1
+  },
+  {
+   "name": "Masaryk University",
+   "country": "CZ",
+   "city": "Brno",
+   "lat": 49.195,
+   "lon": 16.608,
+   "works": 1
+  },
+  {
+   "name": "University of Tartu",
+   "country": "EE",
+   "city": "Tartu",
+   "lat": 58.381,
+   "lon": 26.725,
+   "works": 1
+  },
+  {
+   "name": "University of Alaska Fairbanks",
+   "country": "US",
+   "city": "Fairbanks",
+   "lat": 64.838,
+   "lon": -147.716,
+   "works": 1
+  },
+  {
+   "name": "European Molecular Biology Laboratory",
+   "country": "DE",
+   "city": "Heidelberg",
+   "lat": 49.408,
+   "lon": 8.691,
+   "works": 1
+  },
+  {
+   "name": "European Molecular Biology Laboratory",
+   "country": "DE",
+   "city": "Hamburg",
+   "lat": 53.551,
+   "lon": 9.993,
+   "works": 1
+  },
+  {
+   "name": "West University of Timişoara",
+   "country": "RO",
+   "city": "Timișoara",
+   "lat": 45.754,
+   "lon": 21.226,
+   "works": 1
+  },
+  {
+   "name": "SIB Swiss Institute of Bioinformatics",
+   "country": "CH",
+   "city": "Lausanne",
+   "lat": 46.516,
+   "lon": 6.633,
+   "works": 1
+  },
+  {
+   "name": "Barcelona Supercomputing Center",
+   "country": "ES",
+   "city": "Barcelona",
+   "lat": 41.389,
+   "lon": 2.159,
+   "works": 1
+  },
+  {
+   "name": "European Bioinformatics Institute",
+   "country": "GB",
+   "city": "Cambridge",
+   "lat": 52.2,
+   "lon": 0.117,
+   "works": 1
+  },
+  {
+   "name": "Novo Nordisk Foundation",
+   "country": "DK",
+   "city": "Copenhagen",
+   "lat": 55.676,
+   "lon": 12.566,
+   "works": 1
+  },
+  {
+   "name": "Vlaams Instituut voor Biotechnologie",
+   "country": "BE",
+   "city": "Ghent",
+   "lat": 51.05,
+   "lon": 3.717,
+   "works": 1
+  },
+  {
+   "name": "Central European Institute of Technology – Masaryk University",
+   "country": "CZ",
+   "city": "Brno",
+   "lat": 49.195,
+   "lon": 16.608,
+   "works": 1
+  },
+  {
+   "name": "European Molecular Biology Laboratory",
+   "country": "FR",
+   "city": "Grenoble",
+   "lat": 45.179,
+   "lon": 5.715,
+   "works": 1
+  },
+  {
+   "name": "European Molecular Biology Laboratory",
+   "country": "ES",
+   "city": "Barcelona",
+   "lat": 41.389,
+   "lon": 2.159,
+   "works": 1
+  },
+  {
+   "name": "European Molecular Biology Laboratory",
+   "country": "IT",
+   "city": "Monterotondo",
+   "lat": 42.052,
+   "lon": 12.62,
+   "works": 1
+  },
+  {
+   "name": "ELIXIR",
+   "country": "GB",
+   "city": "Hinxton",
+   "lat": 52.085,
+   "lon": 0.182,
+   "works": 1
+  },
+  {
+   "name": "Institut Français de Bioinformatique",
+   "country": "FR",
+   "city": "Villejuif",
+   "lat": 48.794,
+   "lon": 2.36,
+   "works": 1
+  }
+ ],
+ "usage": {
+  "10.5281/zenodo.13618328": {
+   "views": 161,
+   "downloads": 53
+  },
+  "10.5281/zenodo.23307684": {
+   "views": 32,
+   "downloads": 0
+  },
+  "10.5281/zenodo.23308203": {
+   "views": 33,
+   "downloads": 0
+  },
+  "10.5281/zenodo.22902394": {
+   "views": 215,
+   "downloads": 0
+  },
+  "10.5281/zenodo.23308763": {
+   "views": 25,
+   "downloads": 0
+  },
+  "10.5281/zenodo.14834245": {
+   "views": 1347,
+   "downloads": 778
+  },
+  "10.5281/zenodo.17475631": {
+   "views": 39,
+   "downloads": 7
+  },
+  "10.5281/zenodo.13594675": {
+   "views": 290,
+   "downloads": 72
+  },
+  "10.5281/zenodo.15698316": {
+   "views": 36,
+   "downloads": 14
+  },
+  "10.5281/zenodo.15468025": {
+   "views": 151,
+   "downloads": 37
+  },
+  "10.5281/zenodo.20595742": {
+   "views": 677,
+   "downloads": 111
+  },
+  "10.5281/zenodo.23189487": {
+   "views": 41,
+   "downloads": 0
+  },
+  "10.5281/zenodo.23306970": {
+   "views": 51,
+   "downloads": 0
+  },
+  "10.5281/zenodo.17412397": {
+   "views": 115,
+   "downloads": 51
+  },
+  "10.5281/zenodo.23307561": {
+   "views": 31,
+   "downloads": 0
+  },
+  "10.5281/zenodo.23306613": {
+   "views": 7,
+   "downloads": 0
+  },
+  "10.5281/zenodo.23306817": {
+   "views": 36,
+   "downloads": 0
+  },
+  "10.5281/zenodo.17475775": {
+   "views": 36,
+   "downloads": 40
+  }
+ }
+}

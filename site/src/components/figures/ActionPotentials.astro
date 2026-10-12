@@ -1,40 +1,56 @@
 ---
-// Activity as intracellular recordings: one membrane-potential trace per kind of activity, with an
-// action potential at the date of every item over a slightly noisy resting potential. An
-// oscilloscope sweep keeps redrawing the traces.
-import { firstYear, month, now } from "../../lib/career";
-import { data, type Entry, type Work } from "../../lib/data";
+// Activity as intracellular recordings, one membrane-potential trace per kind of activity. Roles
+// make their neuron fire tonically for as long as they last (faster with more roles at once);
+// each new output or event fires a burst followed by a few months of raised activity. Spikes are
+// drawn as action potentials and an oscilloscope sweep keeps redrawing the traces.
+import { events, firstYear, now, roles, works } from "../../lib/career";
 import { points, random, type Point } from "../../lib/random";
 interface Props { seed: number; width: number; height: number }
 const { seed, width, height } = Astro.props;
 
 const uniform = random(seed);
-const worksIn = (sections: string[]) => sections.flatMap((s) => ((data as any)[s] as Work[]).map((w) => w.year * 12 + Math.floor(uniform() * 12)));
-const entriesIn = (sections: string[]) => sections.flatMap((s) => ((data as any)[s] as Entry[]).flatMap((e) => e.periods.map((p) => month(p.start!))));
 const rows = [
-  { label: "papers & preprints", spikes: worksIn(["publications", "preprints"]) },
-  { label: "software & data", spikes: worksIn(["software", "datasets", "posters", "presentations", "reports", "websites", "theses"]) },
-  { label: "talks, posters & outreach", spikes: entriesIn(["events", "outreach"]) },
-  { label: "roles", spikes: entriesIn(["research", "teaching", "leadership", "service", "other"]) },
+  { label: "outputs", roles: [] as string[], items: works.map((w) => w.year * 12 + Math.floor(uniform() * 12)) },
+  { label: "talks & outreach", roles: [] as string[], items: events.map((e) => e.start) },
+  { label: "research", roles: ["research"], items: [] as number[] },
+  { label: "teaching, leadership & more", roles: ["teaching", "leadership", "service", "other"], items: [] as number[] },
 ];
 
+// Firing rate in spikes per month: tonic while roles are active, plus a decaying boost after items.
+const rate = (row: (typeof rows)[number], t: number) => {
+  const active = roles.filter((r) => row.roles.includes(r.section) && r.span[0] <= t && t < Math.max(r.span[1], r.span[0] + 1)).length;
+  const boost = row.items.reduce((sum, at) => sum + (t >= at ? 0.7 * Math.exp(-(t - at) / 2.5) : 0), 0);
+  return 0.3 * active + boost;
+};
 const [start, end] = [firstYear * 12, now + 1];
+const spikesOf = (row: (typeof rows)[number]) => {
+  const spikes: number[] = [];
+  for (let t = start; t < end; t += 0.05) {
+    const burst = row.items.some((at) => t >= at && t < at + 0.2);  // a short burst right at each item
+    if ((burst ? uniform() < 0.45 : uniform() < rate(row, t) * 0.05) && (spikes.length === 0 || t - spikes.at(-1)! > 0.15)) spikes.push(t);
+  }
+  return spikes;
+};
+
 const [left, right, top, bottom] = [14, width - 14, 10, height - 30];
 const band = (bottom - top) / rows.length;
 const x = (m: number) => left + ((m - start) / (end - start)) * (right - left);
-const width1 = Math.max(4, (right - left) / 180);  // width of one action potential, in figure units
-
-// Action potential shape: fast upstroke and overshoot, then an after-hyperpolarisation.
+const apWidth = Math.max(3, (right - left) / 220);
+// Action potential: fast upstroke and overshoot, then an after-hyperpolarisation.
 const ap = (u: number) => (u < -0.4 ? 0 : Math.exp(-(((u - 0.1) / 0.18) ** 2)) - 0.28 * Math.exp(-(((u - 0.75) / 0.4) ** 2)));
-const traces = rows.map(({ spikes }, i) => {
-  const rest = top + band * (i + 0.72), amplitude = band * 0.62;
-  const times = spikes.map(x);
-  let noise = 0;
+const traces = rows.map((row, i) => {
+  const rest = top + band * (i + 0.74), amplitude = band * 0.6;
+  const spikes = spikesOf(row).map(x);
+  let noise = 0, k = 0;
   const trace: Point[] = [];
   for (let px = left; px <= right; px += 0.6) {
     noise = 0.9 * noise + (uniform() - 0.5) * 0.35;
-    const v = times.reduce((sum, t) => sum + ap((px - t) / width1), 0);
-    trace.push([px, rest - amplitude * Math.min(1.15, v) + noise]);
+    while (k < spikes.length && spikes[k] < px - apWidth * 3) k++;
+    let v = 0;
+    for (let j = k; j < spikes.length && spikes[j] < px + apWidth; j++) v += ap((px - spikes[j]) / apWidth);
+    // While active, the resting potential sits a little higher (depolarised).
+    const t = start + ((px - left) / (right - left)) * (end - start), depolarised = Math.min(1, rate(row, t) / 4) * 0.08;
+    trace.push([px, rest - amplitude * (Math.min(1.15, v) + depolarised) + noise]);
   }
   return trace;
 });
@@ -43,8 +59,8 @@ const years = Array.from({ length: Math.floor(now / 12) - firstYear + 1 }, (_, i
 const id = `ap-${seed}-${width}`;
 ---
 
-<div class="fig potentials" style={`--sweep: 12s; --span: ${right - left}`}>
-  <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`Activity since ${firstYear} as membrane-potential recordings: ${rows.map((r) => `${r.spikes.length} ${r.label}`).join(", ")}`}>
+<div class="fig potentials" style={`--sweep: 14s; --span: ${right - left}`}>
+  <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`Activity since ${firstYear} as membrane-potential recordings: ${rows.map((r) => r.label).join(", ")}`}>
     <clipPath id={id}><rect class="sweep-window" x={left} y="0" width={right - left} height={height} /></clipPath>
     {rows.map((row, i) => <text class="label" x={left} y={top + band * i + 10}>{row.label}</text>)}
     {traces.map((trace) => <polyline class="trace ghost" points={points(trace)} />)}

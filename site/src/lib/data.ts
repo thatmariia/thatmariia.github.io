@@ -37,14 +37,15 @@ export function authors(list: string[]): string {
 
 export const workUrl = (w: Work) => (w.doi ? `https://doi.org/${w.doi}` : w.url);
 
-const WORK_SECTIONS = {
-  publications: "Publication", preprints: "Preprint", software: "Software", datasets: "Dataset",
-  posters: "Poster", presentations: "Presentation", reports: "Report", websites: "Website", theses: "Thesis",
+// Output categories, each with its colour in the key.
+const OUTPUTS = {
+  software: ["Software", "blue"], datasets: ["Dataset", "ochre"], posters: ["Poster", "red"],
+  presentations: ["Presentation", "pink"], reports: ["Report", "brown"], websites: ["Website", "green"],
+  theses: ["Thesis", "teal"],
 } as const;
 
-export const outputSections = Object.entries(WORK_SECTIONS)
-  .filter(([key]) => key !== "publications" && key !== "preprints")
-  .map(([key, label]) => ({ key, label, items: (data as any)[key] as Work[] }))
+export const outputSections = Object.entries(OUTPUTS)
+  .map(([key, [label, color]]) => ({ key, label, color, items: (data as any)[key] as Work[] }))
   .filter((s) => s.items.length);
 
 /** Title of every linkable item, for labelling cross-links. */

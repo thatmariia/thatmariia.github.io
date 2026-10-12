@@ -1,8 +1,8 @@
 ---
 import Related from "./Related.astro";
 import { authors, markup, workUrl, type Work } from "../lib/data";
-interface Props { work: Work; label?: string }
-const { work, label } = Astro.props;
+interface Props { work: Work; label?: string; color?: string }
+const { work, label, color } = Astro.props;
 const url = workUrl(work);
 const status = { "in-progress": "in progress", submitted: "submitted", published: "" }[work.status];
 ---
@@ -17,5 +17,5 @@ const status = { "in-progress": "in progress", submitted: "submitted", published
     {work.venue && <p class="venue">{work.venue}</p>}
     <Related related={work.related} links={work.links} />
   </div>
-  <p class="meta tag">{status || label}</p>
+  <p class="meta tag">{color && <span class:list={["key-dot", color]} />}{status || label}</p>
 </article>

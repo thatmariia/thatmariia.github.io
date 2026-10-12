@@ -116,26 +116,43 @@ a.pill:hover, .pill.solid, .pill[aria-current="page"] { background: var(--ink); 
 .preview-kind { font-weight: 700; color: var(--muted); }
 .preview-summary { color: var(--muted); }
 
-/* Field lines */
+/* Figures of the fields */
 
 .figure { margin: 0; }
 .narrow { display: none; }
-.fieldlines { position: relative; }
-.fieldlines svg { width: 100%; }
-.fieldlines .line {
+.option { display: none; }
+.figure-options { display: flex; flex-wrap: wrap; gap: 6px; border: 0; padding: 0; margin: 0 0 12px; }
+.figure-options legend { float: left; margin-right: 6px; padding-top: 0.3em; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.figure-options input { position: absolute; opacity: 0; pointer-events: none; }
+.figure-options label { cursor: pointer; }
+.figure-options label:has(input:checked) { background: var(--ink); color: var(--bg); }
+.figure-options label:has(input:focus-visible) { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+.fig { position: relative; }
+.fig svg { width: 100%; }
+.fig .line {
   fill: none; stroke: var(--ink); stroke-width: 0.8; opacity: 0.5; stroke-linecap: round;
   stroke-dasharray: 1; stroke-dashoffset: 1;
   animation: draw 1.8s ease-out forwards; animation-delay: calc(var(--i) * 0.08s);
   transition: opacity 0.25s, stroke-width 0.25s;
 }
 @keyframes draw { to { stroke-dashoffset: 0; } }
-.fieldlines .charge {
+@keyframes appear { from { opacity: 0; } }
+.fig .node {
   position: absolute; transform: translate(-50%, -50%);
   padding: 0.3em 0.9em; border: 1px solid var(--ink); border-radius: 999px;
   background: var(--bg); color: var(--ink); font-size: 0.76rem; font-weight: 600; white-space: nowrap; cursor: default;
   transition: background-color 0.2s, color 0.2s;
 }
-.fieldlines .charge:hover { background: var(--ink); color: var(--bg); }
+.fig .node:hover { background: var(--ink); color: var(--bg); }
+
+.bifurcation .dots { stroke: var(--ink); stroke-width: 1.1; stroke-linecap: round; opacity: 0.7; animation: appear 1.2s ease; }
+.neurons .line { opacity: 0.7; }
+.neurons .line circle { fill: var(--ink); stroke: none; }
+.neurons .dendrite { fill: none; stroke: var(--ink); stroke-width: 0.8; stroke-linecap: round; opacity: 0.55; animation: appear 1.2s ease; }
+.connectome .line { opacity: 0.4; }
+.attractor .line { stroke-width: 0.7; opacity: 0.6; animation-delay: calc(var(--i) * 0.12s); }
+
 .mark .line { opacity: 0.75; animation-duration: 1.2s; }
 .mark .dot { fill: var(--bg); stroke: var(--ink); stroke-width: 1.2; }
 
@@ -165,5 +182,5 @@ a.pill:hover, .pill.solid, .pill[aria-current="page"] { background: var(--ink); 
 @media (max-width: 640px) {
   .wide { display: none; }
   .narrow { display: block; }
-  .fieldlines .charge { font-size: 0.68rem; }
+  .fig .node { font-size: 0.68rem; }
 }

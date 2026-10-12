@@ -1,11 +1,36 @@
 ---
-// The fields figure on the home page: wide and narrow layouts of the same charges.
-import FieldLines from "./FieldLines.astro";
+// The fields figure on the home page. TEMPORARY: all options are rendered and pill buttons
+// (plain radio inputs, no JavaScript) switch between them until one is chosen.
+import Attractor from "./figures/Attractor.astro";
+import Bifurcation from "./figures/Bifurcation.astro";
+import Connectome from "./figures/Connectome.astro";
+import FieldLines from "./figures/FieldLines.astro";
+import Neurons from "./figures/Neurons.astro";
 import { data } from "../lib/data";
+
 const fields = data.profile.walk;
+const options = [
+  { key: "fieldlines", label: "Field lines", Figure: FieldLines, seed: 21 },
+  { key: "bifurcation", label: "Bifurcation", Figure: Bifurcation, seed: 1 },
+  { key: "neurons", label: "Neurons", Figure: Neurons, seed: 5 },
+  { key: "connectome", label: "Connectome", Figure: Connectome, seed: 3 },
+  { key: "attractor", label: "Attractor", Figure: Attractor, seed: 1 },
+];
+const show = options.map(({ key }) => `.figure:has(input[value="${key}"]:checked) .option[data-option="${key}"] { display: block; }`).join("\n");
 ---
 
 <figure class="figure">
-  <div class="wide"><FieldLines fields={fields} seed={21} width={960} height={460} /></div>
-  <div class="narrow"><FieldLines fields={fields} seed={21} width={400} height={560} /></div>
+  <fieldset class="figure-options">
+    <legend>Figure</legend>
+    {options.map(({ key, label }, i) => (
+      <label class="pill"><input type="radio" name="figure" value={key} checked={i === 0} />{label}</label>
+    ))}
+  </fieldset>
+  {options.map(({ key, Figure, seed }) => (
+    <div class="option" data-option={key}>
+      <div class="wide"><Figure fields={fields} seed={seed} width={960} height={460} /></div>
+      <div class="narrow"><Figure fields={fields} seed={seed} width={400} height={560} /></div>
+    </div>
+  ))}
+  <style is:inline set:html={show} />
 </figure>

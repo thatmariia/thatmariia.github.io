@@ -1,0 +1,11 @@
+---
+// The fields figure on the home page: wide and narrow layouts of the same charges.
+import FieldLines from "./FieldLines.astro";
+import { data } from "../lib/data";
+const fields = data.profile.walk;
+---
+
+<figure class="figure">
+  <div class="wide"><FieldLines fields={fields} seed={21} width={960} height={460} /></div>
+  <div class="narrow"><FieldLines fields={fields} seed={21} width={400} height={560} /></div>
+</figure>

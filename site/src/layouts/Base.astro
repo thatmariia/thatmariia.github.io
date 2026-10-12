@@ -1,0 +1,65 @@
+---
+import "@fontsource-variable/sora/index.css";
+import "@fontsource-variable/martian-mono/index.css";
+import "../styles/base.css";
+import "../styles/site.css";
+import FieldLines from "../components/FieldLines.astro";
+import Head from "../components/Head.astro";
+import { affiliations, data, PAGES } from "../lib/data";
+
+interface Props { title?: string; sections?: { id: string; title: string }[]; mark?: number }
+const { title, sections = [], mark = 1 } = Astro.props;
+const { profile } = data;
+const here = Astro.url.pathname;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <Head title={title} />
+    <script is:inline>
+      try {
+        const theme = localStorage.getItem("theme");
+        if (theme) document.documentElement.dataset.theme = theme;
+      } catch {}
+    </script>
+  </head>
+  <body>
+    <aside class="side">
+      <a class="name" href="/">{profile.name}</a>
+      <p class="headline">{profile.headline}</p>
+      <ul class="links">{profile.links.map((l) => <li><a class="pill" href={l.url}>{l.label} <span aria-hidden="true">↗</span></a></li>)}</ul>
+      <nav class="pages" aria-label="Pages">
+        {PAGES.map(([href, label]) => (
+          <div class="page">
+            <a class="pill" href={href} aria-current={href === here ? "page" : undefined}>{label}</a>
+            {href === here && sections.length > 0 && (
+              <ul class="subs">{sections.map((s) => <li><a href={`#${s.id}`}>{s.title}</a></li>)}</ul>
+            )}
+          </div>
+        ))}
+      </nav>
+      <div class="side-foot">
+        <dl class="facts">
+          <dt>Based in</dt><dd>{profile.location}</dd>
+          <dt>Affiliations</dt><dd>{affiliations.map((a) => <span>{a}</span>)}</dd>
+        </dl>
+        <button class="switch" type="button" aria-label="Switch between light and dark" onclick="
+          const root = document.documentElement;
+          const dark = root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+          root.dataset.theme = dark ? 'light' : 'dark';
+          try { localStorage.setItem('theme', root.dataset.theme); } catch {}
+        "><span>Light</span><span>Dark</span></button>
+      </div>
+    </aside>
+    <main class="main">
+      {title && (
+        <header class="page-head">
+          <h1>{title}</h1>
+          <FieldLines fields={["", "", ""]} seed={mark} width={180} height={84} labels={false} />
+        </header>
+      )}
+      <slot />
+    </main>
+  </body>
+</html>

@@ -1,5 +1,6 @@
 ---
-// Cross-links to other items, labelled by kind, with a preview card on hover or focus (CSS only).
+// Cross-links to other items, labelled by kind, with a preview card on hover or focus (CSS only;
+// the card is visual only, the link text already names the item).
 import { refs, type Link } from "../lib/data";
 interface Props { related?: string[]; links?: Link[] }
 const { related = [], links = [] } = Astro.props;
@@ -9,17 +10,17 @@ const { related = [], links = [] } = Astro.props;
   <ul class="related">
     {related.map((id) => (
       <li>
-        <a class="xref" href={`#${id}`} aria-describedby={`preview-${id}`}>
+        <a class="xref" href={refs[id].href}>
           <span class="xref-kind">{refs[id].kind}</span>
           <span class="xref-title">{refs[id].title}</span>
         </a>
-        <span class="preview" id={`preview-${id}`} role="tooltip">
+        <span class="preview" aria-hidden="true">
           <span class="preview-kind">{refs[id].kind}</span>
           <span class="preview-title">{refs[id].title}</span>
           {refs[id].summary && <span class="preview-summary">{refs[id].summary}</span>}
         </span>
       </li>
     ))}
-    {links.map((link) => <li><a class="xref" href={link.url}><span class="xref-kind">Link</span> {link.label} ↗</a></li>)}
+    {links.map((link) => <li><a class="pill tiny" href={link.url}>{link.label} ↗</a></li>)}
   </ul>
 )}

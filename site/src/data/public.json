@@ -1190,6 +1190,137 @@
   ],
   "software": [
     {
+      "id": "rs-files-templates",
+      "title": "rs-files-templates",
+      "authors": [
+        "M. Steeghs-Turchina"
+      ],
+      "year": 2026,
+      "venue": "Zenodo",
+      "status": "published",
+      "doi": "10.5281/zenodo.23308763",
+      "links": [
+        {
+          "label": "Code",
+          "url": "https://github.com/LUMC-DCC/rs-files-templates"
+        }
+      ]
+    },
+    {
+      "id": "diff-fuse",
+      "title": "diff-fuse",
+      "authors": [
+        "M. Steeghs-Turchina"
+      ],
+      "year": 2026,
+      "venue": "Zenodo",
+      "status": "published",
+      "doi": "10.5281/zenodo.23308203",
+      "links": [
+        {
+          "label": "Code",
+          "url": "https://github.com/bio-tools/diff-fuse"
+        }
+      ]
+    },
+    {
+      "id": "rsm-schema-export-template",
+      "title": "RSM Schema export template for Research SMP (for DS Wizard)",
+      "authors": [
+        "M. Steeghs-Turchina"
+      ],
+      "year": 2026,
+      "venue": "Zenodo",
+      "status": "published",
+      "doi": "10.5281/zenodo.23307684",
+      "related": [
+        "rsm-schema",
+        "research-smp-knowledge-model"
+      ]
+    },
+    {
+      "id": "rsm-schema",
+      "title": "rsm-schema",
+      "authors": [
+        "M. Steeghs-Turchina"
+      ],
+      "year": 2026,
+      "venue": "Zenodo",
+      "status": "published",
+      "doi": "10.5281/zenodo.23307561",
+      "links": [
+        {
+          "label": "Code",
+          "url": "https://github.com/LUMC-DCC/rsm-schema"
+        },
+        {
+          "label": "Schema",
+          "url": "https://lumc-dcc.github.io/rsm-schema/schema/1.0.0/rsm.schema.json"
+        }
+      ],
+      "related": [
+        "rsm-schema-export-template"
+      ]
+    },
+    {
+      "id": "nwo-export-template",
+      "title": "eScience Center / NWO export template for Research SMP (for DS Wizard)",
+      "authors": [
+        "M. Steeghs-Turchina"
+      ],
+      "year": 2026,
+      "venue": "Zenodo",
+      "status": "published",
+      "doi": "10.5281/zenodo.23306970",
+      "related": [
+        "research-smp-knowledge-model"
+      ]
+    },
+    {
+      "id": "questionnaire-report-template",
+      "title": "Universal questionnaire report template (for DS Wizard)",
+      "authors": [
+        "M. Steeghs-Turchina"
+      ],
+      "year": 2026,
+      "venue": "Zenodo",
+      "status": "published",
+      "doi": "10.5281/zenodo.23306817"
+    },
+    {
+      "id": "research-smp-knowledge-model",
+      "title": "Research SMP knowledge model (for DS Wizard)",
+      "authors": [
+        "M. Steeghs-Turchina",
+        "A. Niehues"
+      ],
+      "year": 2026,
+      "venue": "Zenodo",
+      "status": "published",
+      "doi": "10.5281/zenodo.23306613",
+      "related": [
+        "rsm-schema-export-template",
+        "nwo-export-template"
+      ]
+    },
+    {
+      "id": "rs-metadata",
+      "title": "rs-metadata",
+      "authors": [
+        "M. Steeghs-Turchina"
+      ],
+      "year": 2026,
+      "venue": "Zenodo",
+      "status": "published",
+      "doi": "10.5281/zenodo.22902394",
+      "links": [
+        {
+          "label": "Code",
+          "url": "https://github.com/LUMC-DCC/rs-metadata"
+        }
+      ]
+    },
+    {
       "id": "gaussquad",
       "title": "gaussquad: Gauss quadrature for arbitrary weights on finite intervals",
       "authors": [
@@ -1287,10 +1418,20 @@
         "M. Steeghs-Turchina",
         "A. Niehues"
       ],
-      "year": 2025,
+      "year": 2026,
       "venue": "Zenodo",
       "status": "published",
-      "doi": "10.5281/zenodo.17475631",
+      "doi": "10.5281/zenodo.23189487",
+      "links": [
+        {
+          "label": "Website",
+          "url": "https://lumc-dcc.github.io/rs-guidelines/"
+        },
+        {
+          "label": "Code",
+          "url": "https://github.com/LUMC-DCC/rs-guidelines"
+        }
+      ],
       "related": [
         "lumc"
       ]

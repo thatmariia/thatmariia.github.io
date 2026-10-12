@@ -49,6 +49,7 @@ class Profile(Model):
 
 class Period(Model):
     title: Text | None = None  # role or programme; omit when the entry says it all
+    level: str | None = None  # e.g. BSc, Propedeuse; shown in the CV only
     unit: Text | None = None  # department, lab, group
     start: Date
     end: Date | Literal["present"] | None = None  # None: a single month or year

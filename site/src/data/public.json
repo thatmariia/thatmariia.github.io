@@ -104,13 +104,13 @@
           "notes": [
             "Shaped institutional policies and best practices for research software development, grounded in FAIR principles, open-source practices, and Open Science",
             "Developed and deployed tools and infrastructure that support sustainable research software",
-            "Collaborated with national (e.g., TDCC) and international (e.g., ELIXIR) initiatives to align policies and tools, contributed to shared work packages, events, and grant proposals",
-            "Won SURF **Research Support Luminary Award**"
+            "Collaborated with national (e.g., TDCC) and international (e.g., ELIXIR) initiatives to align policies and tools, contributed to shared work packages, events, and grant proposals"
           ]
         }
       ],
       "related": [
-        "research-software-guidelines"
+        "research-software-guidelines",
+        "surf-luminary-award"
       ]
     },
     {
@@ -411,7 +411,80 @@
     }
   ],
   "service": [],
-  "awards": [],
+  "awards": [
+    {
+      "id": "surf-luminary-award",
+      "title": "Research Support Luminary Award",
+      "location": "Amsterdam, NL",
+      "periods": [
+        {
+          "unit": "SURF",
+          "start": "2026-05"
+        }
+      ],
+      "related": [
+        "surf-research-day-2026",
+        "lumc"
+      ]
+    },
+    {
+      "id": "elixir-poster-award",
+      "title": "Best early career researcher poster award",
+      "location": "Lyon, FR",
+      "periods": [
+        {
+          "unit": "ELIXIR All Hands",
+          "start": "2026-06"
+        }
+      ],
+      "related": [
+        "elixir-all-hands-2026",
+        "software-curation-loop-poster"
+      ]
+    },
+    {
+      "id": "mathpsych-talk-award",
+      "title": "People's choice award for a talk",
+      "location": "Virtual",
+      "periods": [
+        {
+          "unit": "Virtual MathPsych/ICCM 2024",
+          "start": "2024-06"
+        }
+      ],
+      "related": [
+        "virtual-mathpsych-2024"
+      ]
+    },
+    {
+      "id": "eaisi-pitch-award",
+      "title": "Best pitch audience award",
+      "location": "Eindhoven, NL",
+      "periods": [
+        {
+          "unit": "The future impact of AI, EAISI Summit",
+          "start": "2021-11"
+        }
+      ],
+      "related": [
+        "eaisi-summit-2021"
+      ]
+    },
+    {
+      "id": "famelab-top-3",
+      "title": "Top 3, FameLab science communication competition",
+      "location": "Eindhoven, NL",
+      "periods": [
+        {
+          "unit": "Eindhoven University of Technology edition",
+          "start": "2021-04"
+        }
+      ],
+      "related": [
+        "famelab-2021"
+      ]
+    }
+  ],
   "funding": [],
   "events": [
     {
@@ -438,8 +511,7 @@
         }
       ],
       "related": [
-        "bidirectional-bridge",
-        "metadata-driven-infrastructure"
+        "bidirectional-bridge"
       ]
     },
     {
@@ -463,26 +535,27 @@
           "start": "2026-06",
           "notes": [
             "Presented a **poster** “Automating software curation loop: Bidirectional bridge GitHub ↔ bio.tools”",
-            "Won the best early career researcher **poster award**",
             "Co-presented a **poster** “Update of the bio.tools registry for software in the life sciences”"
           ]
         }
       ],
       "related": [
+        "elixir-poster-award",
         "bidirectional-bridge",
         "software-curation-loop-poster"
       ]
     },
     {
+      "id": "surf-research-day-2026",
       "title": "SURF Research Day 2026",
       "location": "Amsterdam, NL",
       "periods": [
         {
-          "start": "2026-05",
-          "notes": [
-            "Won **Research Support Luminary Award**"
-          ]
+          "start": "2026-05"
         }
+      ],
+      "related": [
+        "surf-luminary-award"
       ]
     },
     {
@@ -561,26 +634,29 @@
         {
           "start": "2024-06",
           "notes": [
-            "Gave a **talk** “Modeling EEG with axon delay times”",
-            "Won the people's choice **award for the talk**"
+            "Gave a **talk** “Modeling EEG with axon delay times”"
           ]
         }
       ],
       "related": [
+        "mathpsych-talk-award",
         "slow-wave-eeg"
       ]
     },
     {
+      "id": "eaisi-summit-2021",
       "title": "The future impact of AI, EAISI Summit",
       "location": "Eindhoven, NL",
       "periods": [
         {
           "start": "2021-11",
           "notes": [
-            "Gave a **talk** “Extending human senses with AI”",
-            "Won the best pitch audience award"
+            "Gave a **talk** “Extending human senses with AI”"
           ]
         }
+      ],
+      "related": [
+        "eaisi-pitch-award"
       ]
     },
     {
@@ -753,16 +829,19 @@
       ]
     },
     {
+      "id": "famelab-2021",
       "title": "Famelab",
       "location": "Virtual",
       "periods": [
         {
           "start": "2021-04",
           "notes": [
-            "Gave a talk about sensory enhancement",
-            "Top 3 at the Eindhoven University of Technology edition (science communication competition)"
+            "Gave a talk about sensory enhancement"
           ]
         }
+      ],
+      "related": [
+        "famelab-top-3"
       ]
     },
     {
@@ -779,31 +858,6 @@
     }
   ],
   "other": [
-    {
-      "title": "De Beachvolleybalschool",
-      "location": "The Hague, NL",
-      "periods": [
-        {
-          "title": "Beach Volleyball Coach",
-          "start": "2026-03",
-          "end": "present"
-        }
-      ]
-    },
-    {
-      "title": "Support Initiatives for Ukraine",
-      "location": "Global / Virtual",
-      "periods": [
-        {
-          "start": "2022-02",
-          "end": "present",
-          "notes": [
-            "Collaborated with an international volunteer team to build and maintain a global map of donation drop-off points for humanitarian aid (featured by BBC)",
-            "Created visual materials for “Dance for Ukraine”, a series of charity dance events to raise funds and awareness for Ukraine"
-          ]
-        }
-      ]
-    },
     {
       "title": "Human Augmentation Research & Technology (HART)",
       "location": "Eindhoven, NL",
@@ -912,21 +966,34 @@
       ]
     }
   ],
-  "publications": [
+  "beyond": [
     {
-      "id": "metadata-driven-infrastructure",
-      "title": "A metadata-driven infrastructure for the research software lifecycle",
-      "authors": [
-        "M. Steeghs-Turchina",
-        "A. Niehues",
-        "M. Palmblad"
-      ],
-      "year": 2026,
-      "status": "in-progress",
-      "related": [
-        "dbc-2026"
+      "title": "De Beachvolleybalschool",
+      "location": "The Hague, NL",
+      "periods": [
+        {
+          "title": "Beach Volleyball Coach",
+          "start": "2026-03",
+          "end": "present"
+        }
       ]
     },
+    {
+      "title": "Support Initiatives for Ukraine",
+      "location": "Global / Virtual",
+      "periods": [
+        {
+          "start": "2022-02",
+          "end": "present",
+          "notes": [
+            "Collaborated with an international volunteer team to build and maintain a global map of donation drop-off points for humanitarian aid (featured by BBC)",
+            "Created visual materials for “Dance for Ukraine”, a series of charity dance events to raise funds and awareness for Ukraine"
+          ]
+        }
+      ]
+    }
+  ],
+  "publications": [
     {
       "id": "software-curation-loop",
       "title": "Completing the software curation loop across registries and repositories",
@@ -1403,6 +1470,7 @@
       "status": "published",
       "doi": "10.7490/f1000research.1120667.1",
       "related": [
+        "elixir-poster-award",
         "elixir-all-hands-2026",
         "bidirectional-bridge"
       ]

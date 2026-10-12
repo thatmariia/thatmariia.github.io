@@ -1,0 +1,63 @@
+---
+// The path as tree rings: one ring per year from the centre outwards, wider in busier years (roles
+// held, outputs and events), slightly irregular like real wood. Knots in each ring are that year's
+// outputs (filled) and events (open), placed by month. The newest ring keeps growing.
+import { firstYear, month, now } from "../../lib/career";
+import { data, PAGE_OF, refs, type Entry, type Work } from "../../lib/data";
+import { random } from "../../lib/random";
+interface Props { seed: number; width: number; height: number }
+const { seed, width, height } = Astro.props;
+
+const uniform = random(seed);
+const lastYear = Math.floor(now / 12);
+const years = Array.from({ length: lastYear - firstYear + 1 }, (_, i) => firstYear + i);
+const ROLES = ["research", "teaching", "leadership", "service", "other"];
+const roleMonths = (y: number) => ROLES.flatMap((s) => ((data as any)[s] as Entry[]).flatMap((e) => e.periods)).reduce((sum, p) => {
+  const [a, b] = [month(p.start!), p.end === "present" ? now + 1 : p.end ? month(p.end) + 1 : month(p.start!) + 1];
+  return sum + Math.max(0, Math.min(b, (y + 1) * 12) - Math.max(a, y * 12));
+}, 0);
+const href = (section: string, id?: string) => (id && refs[id] ? refs[id].href : PAGE_OF[section]);
+const WORKS = ["publications", "preprints", "software", "datasets", "posters", "presentations", "reports", "websites", "theses"];
+const knots = [
+  ...WORKS.flatMap((s) => ((data as any)[s] as Work[]).map((w) => ({ t: w.year * 12 + uniform() * 12, title: w.title, href: href(s, w.id), kind: "output" }))),
+  ...(["events", "outreach"] as const).flatMap((s) => (data[s] as Entry[]).map((e) => ({ t: month(e.periods[0].start!) + 0.5, title: e.title!, href: href(s, e.id), kind: "event" }))),
+];
+const activity = years.map((y) => roleMonths(y) / 12 + knots.filter((k) => Math.floor(k.t / 12) === y).length * 0.6);
+
+// Ring radii: cumulative widths, scaled to fit.
+const [cx, cy] = [width / 2, height / 2], R = Math.min(width, height) / 2 - 18;
+const widths = activity.map((a) => 1 + a);
+const total = widths.reduce((s, w) => s + w, 0);
+const outer = widths.map((_, i) => (R * widths.slice(0, i + 1).reduce((s, w) => s + w, 0)) / total);
+const wobble = Array.from({ length: 5 }, () => ({ k: 2 + Math.floor(uniform() * 5), phase: uniform() * 2 * Math.PI, amp: 0.008 + uniform() * 0.012 }));
+const radiusAt = (r: number, a: number) => r * (1 + wobble.reduce((s, w) => s + w.amp * Math.sin(w.k * a + w.phase + r * 0.01), 0));
+const f = (v: number) => v.toFixed(1);
+const ring = (r: number) => Array.from({ length: 121 }, (_, k) => {
+  const a = (2 * Math.PI * k) / 120, rr = radiusAt(r, a);
+  return `${k ? "L" : "M"}${f(cx + rr * Math.cos(a))},${f(cy + rr * Math.sin(a))}`;
+}).join("") + "Z";
+const knotAt = (t: number) => {
+  const i = Math.floor(t / 12) - firstYear, inner = i ? outer[i - 1] : 0, a = -Math.PI / 2 + (2 * Math.PI * (t % 12)) / 12;
+  const r = radiusAt(inner + (outer[i] - inner) * (0.3 + uniform() * 0.4), a);
+  return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
+};
+const labelled = years.filter((_, i) => outer[i] - (i ? outer[i - 1] : 0) > 9 || i === years.length - 1);
+---
+
+<div class="fig rings">
+  <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`Tree rings from ${firstYear} to now, wider in busier years`}>
+    {Array.from({ length: 9 }, (_, k) => {
+      const a = uniform() * 2 * Math.PI, r = R * (0.35 + uniform() * 0.6);
+      return <line class="crack" x1={f(cx + R * 0.05 * Math.cos(a))} y1={f(cy + R * 0.05 * Math.sin(a))} x2={f(cx + r * Math.cos(a))} y2={f(cy + r * Math.sin(a))} />;
+    })}
+    {outer.map((r, i) => <path class:list={["ring", { newest: i === outer.length - 1 }]} d={ring(r)} />)}
+    {knots.map((k) => {
+      const [x, y] = knotAt(k.t);
+      return <a href={k.href}><title>{k.title}</title><circle class={k.kind} cx={f(x)} cy={f(y)} r="2.4" /></a>;
+    })}
+    {labelled.map((y) => {
+      const i = y - firstYear, r = (outer[i] + (i ? outer[i - 1] : 0)) / 2;
+      return <text x={f(cx + 3)} y={f(cy - r + 3)}>{y}</text>;
+    })}
+  </svg>
+</div>

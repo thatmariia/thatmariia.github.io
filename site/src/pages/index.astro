@@ -2,9 +2,8 @@
 import Figure from "../components/Figure.astro";
 import WorkItem from "../components/WorkItem.astro";
 import Base from "../layouts/Base.astro";
-import { data, dates, isUpcoming, markup, outputSections, type Entry, type Work } from "../lib/data";
+import { data, markup, outputSections, type Work } from "../lib/data";
 
-const upcoming = (data.events as Entry[]).filter(isUpcoming).reverse();
 const recent = [data.publications, data.preprints, ...outputSections.map((s) => s.items)]
   .flat()
   .filter((w: Work) => w.status === "published")
@@ -15,20 +14,6 @@ const recent = [data.publications, data.preprints, ...outputSections.map((s) => 
 <Base>
   <Figure />
   <div class="prose intro" set:html={markup(data.profile.bio)} />
-  {upcoming.length > 0 && (
-    <section class="block">
-      <h2>Upcoming</h2>
-      <div class="cards">
-        {upcoming.map((e) => (
-          <a class="card" href={`/events/#${e.id ?? "upcoming"}`}>
-            <span class="pill solid">{dates(e.periods[0])}</span>
-            <span class="card-title">{e.title}</span>
-            <span class="card-meta">{e.location}</span>
-          </a>
-        ))}
-      </div>
-    </section>
-  )}
   <section class="block">
     <h2>Recent work</h2>
     {recent.map((work) => <WorkItem work={work} />)}

@@ -1,0 +1,144 @@
+---
+import "@fontsource/instrument-serif/400.css";
+import "@fontsource/instrument-serif/400-italic.css";
+import "@fontsource-variable/hanken-grotesk/index.css";
+import "@fontsource/space-mono/400.css";
+import "../styles/global.css";
+import EntryItem from "../components/EntryItem.astro";
+import Section from "../components/Section.astro";
+import Walk from "../components/Walk.astro";
+import WorkItem from "../components/WorkItem.astro";
+import { data, firstSentence, isUpcoming, markup, outputSections, restOfText, type Entry } from "../lib/data";
+
+const { profile } = data;
+const [firstName, ...lastNames] = profile.name.split(" ");
+const current = (data.research as Entry[]).flatMap((entry) =>
+  entry.periods.filter((p) => p.end === "present").map((p) => ({ role: p.title, org: entry.title })),
+);
+const path = [
+  ["Research", data.research], ["Teaching", data.teaching], ["Leadership", data.leadership],
+  ["Service", data.service], ["Awards", data.awards], ["Funding", data.funding], ["Also", data.other],
+].filter(([, items]) => items.length) as [string, Entry[]][];
+const events = data.events as Entry[];
+const upcoming = events.filter(isUpcoming).reverse();
+const past = events.filter((e) => !isUpcoming(e));
+const studies = (data.education as Entry[]).flatMap((e) => e.periods.map((p) => p.title));
+const thesis = (data.education as Entry[]).flatMap((e) => e.related ?? []);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{profile.name}</title>
+    <meta name="description" content={`${profile.name} — ${profile.headline}`} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script is:inline>
+      try {
+        const theme = localStorage.getItem("theme");
+        if (theme) document.documentElement.dataset.theme = theme;
+      } catch {}
+    </script>
+  </head>
+  <body>
+    <header class="top">
+      <a class="mono" href="#">{profile.name}</a>
+      <nav class="mono">
+        <a href="#work">Work</a>
+        <a href="#path">Path</a>
+        <a href="#events">Events</a>
+        <a href="#elsewhere">Elsewhere</a>
+        <button class="theme" type="button" aria-label="Switch light or dark theme" onclick="
+          const root = document.documentElement;
+          const dark = root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+          root.dataset.theme = dark ? 'light' : 'dark';
+          try { localStorage.setItem('theme', root.dataset.theme); } catch {}
+        "><span aria-hidden="true">◐</span></button>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="aura cobalt" aria-hidden="true"></div>
+        <div class="aura vermilion" aria-hidden="true"></div>
+        <div class="aura ochre" aria-hidden="true"></div>
+        <p class="mono kicker">{profile.headline}</p>
+        <h1>{firstName}<em>{lastNames.join(" ")}</em></h1>
+        <Walk text={firstSentence(profile.bio)} seed={11} width={1200} height={420} />
+        <p class="walk-caption">{firstSentence(profile.bio)}</p>
+        {current.length > 0 && (
+          <dl class="now">
+            <dt class="mono">Currently</dt>
+            {current.map((c) => <dd>{c.role}<span>{c.org}</span></dd>)}
+          </dl>
+        )}
+      </section>
+
+      <Section id="about" number="01" title="About">
+        <div class="prose" set:html={markup(restOfText(profile.bio) || profile.bio)} />
+        <dl class="studies">
+          <dt class="mono">Studied</dt>
+          <dd>
+            {studies.join(" · ")}
+            {thesis.map((id) => <a class="mono" href={`#${id}`}>↔ thesis</a>)}
+          </dd>
+          {data.skills.map((group) => (
+            <>
+              <dt class="mono">{group.title}</dt>
+              <dd>{Object.values(group.levels).flat().join(" · ")}</dd>
+            </>
+          ))}
+        </dl>
+      </Section>
+
+      <Section id="work" number="02" title="Publications">
+        {data.publications.map((work) => <WorkItem work={work as any} />)}
+        {data.preprints.length > 0 && <h3 class="group">Preprints</h3>}
+        {data.preprints.map((work) => <WorkItem work={work as any} label="preprint" />)}
+      </Section>
+
+      <Section id="outputs" number="03" title="Open science outputs">
+        {outputSections.map((section) => (
+          <>
+            <h3 class="group">{section.key[0].toUpperCase() + section.key.slice(1)}<span class="mono">{section.items.length}</span></h3>
+            {section.items.map((work) => <WorkItem work={work} label={section.label.toLowerCase()} />)}
+          </>
+        ))}
+      </Section>
+
+      <Section id="path" number="04" title="Path">
+        {path.map(([title, items]) => (
+          <>
+            <h3 class="group">{title}</h3>
+            {items.map((entry) => <EntryItem entry={entry} />)}
+          </>
+        ))}
+      </Section>
+
+      <Section id="events" number="05" title="Events & outreach">
+        {upcoming.length > 0 && <h3 class="group">Upcoming</h3>}
+        {upcoming.map((entry) => <EntryItem entry={entry} upcoming />)}
+        <h3 class="group">Conferences & events</h3>
+        {past.map((entry) => <EntryItem entry={entry} />)}
+        {data.outreach.length > 0 && <h3 class="group">Outreach</h3>}
+        {(data.outreach as Entry[]).map((entry) => <EntryItem entry={entry} />)}
+      </Section>
+    </main>
+
+    <footer class="section" id="elsewhere">
+      <header class="section-head">
+        <span class="mono">06</span>
+        <h2>Elsewhere</h2>
+      </header>
+      <div class="section-body">
+        <ul class="elsewhere">
+          {profile.links.map((link) => <li><a href={link.url}>{link.label}<span aria-hidden="true">↗</span></a></li>)}
+        </ul>
+        <p class="mono colophon">
+          Set in Instrument Serif, Hanken Grotesk &amp; Space Mono · Updated {new Date().toISOString().slice(0, 10)}
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

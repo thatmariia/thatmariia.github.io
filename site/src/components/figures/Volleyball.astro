@@ -1,7 +1,8 @@
 ---
 // Beyond science as an endless beach-volleyball rally, two players a side, simulated in the browser.
 // Every rally is different: serves and passes go to random spots, players run to the ball, the
-// setter moves under the pass, attacks are dug, blocked (a block counts as a touch) or killed.
+// setter moves under the pass (or attacks on two), attacks are dug, blocked (a block counts as a
+// touch) or killed.
 // Each touch shows the next activity in the sand under the player. Static for reduced motion.
 import { data } from "../../lib/data";
 import { random } from "../../lib/random";
@@ -147,23 +148,35 @@ const READY = (face: number) => `M0,-46 L${8 * face},-38 M0,-46 L${7 * face},-36
         first(p, to);
       });
     };
-    // After a first touch by p (a pass, dig or block), the partner sets and p attacks.
+    // The other side gets ready for an attack from side s: one blocks at the net, the other defends.
+    const defend = (s: number) => {
+      const [blocker, defender] = team(-s).sort((a, b) => Math.abs(a.x - net) - Math.abs(b.x - net));
+      blocker.tx = net + blocker.s * 11 * k;
+      defender.tx = side(rand(0.5, 0.8), defender.s);
+      return blocker;
+    };
+    // After a first touch by p (a pass, dig or block), the partner sets and p attacks. Now and then
+    // a tight pass is attacked straight away on two.
     const first = (p: Player, from: Point, blocked = false) => {
-      const setter = partner(p), setX = side(rand(0.2, 0.5), p.s);
-      const to = meet(setter, "set", setX, now + 1.1);
+      const setter = partner(p);
+      if (!blocked && Math.random() < 0.2) {
+        const to = meet(setter, "attack", side(rand(0.12, 0.22), p.s), now + 1.1), blocker = defend(p.s);
+        fly(from, to, 1.1, high(from, to, 0.5), rand(-3, 3), () => {
+          touch(setter, "attack");
+          attack(setter, blocker, to);
+        });
+        return;
+      }
+      const to = meet(setter, "set", side(rand(0.2, 0.5), p.s), now + 1.1);
       fly(from, to, blocked ? 0.9 : 1.1, high(from, to, blocked ? 0.35 : 0.75), blocked ? rand(-4, 4) : rand(-3, 3), () => {
         touch(setter, "set");
         set(setter, p, to);
       });
     };
     const set = (setter: Player, hitter: Player, from: Point) => {
-      const hitX = side(rand(0.14, 0.3), hitter.s), dur = 0.95;
-      const to = meet(hitter, "attack", hitX, now + dur);
+      const dur = 0.95, to = meet(hitter, "attack", side(rand(0.14, 0.3), hitter.s), now + dur);
       setter.tx = side(rand(0.45, 0.7), setter.s);
-      // The other side gets ready: one player blocks at the net, the other defends.
-      const [blocker, defender] = team(-hitter.s).sort((a, b) => Math.abs(a.x - net) - Math.abs(b.x - net));
-      blocker.tx = net + blocker.s * 11 * k;
-      defender.tx = side(rand(0.5, 0.8), defender.s);
+      const blocker = defend(hitter.s);
       fly(from, to, dur, high(from, to, 0.45), 0, () => {
         touch(hitter, "attack");
         attack(hitter, blocker, to);

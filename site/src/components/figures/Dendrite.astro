@@ -1,0 +1,90 @@
+---
+// A career as a growing dendrite. The trunk is time, from the first role at the bottom to now at
+// the top. Every role (organisation) branches off when it began and grows for as long as it lasted;
+// research to one side, everything else to the other. Outputs and events sit as spines on the branch
+// they are linked to, or on the trunk. Pulses keep travelling up the trunk and branches.
+import { firstYear, month, now } from "../../lib/career";
+import { data, type Entry, type Work } from "../../lib/data";
+import { random, type Point } from "../../lib/random";
+interface Props { seed: number; width: number; height: number }
+const { seed, width, height } = Astro.props;
+
+const uniform = random(seed);
+const [start, end] = [firstYear * 12, now + 1];
+const [top, bottom] = [24, height - 18];
+const y = (t: number) => bottom - ((t - start) / (end - start)) * (bottom - top);
+const trunkX = (t: number) => width / 2 + Math.sin((t - start) / 14) * width * 0.025;
+const f = (v: number) => v.toFixed(1);
+
+// Branches: one per role entry, spanning its earliest start to its latest end.
+const SECTIONS = ["research", "teaching", "leadership", "service", "other", "beyond"];
+const branches = SECTIONS.flatMap((section) => (data as any)[section] as Entry[]).map((e, k) => {
+  const section = SECTIONS.find((s) => ((data as any)[s] as Entry[]).includes(e))!;
+  const from = Math.min(...e.periods.map((p) => month(p.start!)));
+  const to = Math.max(...e.periods.map((p) => (p.end === "present" ? now : p.end ? month(p.end) : month(p.start!) + 1)));
+  return { e, section, from, to: Math.max(to, from + 1) };
+}).sort((a, b) => a.from - b.from);
+const reachMax = width / 2 - 70;
+const sideCount = { right: 0, left: 0 };
+const drawn = branches.map((b) => {
+  const side = b.section === "research" ? "right" : "left", sign = side === "right" ? 1 : -1;
+  const level = sideCount[side]++ % 3;  // stagger reaches so neighbouring branches do not overlap
+  const reach = Math.min(reachMax, 24 + Math.sqrt(b.to - b.from) * 9) * (0.7 + level * 0.15);
+  const [x0, y0] = [trunkX(b.from), y(b.from)], [x1, y1] = [x0 + sign * reach, y(b.to)];
+  const c1: Point = [x0 + sign * reach * 0.55, y0 - 4], c2: Point = [x1, y0 + (y1 - y0) * 0.45];
+  const point = (u: number): Point => [0, 1].map((k) =>
+    (1 - u) ** 3 * [x0, y0][k] + 3 * (1 - u) ** 2 * u * c1[k] + 3 * (1 - u) * u * u * c2[k] + u ** 3 * [x1, y1][k]) as Point;
+  return { ...b, sign, d: `M${f(x0)},${f(y0)} C${f(c1[0])},${f(c1[1])} ${f(c2[0])},${f(c2[1])} ${f(x1)},${f(y1)}`, point, tip: [x1, y1] as Point, width: 0.8 + Math.min(2.2, (b.to - b.from) / 24) };
+});
+
+// Spines: outputs and events, on the branch of a linked role if there is one, else on the trunk.
+const linkedTo = (id?: string, related: string[] = []) => drawn.find((b) => (b.e.id && related.includes(b.e.id)) || (id && b.e.related?.includes(id)));
+const WORKS = ["publications", "preprints", "software", "datasets", "posters", "presentations", "reports", "websites", "theses"];
+const spines = [
+  ...WORKS.flatMap((s) => ((data as any)[s] as Work[]).map((w) => ({ id: w.id, related: w.related ?? [], t: w.year * 12 + uniform() * 12, kind: "output", title: w.title }))),
+  ...(["events", "outreach"] as const).flatMap((s) => (data[s] as Entry[]).map((e) => ({ id: e.id, related: e.related ?? [], t: month(e.periods[0].start!), kind: "event", title: e.title! }))),
+].map((s) => {
+  const branch = linkedTo(s.id, s.related);
+  let base: Point, out: number;
+  if (branch) {
+    base = branch.point(Math.min(1, Math.max(0.15, (s.t - branch.from) / (branch.to - branch.from))));
+    out = branch.sign;
+  } else {
+    base = [trunkX(s.t), y(s.t)];
+    out = uniform() < 0.5 ? -1 : 1;
+  }
+  const a = -Math.PI / 2 + out * (0.6 + uniform() * 0.8), l = 7 + uniform() * 6;
+  return { ...s, base, tip: [base[0] + Math.cos(a) * l, base[1] + Math.sin(a) * l] as Point };
+});
+// Labels for roles of two years or more, cut to the room left on their side of the figure.
+const labels = drawn.filter((b) => b.to - b.from >= 24).map((b) => {
+  const x = b.tip[0] + b.sign * 4, room = b.sign > 0 ? width - x - 4 : x - 4, fits = Math.floor(room / 6.4);
+  const text = b.e.title!.length > fits ? `${b.e.title!.slice(0, Math.max(3, fits - 1)).trim()}…` : b.e.title!;
+  return { x, y: b.tip[1] + 3, anchor: b.sign > 0 ? "start" : "end", text };
+});
+const trunk = Array.from({ length: 80 }, (_, k) => start + (k / 79) * (end - start)).map((t) => `${f(trunkX(t))},${f(y(t))}`).join(" ");
+const years = Array.from({ length: Math.floor(now / 12) - firstYear + 1 }, (_, i) => firstYear + i).filter((yr) => (yr - firstYear) % 2 === 0);
+---
+
+<div class="fig dendrite">
+  <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`Career since ${firstYear} as a dendrite: ${drawn.length} roles as branches, with outputs and events as spines`}>
+    {years.map((yr) => <text class="year" x={f(trunkX(yr * 12) - 8)} y={f(y(yr * 12) + 3)} text-anchor="end">{yr}</text>)}
+    <polyline class="trunk" points={trunk} />
+    <polyline class="sap" points={trunk} pathLength="1" />
+    {drawn.map((b) => (
+      <g class="branch">
+        <title>{b.e.title}{b.e.periods[0].title ? ` · ${b.e.periods[0].title}` : ""}</title>
+        <path d={b.d} stroke-width={b.width.toFixed(2)} />
+      </g>
+    ))}
+    {drawn.map((b) => <path class="sap" d={b.d} pathLength="1" style={`animation-delay: ${(uniform() * 6).toFixed(2)}s`} />)}
+    {spines.map((s) => (
+      <g class:list={["spine", s.kind]}>
+        <title>{s.title}</title>
+        <line x1={f(s.base[0])} y1={f(s.base[1])} x2={f(s.tip[0])} y2={f(s.tip[1])} />
+        <circle cx={f(s.tip[0])} cy={f(s.tip[1])} r="2.3" />
+      </g>
+    ))}
+    {labels.map((l) => <text x={f(l.x)} y={f(l.y)} text-anchor={l.anchor}>{l.text}</text>)}
+  </svg>
+</div>

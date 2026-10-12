@@ -50,7 +50,7 @@ const READY = (face: number) => `M0,-46 L${8 * face},-38 M0,-46 L${7 * face},-36
         <path class="arms" d={READY(i < 2 ? 1 : -1)} />
       </g>
     ))}
-    <text class="touch" x={f(start[0])} y={f(sand + 30)} text-anchor="middle"><tspan class="move">serve</tspan> {activities[0]}</text>
+    <text class="touch" x={f(Math.max(start[0], (6 + activities[0].length) * 4.6 + 6))} y={f(sand + 30)} text-anchor="middle"><tspan class="move">serve</tspan> {activities[0]}</text>
     <ellipse class="shadow" cx={f(start[0])} cy={f(sand + 3)} rx={f(r)} ry="2.4" />
     <g class="ball" transform={`translate(${f(start[0] + 7 * k)},${f(sand - 95 * k)})`}>
       <g class="spin">
@@ -110,9 +110,9 @@ const READY = (face: number) => `M0,-46 L${8 * face},-38 M0,-46 L${7 * face},-36
     const high = (a: Point, b: Point, lift: number) => Math.min(a.y, b.y) - (Math.min(a.y, b.y) - 24) * lift;
     const touch = (p: Player, kind: Kind) => {
       [p.pose, p.poseUntil] = [kind, now + 0.35];
-      const x = Math.max(60, Math.min(width - 60, p.x));
       label.innerHTML = `<tspan class="move">${kind}</tspan> ${activities[count++ % activities.length].replace(/&/g, "&amp;").replace(/</g, "&lt;")}`;
-      label.setAttribute("x", x.toFixed(1));
+      const w = label.getComputedTextLength() * 0.6 + 6;  // with room for the web font
+      label.setAttribute("x", Math.max(w, Math.min(width - w, p.x)).toFixed(1));
       label.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 250 });
     };
 

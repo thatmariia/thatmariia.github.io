@@ -1,17 +1,18 @@
 ---
 // The figure at the top of a page. A page names the figures that suit its data; while choosing,
 // pill buttons (plain radio inputs, no JavaScript) switch between them when there is more than one.
-import Braid from "./figures/Braid.astro";
 import Collaborators from "./figures/Collaborators.astro";
+import EEG from "./figures/EEG.astro";
+import Feynman from "./figures/Feynman.astro";
 import Fireworks from "./figures/Fireworks.astro";
+import NeuralNet from "./figures/NeuralNet.astro";
 import NeuronGame from "./figures/NeuronGame.astro";
-import PianoRoll from "./figures/PianoRoll.astro";
 import Saltatory from "./figures/Saltatory.astro";
 import Sieve from "./figures/Sieve.astro";
 import Spiral from "./figures/Spiral.astro";
+import Topo from "./figures/Topo.astro";
 import Travels from "./figures/Travels.astro";
 import Volleyball from "./figures/Volleyball.astro";
-import Worldline from "./figures/Worldline.astro";
 
 const FIGURES = {
   game: { label: "Neuron burst", Figure: NeuronGame, seed: 1 },
@@ -19,9 +20,10 @@ const FIGURES = {
   sieve: { label: "Sieve", Figure: Sieve, seed: 1 },
   spiral: { label: "Spiral explorer", Figure: Spiral, seed: 2 },
   collaborators: { label: "Collaborators", Figure: Collaborators, seed: 7 },
-  worldline: { label: "Worldline", Figure: Worldline, seed: 1 },
-  braid: { label: "Braid", Figure: Braid, seed: 3 },
-  piano: { label: "Piano roll", Figure: PianoRoll, seed: 1 },
+  topo: { label: "Topographic map", Figure: Topo, seed: 1 },
+  feynman: { label: "Feynman diagram", Figure: Feynman, seed: 1 },
+  neuralnet: { label: "Neural network", Figure: NeuralNet, seed: 1 },
+  eeg: { label: "EEG", Figure: EEG, seed: 5 },
   travels: { label: "Travels", Figure: Travels, seed: 2 },
   fireworks: { label: "Fireworks", Figure: Fireworks, seed: 6 },
   volleyball: { label: "Volleyball", Figure: Volleyball, seed: 3 },

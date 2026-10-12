@@ -62,21 +62,26 @@ const destinations = [...new Map(trips.map((t) => [t.to.name, t.to])).values()]
   .map((c) => ({ name: c.name, at: project(c.at), count: trips.filter((t) => t.to.name === c.name).length }));
 const rings = [10, 100, 1000].filter((d) => d < maxDistance);
 
-// Labels to the right of their dots, pushed apart vertically where they would overlap.
+// Labels to the right of their dots, pushed apart vertically where they would overlap (also
+// away from the ring distances, which stay put).
 const labels = [
-  ...places.map((p) => ({ text: p.name, x: p.at[0] + p.size + 4, y: p.at[1] + 3, strong: true })),
-  ...destinations.map((d) => ({ text: d.name, x: d.at[0] + 6, y: d.at[1] + 3, strong: false })),
+  ...places.map((p) => ({ text: p.name, x: p.at[0] + p.size + 4, y: p.at[1] + 3, strong: true, fixed: false })),
+  ...destinations.map((d) => ({ text: d.name, x: d.at[0] + 6, y: d.at[1] + 3, strong: false, fixed: false })),
+  ...rings.map((d) => {
+    const text = `${d.toLocaleString("en")} km`;
+    return { text, x: cx - scale(d) * 0.5 - text.length * 3.7, y: cy - scale(d) * 0.87 - 4, strong: false, fixed: true };
+  }),
 ];
 for (let round = 0; round < 80; round++) {
   for (const a of labels) {
     for (const b of labels) {
       if (a === b) continue;
-      const overlapX = Math.min(a.x + a.text.length * 6.4, b.x + b.text.length * 6.4) - Math.max(a.x, b.x);
+      const overlapX = Math.min(a.x + a.text.length * 7.4, b.x + b.text.length * 7.4) - Math.max(a.x, b.x);
       const overlapY = 12 - Math.abs(a.y - b.y);
       if (overlapX > 0 && overlapY > 0) {
         const push = (overlapY / 2) * Math.sign(a.y - b.y || 1);
-        a.y += push;
-        b.y -= push;
+        if (!a.fixed) a.y += b.fixed ? 2 * push : push;
+        if (!b.fixed) b.y -= a.fixed ? 2 * push : push;
       }
     }
   }
@@ -100,6 +105,6 @@ for (let round = 0; round < 80; round++) {
       <circle class="destination" cx={f(x)} cy={f(y)} r="3"><title>{name} · {count} {count === 1 ? "event" : "events"}</title></circle>
     ))}
     {places.map(({ name, at: [x, y], size }) => <circle class="place" cx={f(x)} cy={f(y)} r={f(size)}><title>{name}</title></circle>)}
-    {labels.map((l) => <text class:list={{ strong: l.strong }} x={f(l.x)} y={f(l.y)}>{l.text}</text>)}
+    {labels.filter((l) => !l.fixed).map((l) => <text class:list={{ strong: l.strong }} x={f(l.x)} y={f(l.y)}>{l.text}</text>)}
   </svg>
 </div>

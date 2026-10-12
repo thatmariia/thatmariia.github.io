@@ -1,0 +1,105 @@
+---
+// Where the work happened, on a polar map centred on home with a logarithmic distance scale
+// (rings at 10, 100, 1000 km). Filled dots are places worked in, sized by time spent; the bold
+// curve is the path between them; arcs are trips to conferences from wherever home base was then.
+// Dashes keep travelling along the path and the arcs.
+import { events, now, roles } from "../../lib/career";
+import { data } from "../../lib/data";
+import { cityOf, distanceBearing } from "../../lib/places";
+import { random, type Point } from "../../lib/random";
+interface Props { seed: number; width: number; height: number }
+const { seed, width, height } = Astro.props;
+
+const home = cityOf(data.profile.location)!;
+const stays = roles.flatMap((r) => {
+  const c = cityOf(r.location);
+  return c ? [{ ...c, from: r.span[0], to: Math.max(r.span[1], r.span[0] + 1) }] : [];
+});
+const trips = events.flatMap((e) => {
+  const c = cityOf(e.location);
+  const base = stays.filter((s) => s.from <= e.start && e.start < s.to).sort((a, b) => b.from - a.from)[0] ?? home;
+  return c && c.name !== base.name ? [{ to: c, from: base, start: e.start }] : [];
+});
+
+// Polar projection: bearing from home, log of distance.
+const all = [...stays, ...trips.map((t) => t.to)];
+const maxDistance = Math.max(...all.map((c) => distanceBearing(home.at, c.at).distance));
+const [cx, cy] = [width / 2, (height - 20) / 2], R = Math.min(width, height - 20) / 2 - 34;
+const scale = (d: number) => (R * Math.log10(1 + d / 3)) / Math.log10(1 + maxDistance / 3);
+const project = (at: [number, number]): Point => {
+  const { distance, bearing } = distanceBearing(home.at, at);
+  return [cx + scale(distance) * Math.sin(bearing), cy - scale(distance) * Math.cos(bearing)];
+};
+
+const months = (name: string) => {
+  let total = 0;
+  for (let m = Math.min(...stays.map((s) => s.from)); m <= now; m++) if (stays.some((s) => s.name === name && s.from <= m && m < s.to)) total++;
+  return total;
+};
+const places = [...new Set(stays.map((s) => s.name))].map((name) => {
+  const s = stays.find((x) => x.name === name)!;
+  return { name, at: project(s.at), size: 2.5 + Math.sqrt(months(name)) * 0.5 };
+});
+
+// The path: places in the order the stays began, as a smooth curve (Catmull-Rom).
+const order = [...stays].sort((a, b) => a.from - b.from).map((s) => s.name).filter((n, i, all) => n !== all[i - 1]);
+const route = order.map((n) => places.find((p) => p.name === n)!.at);
+const f = (v: number) => v.toFixed(1);
+let path = `M${f(route[0][0])},${f(route[0][1])}`;
+for (let i = 0; i < route.length - 1; i++) {
+  const [a, b, c, d] = [route[Math.max(0, i - 1)], route[i], route[i + 1], route[Math.min(route.length - 1, i + 2)]];
+  path += ` C${f(b[0] + (c[0] - a[0]) / 6)},${f(b[1] + (c[1] - a[1]) / 6)} ${f(c[0] - (d[0] - b[0]) / 6)},${f(c[1] - (d[1] - b[1]) / 6)} ${f(c[0])},${f(c[1])}`;
+}
+
+const uniform = random(seed);
+const arcs = trips.map(({ from, to }) => {
+  const [a, b] = [project(from.at), project(to.at)], bend = 0.25 + uniform() * 0.15;
+  const [mx, my] = [(a[0] + b[0]) / 2 - (b[1] - a[1]) * bend, (a[1] + b[1]) / 2 + (b[0] - a[0]) * bend];
+  return { d: `M${f(a[0])},${f(a[1])} Q${f(mx)},${f(my)} ${f(b[0])},${f(b[1])}`, delay: uniform() * 6 };
+});
+const destinations = [...new Map(trips.map((t) => [t.to.name, t.to])).values()]
+  .filter((c) => !places.some((p) => p.name === c.name))
+  .map((c) => ({ name: c.name, at: project(c.at), count: trips.filter((t) => t.to.name === c.name).length }));
+const rings = [10, 100, 1000].filter((d) => d < maxDistance);
+
+// Labels to the right of their dots, pushed apart vertically where they would overlap.
+const labels = [
+  ...places.map((p) => ({ text: p.name, x: p.at[0] + p.size + 4, y: p.at[1] + 3, strong: true })),
+  ...destinations.map((d) => ({ text: d.name, x: d.at[0] + 6, y: d.at[1] + 3, strong: false })),
+];
+for (let round = 0; round < 80; round++) {
+  for (const a of labels) {
+    for (const b of labels) {
+      if (a === b) continue;
+      const overlapX = Math.min(a.x + a.text.length * 6.4, b.x + b.text.length * 6.4) - Math.max(a.x, b.x);
+      const overlapY = 12 - Math.abs(a.y - b.y);
+      if (overlapX > 0 && overlapY > 0) {
+        const push = (overlapY / 2) * Math.sign(a.y - b.y || 1);
+        a.y += push;
+        b.y -= push;
+      }
+    }
+  }
+}
+---
+
+<div class="fig travels">
+  <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`Places worked in and conference trips around ${home.name}`}>
+    {rings.map((d) => (
+      <g class="ring">
+        <circle cx={f(cx)} cy={f(cy)} r={f(scale(d))} />
+        <text x={f(cx - scale(d) * 0.5)} y={f(cy - scale(d) * 0.87 - 4)} text-anchor="middle">{d.toLocaleString("en")} km</text>
+      </g>
+    ))}
+    <text class="north" x={f(cx)} y={f(cy - R - 12)} text-anchor="middle">N</text>
+    {arcs.map((arc) => <path class="arc" d={arc.d} />)}
+    {arcs.map((arc) => <path class="arc-pulse" d={arc.d} pathLength="1" style={`animation-delay: ${arc.delay.toFixed(2)}s`} />)}
+    <path class="route" d={path} />
+    <path class="route-pulse" d={path} pathLength="1" />
+    {destinations.map(({ name, at: [x, y], count }) => (
+      <circle class="destination" cx={f(x)} cy={f(y)} r="3"><title>{name} · {count} {count === 1 ? "event" : "events"}</title></circle>
+    ))}
+    {places.map(({ name, at: [x, y], size }) => <circle class="place" cx={f(x)} cy={f(y)} r={f(size)}><title>{name}</title></circle>)}
+    {labels.map((l) => <text class:list={{ strong: l.strong }} x={f(l.x)} y={f(l.y)}>{l.text}</text>)}
+  </svg>
+</div>

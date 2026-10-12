@@ -116,26 +116,107 @@ a.pill:hover, .pill.solid, .pill[aria-current="page"] { background: var(--ink); 
 .preview-kind { font-weight: 700; color: var(--muted); }
 .preview-summary { color: var(--muted); }
 
-/* Field lines */
+/* Figures of the fields */
 
 .figure { margin: 0; }
 .narrow { display: none; }
-.fieldlines { position: relative; }
-.fieldlines svg { width: 100%; }
-.fieldlines .line {
+.option { display: none; }
+.figure-options { display: flex; flex-wrap: wrap; gap: 6px; border: 0; padding: 0; margin: 0 0 12px; }
+.figure-options legend { float: left; margin-right: 6px; padding-top: 0.3em; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.figure-options input { position: absolute; opacity: 0; pointer-events: none; }
+.figure-options label { cursor: pointer; }
+.figure-options label:has(input:checked) { background: var(--ink); color: var(--bg); }
+.figure-options label:has(input:focus-visible) { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+.fig { position: relative; }
+.fig svg { width: 100%; }
+.fig .line {
   fill: none; stroke: var(--ink); stroke-width: 0.8; opacity: 0.5; stroke-linecap: round;
   stroke-dasharray: 1; stroke-dashoffset: 1;
   animation: draw 1.8s ease-out forwards; animation-delay: calc(var(--i) * 0.08s);
   transition: opacity 0.25s, stroke-width 0.25s;
 }
 @keyframes draw { to { stroke-dashoffset: 0; } }
-.fieldlines .charge {
+@keyframes appear { from { opacity: 0; } }
+.fig .node {
   position: absolute; transform: translate(-50%, -50%);
   padding: 0.3em 0.9em; border: 1px solid var(--ink); border-radius: 999px;
   background: var(--bg); color: var(--ink); font-size: 0.76rem; font-weight: 600; white-space: nowrap; cursor: default;
   transition: background-color 0.2s, color 0.2s;
 }
-.fieldlines .charge:hover { background: var(--ink); color: var(--bg); }
+.fig .node:hover { background: var(--ink); color: var(--bg); }
+
+.fig text { font: 10.5px var(--mono); fill: var(--muted); stroke: var(--bg); stroke-width: 4px; paint-order: stroke; }
+
+/* Pulses travelling along paths: a short dash looping from start to end. */
+.pulse, .arc-pulse, .route-pulse, .collaborators .spike {
+  fill: none; stroke: var(--ink); stroke-width: 3; stroke-linecap: round;
+  stroke-dasharray: 0.035 0.965; stroke-dashoffset: 1; animation: travel 3s linear infinite;
+}
+@keyframes travel { to { stroke-dashoffset: 0; } }
+
+.potentials .trace { fill: none; stroke: var(--ink); stroke-width: 1; stroke-linejoin: round; }
+.potentials .ghost { opacity: 0.18; }
+.potentials .sweep-window { transform-box: fill-box; transform-origin: left; animation: reveal var(--sweep) linear infinite; }
+.potentials .playhead, .raster .playhead { stroke: var(--ink); stroke-width: 1; opacity: 0.5; animation: sweep var(--sweep) linear infinite; }
+.potentials .axis { stroke: var(--ink); stroke-width: 1; }
+@keyframes reveal { from { transform: scaleX(0); } }
+
+.connections .line { opacity: 1; stroke-dasharray: none; animation: appear 1.2s ease; }
+.connections .arc { fill: none; stroke: var(--ink); stroke-width: 0.9; opacity: 0.5; }
+.connections .pulse { animation-duration: 4s; }
+.connections .axis { stroke: var(--ink); stroke-width: 1; }
+.connections .tick { stroke: var(--ink); stroke-width: 1; opacity: 0.35; }
+.connections .item { cursor: pointer; }
+.connections .item :is(circle, rect) { stroke: var(--ink); stroke-width: 1.5; transform-box: fill-box; transform-origin: center; transition: transform 0.2s; }
+.connections .paper :is(circle, rect), .connections .output :is(circle, rect) { fill: var(--ink); }
+.connections .event :is(circle, rect), .connections .role :is(circle, rect) { fill: var(--bg); }
+.connections .item:hover :is(circle, rect) { transform: scale(1.6); }
+
+.world .meridian { stroke: var(--ink); stroke-width: 0.6; opacity: 0.15; }
+.world .ring circle { fill: none; stroke: var(--ink); stroke-width: 0.8; stroke-dasharray: 2 4; opacity: 0.35; }
+.world .link { stroke: var(--ink); stroke-width: 0.6; opacity: 0.25; }
+.world .pulse { stroke-width: 2.2; animation-duration: 3.5s; }
+.world .city { fill: var(--ink); }
+.world .home { fill: var(--bg); stroke: var(--ink); stroke-width: 2; }
+
+.ripples .ripple {
+  fill: none; stroke: var(--ink); stroke-width: 1; vector-effect: non-scaling-stroke;
+  transform-box: fill-box; transform-origin: center; animation: ripple 4s linear infinite;
+}
+.ripples .core { fill: var(--ink); }
+.ripples .grid line { stroke: var(--ink); stroke-width: 0.6; stroke-dasharray: 2 4; opacity: 0.3; }
+.ripples .axis { stroke: var(--ink); stroke-width: 1; }
+@keyframes ripple { from { transform: scale(1); opacity: 0.8; } to { transform: scale(var(--spread)); opacity: 0; } }
+
+.travels .ring circle { fill: none; stroke: var(--ink); stroke-width: 0.8; stroke-dasharray: 2 4; opacity: 0.35; }
+.travels .north { fill: var(--ink); }
+.travels .arc { fill: none; stroke: var(--ink); stroke-width: 0.7; opacity: 0.35; }
+.travels .arc-pulse { stroke-width: 2; animation-duration: 5s; }
+.travels .route { fill: none; stroke: var(--ink); stroke-width: 1.8; stroke-linecap: round; }
+.travels .route-pulse { stroke: var(--bg); stroke-width: 3.5; stroke-dasharray: 0.02 0.98; animation-duration: 9s; }
+.travels .place { fill: var(--ink); }
+.travels .strong { fill: var(--ink); }
+.travels .destination { fill: var(--bg); stroke: var(--ink); stroke-width: 1.2; }
+
+.raster .rate { fill: none; stroke: var(--ink); stroke-width: 1.4; }
+.raster .rate-area { fill: var(--ink); opacity: 0.06; }
+.raster .tick { stroke: var(--ink); stroke-width: 1.4; opacity: 0.45; animation: pass var(--sweep) linear infinite; }
+.raster a:hover .tick { opacity: 1; stroke-width: 3; }
+.raster .playhead { stroke: var(--ink); stroke-width: 1; opacity: 0.5; animation: sweep var(--sweep) linear infinite; }
+.raster .axis { stroke: var(--ink); stroke-width: 1; }
+@keyframes pass { 0% { opacity: 1; stroke-width: 3; } 6%, 100% { opacity: 0.45; stroke-width: 1.4; } }
+@keyframes sweep { to { transform: translateX(calc(var(--span) * 1px)); } }
+
+.collaborators .ring circle { fill: none; stroke: var(--ink); stroke-width: 0.8; stroke-dasharray: 2 4; opacity: 0.35; }
+.collaborators .axon { fill: none; stroke: var(--ink); stroke-width: 0.8; opacity: 0.4; }
+.collaborators .spike { stroke-width: 2.4; }
+.collaborators .dendrite { fill: none; stroke: var(--ink); stroke-width: 1.2; stroke-linecap: round; }
+.collaborators .soma { fill: var(--ink); stroke: var(--ink); stroke-width: 1.5; stroke-linejoin: round; }
+.collaborators .me .soma { fill: var(--bg); stroke-width: 2.5; }
+.collaborators .neuron { animation: appear 1.2s ease; }
+
+
 .mark .line { opacity: 0.75; animation-duration: 1.2s; }
 .mark .dot { fill: var(--bg); stroke: var(--ink); stroke-width: 1.2; }
 
@@ -165,5 +246,5 @@ a.pill:hover, .pill.solid, .pill[aria-current="page"] { background: var(--ink); 
 @media (max-width: 640px) {
   .wide { display: none; }
   .narrow { display: block; }
-  .fieldlines .charge { font-size: 0.68rem; }
+  .fig .node { font-size: 0.68rem; }
 }

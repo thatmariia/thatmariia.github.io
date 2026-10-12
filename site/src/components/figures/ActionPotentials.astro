@@ -1,0 +1,56 @@
+---
+// Activity as intracellular recordings: one membrane-potential trace per kind of activity, with an
+// action potential at the date of every item over a slightly noisy resting potential. An
+// oscilloscope sweep keeps redrawing the traces.
+import { firstYear, month, now } from "../../lib/career";
+import { data, type Entry, type Work } from "../../lib/data";
+import { points, random, type Point } from "../../lib/random";
+interface Props { seed: number; width: number; height: number }
+const { seed, width, height } = Astro.props;
+
+const uniform = random(seed);
+const worksIn = (sections: string[]) => sections.flatMap((s) => ((data as any)[s] as Work[]).map((w) => w.year * 12 + Math.floor(uniform() * 12)));
+const entriesIn = (sections: string[]) => sections.flatMap((s) => ((data as any)[s] as Entry[]).flatMap((e) => e.periods.map((p) => month(p.start!))));
+const rows = [
+  { label: "papers & preprints", spikes: worksIn(["publications", "preprints"]) },
+  { label: "software & data", spikes: worksIn(["software", "datasets", "posters", "presentations", "reports", "websites", "theses"]) },
+  { label: "talks, posters & outreach", spikes: entriesIn(["events", "outreach"]) },
+  { label: "roles", spikes: entriesIn(["research", "teaching", "leadership", "service", "other"]) },
+];
+
+const [start, end] = [firstYear * 12, now + 1];
+const [left, right, top, bottom] = [14, width - 14, 10, height - 30];
+const band = (bottom - top) / rows.length;
+const x = (m: number) => left + ((m - start) / (end - start)) * (right - left);
+const width1 = Math.max(4, (right - left) / 180);  // width of one action potential, in figure units
+
+// Action potential shape: fast upstroke and overshoot, then an after-hyperpolarisation.
+const ap = (u: number) => (u < -0.4 ? 0 : Math.exp(-(((u - 0.1) / 0.18) ** 2)) - 0.28 * Math.exp(-(((u - 0.75) / 0.4) ** 2)));
+const traces = rows.map(({ spikes }, i) => {
+  const rest = top + band * (i + 0.72), amplitude = band * 0.62;
+  const times = spikes.map(x);
+  let noise = 0;
+  const trace: Point[] = [];
+  for (let px = left; px <= right; px += 0.6) {
+    noise = 0.9 * noise + (uniform() - 0.5) * 0.35;
+    const v = times.reduce((sum, t) => sum + ap((px - t) / width1), 0);
+    trace.push([px, rest - amplitude * Math.min(1.15, v) + noise]);
+  }
+  return trace;
+});
+const years = Array.from({ length: Math.floor(now / 12) - firstYear + 1 }, (_, i) => firstYear + i)
+  .filter((y, i, all) => ((y - firstYear) % (width > height ? 2 : 4) === 0 && all.at(-1)! - y >= 2) || y === all.at(-1));
+const id = `ap-${seed}-${width}`;
+---
+
+<div class="fig potentials" style={`--sweep: 12s; --span: ${right - left}`}>
+  <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`Activity since ${firstYear} as membrane-potential recordings: ${rows.map((r) => `${r.spikes.length} ${r.label}`).join(", ")}`}>
+    <clipPath id={id}><rect class="sweep-window" x={left} y="0" width={right - left} height={height} /></clipPath>
+    {rows.map((row, i) => <text class="label" x={left} y={top + band * i + 10}>{row.label}</text>)}
+    {traces.map((trace) => <polyline class="trace ghost" points={points(trace)} />)}
+    <g clip-path={`url(#${id})`}>{traces.map((trace) => <polyline class="trace" points={points(trace)} />)}</g>
+    <line class="playhead" x1={left} x2={left} y1={top} y2={bottom} />
+    <line class="axis" x1={left} y1={bottom + 6} x2={right} y2={bottom + 6} />
+    {years.map((y, i) => <text x={x(y * 12).toFixed(1)} y={bottom + 22} text-anchor={i === 0 ? "start" : "middle"}>{y}</text>)}
+  </svg>
+</div>

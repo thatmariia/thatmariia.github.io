@@ -51,7 +51,7 @@ const KIND: Record<string, string> = {
 export const PAGES = [
   ["/", "Home"], ["/publications/", "Publications"], ["/open-science/", "Open science"], ["/path/", "Path"], ["/events/", "Events"],
 ] as const;
-const PAGE_OF: Record<string, string> = {
+export const PAGE_OF: Record<string, string> = {
   publications: "/publications/", preprints: "/publications/",
   software: "/open-science/", datasets: "/open-science/", posters: "/open-science/", presentations: "/open-science/",
   reports: "/open-science/", websites: "/open-science/", theses: "/open-science/",

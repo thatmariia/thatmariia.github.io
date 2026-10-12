@@ -1,6 +1,6 @@
 ---
-// The home-page figure. TEMPORARY: all options are rendered and pill buttons (plain radio
-// inputs, no JavaScript) switch between them until one is chosen.
+// The figure at the top of a page. A page names the figures that suit its data; while choosing,
+// pill buttons (plain radio inputs, no JavaScript) switch between them when there is more than one.
 import ActionPotentials from "./figures/ActionPotentials.astro";
 import Collaborators from "./figures/Collaborators.astro";
 import Dendrite from "./figures/Dendrite.astro";
@@ -11,32 +11,37 @@ import Spiral from "./figures/Spiral.astro";
 import Travels from "./figures/Travels.astro";
 import World from "./figures/World.astro";
 
-const options = [
-  { key: "raster", label: "Raster", Figure: Raster, seed: 5 },
-  { key: "potentials", label: "Action potentials", Figure: ActionPotentials, seed: 5 },
-  { key: "collaborators", label: "Collaborators", Figure: Collaborators, seed: 7 },
-  { key: "projects", label: "Projects", Figure: Projects, seed: 3 },
-  { key: "spiral", label: "Spiral", Figure: Spiral, seed: 2 },
-  { key: "dendrite", label: "Dendrite", Figure: Dendrite, seed: 4 },
-  { key: "places", label: "Places", Figure: Places, seed: 4 },
-  { key: "travels", label: "Travels", Figure: Travels, seed: 2 },
-  { key: "world", label: "World", Figure: World, seed: 4 },
-];
-const show = options.map(({ key }) => `.figure:has(input[value="${key}"]:checked) .option[data-option="${key}"] { display: block; }`).join("\n");
+const FIGURES = {
+  spiral: { label: "Spiral", Figure: Spiral, seed: 2 },
+  potentials: { label: "Action potentials", Figure: ActionPotentials, seed: 5 },
+  raster: { label: "Raster", Figure: Raster, seed: 5 },
+  projects: { label: "Projects", Figure: Projects, seed: 3 },
+  collaborators: { label: "Collaborators", Figure: Collaborators, seed: 7 },
+  world: { label: "World", Figure: World, seed: 4 },
+  dendrite: { label: "Dendrite", Figure: Dendrite, seed: 4 },
+  places: { label: "Places", Figure: Places, seed: 4 },
+  travels: { label: "Travels", Figure: Travels, seed: 2 },
+};
+interface Props { show: (keyof typeof FIGURES)[] }
+const { show } = Astro.props;
+const options = show.map((key) => ({ key, ...FIGURES[key] }));
+const visible = options.map(({ key }) => `.figure:has(input[value="${key}"]:checked) .option[data-option="${key}"] { display: block; }`).join("\n");
 ---
 
 <figure class="figure">
-  <fieldset class="figure-options">
-    <legend>Figure</legend>
-    {options.map(({ key, label }, i) => (
-      <label class="pill"><input type="radio" name="figure" value={key} checked={i === 0} />{label}</label>
-    ))}
-  </fieldset>
+  {options.length > 1 && (
+    <fieldset class="figure-options">
+      <legend>Figure</legend>
+      {options.map(({ key, label }, i) => (
+        <label class="pill"><input type="radio" name="figure" value={key} checked={i === 0} />{label}</label>
+      ))}
+    </fieldset>
+  )}
   {options.map(({ key, Figure, seed }) => (
-    <div class="option" data-option={key}>
+    <div class="option" data-option={key} style={options.length === 1 ? "display: block" : undefined}>
       <div class="wide"><Figure seed={seed} width={960} height={460} /></div>
       <div class="narrow"><Figure seed={seed} width={400} height={560} /></div>
     </div>
   ))}
-  <style is:inline set:html={show} />
+  <style is:inline set:html={visible} />
 </figure>

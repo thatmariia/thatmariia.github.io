@@ -1,5 +1,4 @@
 ---
-import Figure from "../components/Figure.astro";
 import WorkItem from "../components/WorkItem.astro";
 import Base from "../layouts/Base.astro";
 import { data, markup, outputSections, type Work } from "../lib/data";
@@ -11,8 +10,7 @@ const recent = [data.publications, data.preprints, ...outputSections.map((s) => 
   .slice(0, 4) as Work[];
 ---
 
-<Base>
-  <Figure />
+<Base figures={["spiral", "potentials", "raster"]}>
   <div class="prose intro" set:html={markup(data.profile.bio)} />
   <section class="block">
     <h2>Recent work</h2>

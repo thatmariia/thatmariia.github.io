@@ -966,7 +966,7 @@
       ]
     }
   ],
-  "beyond": [
+  "publications": [
     {
       "id": "software-curation-loop",
       "title": "Completing the software curation loop across registries and repositories",
@@ -1493,6 +1493,36 @@
         "tue",
         "maastricht-ccn-lab"
       ]
+    }
+  ],
+  "beyond": [
+    {
+      "title": "Sports",
+      "note": "beach volleyball (Dutch NBC; coach at De Beachvolleybalschool), CrossFit"
+    },
+    {
+      "title": "Travel",
+      "note": "30+ countries on 5 continents, including Antarctica; hiking"
+    },
+    {
+      "title": "Acting & filmmaking",
+      "note": "acting school, LAMDA screen acting, film courses"
+    },
+    {
+      "title": "Art & design",
+      "note": "graphic design; 12 years of applied arts and fashion (art school, Victor Nikolaev's studio)"
+    },
+    {
+      "title": "Photography"
+    },
+    {
+      "title": "Courses",
+      "note": "science communication (Dr. Barry Fitzgerald), pitching (Mark Robinson, TEDx; Honors Academy)"
+    },
+    {
+      "title": "Volunteering",
+      "note": "Support initiatives for Ukraine — global map of aid drop-off points (featured by BBC), visuals for Dance for Ukraine",
+      "since": "2022-02"
     }
   ],
   "skills": [

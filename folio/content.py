@@ -43,7 +43,9 @@ class Profile(Model):
     headline: Text
     bio: Text
     author_names: list[str] = Field(min_length=1)  # highlighted in author lists
+    location: str | None = None  # where you live, e.g. "The Hague, NL"
     links: list[Link] = []
+    walk: list[str] = []  # fields passed through, in order; drawn on the website
     email: str | None = None
     phone: str | None = None
 

@@ -19,7 +19,7 @@ def test_no_private_value_reaches_the_output(public):
 
 
 def test_private_profile_fields_are_dropped(public):
-    assert public["profile"].keys() == {"name", "headline", "bio", "author_names", "links"}
+    assert public["profile"].keys() == {"name", "headline", "bio", "author_names", "location", "links", "walk"}
 
 
 def test_hidden_items_are_dropped(public):

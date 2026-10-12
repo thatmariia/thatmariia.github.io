@@ -1,0 +1,57 @@
+---
+// Activity over the years as bundles of oscillations, one bundle per kind of activity. A bundle's
+// amplitude follows that activity per year, and its curves fall into sync when it is high and
+// drift apart when it is low.
+import { events, firstYear, lastYear, roles, works } from "../../lib/career";
+import { points, random, type Point } from "../../lib/random";
+interface Props { seed: number; width: number; height: number }
+const { seed, width, height } = Astro.props;
+
+const years = Array.from({ length: lastYear - firstYear + 1 }, (_, i) => firstYear + i);
+const perYear = (count: (year: number) => number) => years.map(count);
+const kinds = [
+  { label: "publications", counts: perYear((y) => works.filter((w) => ["publications", "preprints"].includes(w.kind) && w.year === y).length) },
+  { label: "open science", counts: perYear((y) => works.filter((w) => !["publications", "preprints"].includes(w.kind) && w.year === y).length) },
+  { label: "events", counts: perYear((y) => events.filter((e) => Math.floor(e.start / 12) === y).length) },
+  { label: "roles", counts: perYear((y) => roles.filter((r) => r.span[0] < (y + 1) * 12 && r.span[1] >= y * 12).length) },
+];
+
+const uniform = random(seed);
+const [left, right, top, bottom] = [14, width - 14, 14, height - 30];
+const band = (bottom - top) / kinds.length;
+const level = (counts: number[], t: number) => {  // smooth interpolation between yearly values, scaled to 0–1
+  const x = t * (counts.length - 1), i = Math.min(counts.length - 2, Math.floor(x)), s = (1 - Math.cos(Math.PI * (x - i))) / 2;
+  return (counts[i] * (1 - s) + counts[i + 1] * s) / Math.max(1, ...counts);
+};
+const cycles = width > height ? 22 : 12;
+const bundles = kinds.map(({ label, counts }, row) => {
+  const middle = top + band * (row + 0.5);
+  const curves = Array.from({ length: 7 }, () => {
+    const phase = uniform() * 2 * Math.PI, detune = (uniform() - 0.5) * 0.12;
+    const curve: Point[] = [];
+    for (let k = 0; k <= 500; k++) {
+      const t = k / 500, a = level(counts, t);
+      const theta = 2 * Math.PI * cycles * t * (1 + detune * (1 - a)) + phase * (1 - a);
+      curve.push([left + t * (right - left), middle - band * 0.42 * (0.08 + 0.92 * a) * Math.sin(theta)]);
+    }
+    return curve;
+  });
+  return { label, middle, curves };
+});
+const every = width > height ? 2 : 4;
+const ticks = years.filter((y) => ((y - firstYear) % every === 0 && lastYear - y >= every / 2) || y === lastYear);
+const xOf = (year: number) => left + ((year - firstYear) / (lastYear - firstYear)) * (right - left);
+---
+
+<div class="fig activity">
+  <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`Activity per year from ${firstYear} to ${lastYear}: ${kinds.map((k) => k.label).join(", ")}`}>
+    {bundles.map(({ label, middle, curves }, row) => (
+      <g>
+        {curves.map((curve, i) => <polyline class="line" points={points(curve)} style={`--i: ${row * 2 + (i % 3)}`} pathLength="1" />)}
+        <text class="label" x={left} y={(middle - band * 0.42 - 4).toFixed(1)}>{label}</text>
+      </g>
+    ))}
+    <line class="axis" x1={left} y1={bottom + 8} x2={right} y2={bottom + 8} />
+    {ticks.map((y) => <text class="tick" x={xOf(y).toFixed(1)} y={bottom + 24} text-anchor={y === firstYear ? "start" : y === lastYear ? "end" : "middle"}>{y}</text>)}
+  </svg>
+</div>

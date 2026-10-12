@@ -1,27 +1,54 @@
 ---
-// EEG scalp topographies at successive times: potential isocontours (solid positive, faint
-// negative) of a rotating dipole-like pattern inside a head outline with electrode positions.
+// Career phases as EEG scalp maps. Each electrode is a kind of activity; the potential peaks where
+// there was most of it in that phase. Maps are average-referenced like real EEG (solid contours
+// above the average, faint below) and share one scale so phases can be compared.
+import { events, firstYear, lastYear, roles, works } from "../../lib/career";
 interface Props { seed: number; width: number; height: number }
 const { seed, width, height } = Astro.props;
 
-const f = (v: number) => v.toFixed(1);
-const wide = width > height, heads = wide ? 3 : 2;
-const [cellW, cellH] = wide ? [width / heads, height] : [width, height / heads];
-const radius = Math.min(cellW, cellH) * 0.34;
+const phases = [
+  { label: `${firstYear}–2017`, from: firstYear, to: 2017 },
+  { label: "2018–2023", from: 2018, to: 2023 },
+  { label: `2024–${lastYear === new Date().getFullYear() ? "now" : lastYear}`, from: 2024, to: lastYear },
+];
+const inPhase = (year: number, p: (typeof phases)[number]) => year >= p.from && year <= p.to;
+const rolesIn = (sections: string[], p: (typeof phases)[number]) =>
+  roles.filter((r) => sections.includes(r.section) && r.span[0] < (p.to + 1) * 12 && r.span[1] >= p.from * 12).length;
+const sites = [
+  { code: "PA", label: "papers", count: (p: any) => works.filter((w) => w.kind === "publications" && inPhase(w.year, p)).length },
+  { code: "PR", label: "preprints", count: (p: any) => works.filter((w) => w.kind === "preprints" && inPhase(w.year, p)).length },
+  { code: "SW", label: "software & data", count: (p: any) => works.filter((w) => !["publications", "preprints"].includes(w.kind) && inPhase(w.year, p)).length },
+  { code: "TK", label: "talks & posters", count: (p: any) => events.filter((e) => e.section === "events" && inPhase(Math.floor(e.start / 12), p)).length },
+  { code: "OU", label: "outreach", count: (p: any) => events.filter((e) => e.section === "outreach" && inPhase(Math.floor(e.start / 12), p)).length },
+  { code: "LE", label: "leadership", count: (p: any) => rolesIn(["leadership", "service", "other"], p) },
+  { code: "TE", label: "teaching", count: (p: any) => rolesIn(["teaching"], p) },
+].map((site, i, all) => {
+  const a = -Math.PI / 2 + (2 * Math.PI * i) / all.length;
+  return { ...site, u: 0.58 * Math.cos(a), v: 0.58 * Math.sin(a), angle: a };
+});
+const counts = phases.map((p) => sites.map((s) => s.count(p)));
+const peak = Math.sqrt(Math.max(1, ...counts.flat()));
 
-// Potential on the unit disc: a positive and a negative blob opposite each other, plus a weaker
-// pair, rotating from one panel to the next.
-function potential(u: number, v: number, k: number) {
-  const blob = (x: number, y: number, s: number) => Math.exp(-((u - x) ** 2 + (v - y) ** 2) / (2 * s * s));
-  const a = 0.6 + seed * 0.3 + k * 0.85, b = a + 2.1;
-  return blob(0.45 * Math.cos(a), 0.45 * Math.sin(a), 0.32) - blob(-0.45 * Math.cos(a), -0.45 * Math.sin(a), 0.32)
-    + 0.45 * (blob(0.55 * Math.cos(b), 0.55 * Math.sin(b), 0.22) - blob(-0.55 * Math.cos(b), -0.55 * Math.sin(b), 0.22));
-}
+// Potential: one Gaussian bump per electrode, weighted by √count, minus its mean over the scalp.
+const raw = (u: number, v: number, c: number[]) =>
+  sites.reduce((sum, s, i) => sum + (Math.sqrt(c[i]) / peak) * Math.exp(-((u - s.u) ** 2 + (v - s.v) ** 2) / (2 * 0.36 ** 2)), 0);
+const n = 64, step = 2 / n;
+const fields = counts.map((c) => {
+  const grid = Array.from({ length: n + 1 }, (_, i) => Array.from({ length: n + 1 }, (_, j) => raw(-1 + j * step, -1 + i * step, c)));
+  const inside = grid.flatMap((row, i) => row.filter((_, j) => (-1 + j * step) ** 2 + (-1 + i * step) ** 2 <= 1));
+  const mean = inside.reduce((s, x) => s + x, 0) / inside.length;
+  return grid.map((row) => row.map((x) => x - mean));
+});
+const top = Math.max(...fields.flat(2).map(Math.abs));
+const levels = [-0.75, -0.55, -0.35, -0.15, 0.15, 0.35, 0.55, 0.75].map((l) => l * top);
 
-// Marching squares over a grid on [-1, 1]², one path per sign of the contour level.
-function contours(k: number, cx: number, cy: number) {
-  const n = 64, step = 2 / n, levels = [-0.75, -0.6, -0.45, -0.3, -0.15, 0.15, 0.3, 0.45, 0.6, 0.75];
-  const grid = Array.from({ length: n + 1 }, (_, i) => Array.from({ length: n + 1 }, (_, j) => potential(-1 + j * step, -1 + i * step, k)));
+const wide = width > height, keyHeight = wide ? 26 : 60;
+const [cellW, cellH] = wide ? [width / 3, height - keyHeight] : [width, (height - keyHeight) / 3];
+const radius = Math.min(cellW, cellH) * (wide ? 0.3 : 0.3);
+const f = (x: number) => x.toFixed(1);
+
+// Marching squares: line segments where the potential crosses each level, split by sign.
+function contours(grid: number[][], cx: number, cy: number) {
   const out = { positive: "", negative: "" };
   const xy = (u: number, v: number) => `${f(cx + u * radius)},${f(cy + v * radius)}`;
   for (const level of levels) {
@@ -31,7 +58,6 @@ function contours(k: number, cx: number, cy: number) {
         const [u, v] = [-1 + j * step, -1 + i * step];
         const c = [grid[i][j], grid[i][j + 1], grid[i + 1][j + 1], grid[i + 1][j]];
         const corners = [[u, v], [u + step, v], [u + step, v + step], [u, v + step]];
-        // Points where the level crosses each edge of the cell.
         const crossings: number[][] = [];
         for (let e = 0; e < 4; e++) {
           const [a, b] = [c[e], c[(e + 1) % 4]];
@@ -40,7 +66,7 @@ function contours(k: number, cx: number, cy: number) {
             crossings.push([p[0] + t * (q[0] - p[0]), p[1] + t * (q[1] - p[1])]);
           }
         }
-        for (let s = 0; s + 1 < crossings.length; s += 2) d += `M${xy(...(crossings[s] as [number, number]))}L${xy(...(crossings[s + 1] as [number, number]))}`;
+        for (let s = 0; s + 1 < crossings.length; s += 2) d += `M${xy(crossings[s][0], crossings[s][1])}L${xy(crossings[s + 1][0], crossings[s + 1][1])}`;
       }
     }
     out[level > 0 ? "positive" : "negative"] += d;
@@ -48,17 +74,15 @@ function contours(k: number, cx: number, cy: number) {
   return out;
 }
 
-const electrodes = [[0, 1], [0.33, 8], [0.66, 12], [0.92, 14]].flatMap(([r, count]) =>
-  Array.from({ length: count }, (_, i) => [r * Math.cos((2 * Math.PI * i) / count - Math.PI / 2), r * Math.sin((2 * Math.PI * i) / count - Math.PI / 2)]));
-const panels = Array.from({ length: heads }, (_, k) => {
-  const [cx, cy] = wide ? [cellW * (k + 0.5), height * 0.47] : [width / 2, cellH * (k + 0.47)];
-  return { k, cx, cy, ...contours(k, cx, cy) };
+const panels = phases.map((phase, k) => {
+  const [cx, cy] = wide ? [cellW * (k + 0.5), height * 0.46] : [width / 2, cellH * (k + 0.46)];
+  return { phase, k, cx, cy, ...contours(fields[k], cx, cy) };
 });
 ---
 
 <div class="fig topography">
-  <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="EEG scalp topographies at successive moments">
-    {panels.map(({ k, cx, cy, positive, negative }) => (
+  <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`Activity by career phase (${phases.map((p) => p.label).join(", ")}) as scalp maps`}>
+    {panels.map(({ phase, k, cx, cy, positive, negative }) => (
       <g>
         <clipPath id={`scalp-${seed}-${width}-${k}`}><circle cx={cx} cy={cy} r={radius} /></clipPath>
         <g clip-path={`url(#scalp-${seed}-${width}-${k})`}>
@@ -69,9 +93,13 @@ const panels = Array.from({ length: heads }, (_, k) => {
         <path class="head" d={`M${f(cx - radius * 0.13)},${f(cy - radius * 0.99)} L${f(cx)},${f(cy - radius * 1.13)} L${f(cx + radius * 0.13)},${f(cy - radius * 0.99)}`} />
         <path class="head" d={`M${f(cx - radius)},${f(cy - radius * 0.14)} q${f(-radius * 0.09)},${f(radius * 0.02)} ${f(-radius * 0.07)},${f(radius * 0.14)} t${f(radius * 0.07)},${f(radius * 0.14)}`} />
         <path class="head" d={`M${f(cx + radius)},${f(cy - radius * 0.14)} q${f(radius * 0.09)},${f(radius * 0.02)} ${f(radius * 0.07)},${f(radius * 0.14)} t${f(-radius * 0.07)},${f(radius * 0.14)}`} />
-        {electrodes.map(([u, v]) => <circle class="electrode" cx={f(cx + u * radius)} cy={f(cy + v * radius)} r="1.6" />)}
-        <text x={cx} y={cy + radius + 26} text-anchor="middle">{k * 100} ms</text>
+        {sites.map((s) => <circle class="electrode" cx={f(cx + s.u * radius)} cy={f(cy + s.v * radius)} r="2.2"><title>{s.label}: {counts[k][sites.indexOf(s)]}</title></circle>)}
+        {sites.map((s) => <text class="code" x={f(cx + s.u * radius * 1.32)} y={f(cy + s.v * radius * 1.32 + 3)} text-anchor="middle">{s.code}</text>)}
+        <text class="phase" x={cx} y={cy + radius + 22} text-anchor="middle">{phase.label}</text>
       </g>
+    ))}
+    {(wide ? [sites] : [sites.slice(0, 3), sites.slice(3, 5), sites.slice(5)]).map((line, row) => (
+      <text class="key" x={width / 2} y={height - keyHeight + 14 + row * 16} text-anchor="middle">{line.map((s) => `${s.code} ${s.label}`).join("  ·  ")}</text>
     ))}
   </svg>
 </div>

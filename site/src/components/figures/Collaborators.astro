@@ -1,0 +1,102 @@
+---
+// The co-author network as neurons: one neuron per recurring collaborator (at least two shared
+// works) plus one for me, axons for co-authorship, and spikes that fire more often along stronger
+// collaborations. Hovering a neuron shows the name and the number of shared works.
+import { myWorks } from "../../lib/career";
+import { isMe } from "../../lib/data";
+import { random, type Point } from "../../lib/random";
+interface Props { seed: number; width: number; height: number }
+const { seed, width, height } = Astro.props;
+
+// The same person can be written differently ("A. Mendes", "A.I. da Silva Mendes"): key on the
+// first initial and the last word of the surname, and show the most common spelling.
+const key = (name: string) => (isMe(name) ? "me" : `${name[0]} ${name.split(/[\s.]+/).filter(Boolean).at(-1)}`);
+// A preprint and its dataset can share a title and authors: count each title once.
+const distinct = [...new Map(myWorks.map((w) => [w.title.toLowerCase(), w])).values()];
+const spellings = new Map<string, Map<string, number>>();
+const shared = new Map<string, number>();
+for (const work of distinct) {
+  for (const author of new Set(work.authors.map(key))) shared.set(author, (shared.get(author) ?? 0) + 1);
+  for (const author of work.authors) {
+    const counts = spellings.get(key(author)) ?? new Map();
+    spellings.set(key(author), counts.set(author, (counts.get(author) ?? 0) + 1));
+  }
+}
+const people = ["me", ...[...shared].filter(([k, n]) => k !== "me" && n >= 2).sort((a, b) => b[1] - a[1]).map(([k]) => k)];
+const name = (k: string) => [...spellings.get(k)!].sort((a, b) => b[1] - a[1])[0][0];
+
+// Edges: pairs of these people who appear on the same work, weighted by how often.
+const weights = new Map<string, number>();
+for (const work of distinct) {
+  const present = [...new Set(work.authors.map(key))].filter((k) => people.includes(k)).map((k) => people.indexOf(k));
+  for (let a = 0; a < present.length; a++) {
+    for (let b = a + 1; b < present.length; b++) {
+      const pair = [present[a], present[b]].sort((x, y) => x - y).join(" ");
+      weights.set(pair, (weights.get(pair) ?? 0) + 1);
+    }
+  }
+}
+const edges = [...weights].map(([pair, w]) => ({ pair: pair.split(" ").map(Number), w }));
+
+// Force-directed layout (Fruchterman–Reingold), then fitted to the figure.
+const uniform = random(seed);
+const k = Math.sqrt((width * height) / people.length) * 0.75;
+const pos: Point[] = people.map(() => [uniform() * width, uniform() * height]);
+for (let iteration = 0; iteration < 400; iteration++) {
+  const shift = pos.map(() => [0, 0]);
+  for (let i = 0; i < pos.length; i++) {
+    for (let j = 0; j < pos.length; j++) {
+      if (i === j) continue;
+      const [dx, dy] = [pos[i][0] - pos[j][0], pos[i][1] - pos[j][1]], d = Math.max(1, Math.hypot(dx, dy));
+      shift[i][0] += (dx / d) * (k * k) / d;
+      shift[i][1] += (dy / d) * (k * k) / d;
+    }
+  }
+  for (const { pair: [i, j], w } of edges) {
+    const [dx, dy] = [pos[i][0] - pos[j][0], pos[i][1] - pos[j][1]], d = Math.max(1, Math.hypot(dx, dy));
+    const pull = ((d * d) / k) * (0.4 + 0.15 * w);
+    shift[i][0] -= (dx / d) * pull; shift[i][1] -= (dy / d) * pull;
+    shift[j][0] += (dx / d) * pull; shift[j][1] += (dy / d) * pull;
+  }
+  const temperature = (Math.min(width, height) / 8) * (1 - iteration / 400) + 1;
+  pos.forEach((p, i) => {
+    const d = Math.max(1, Math.hypot(shift[i][0], shift[i][1]));
+    p[0] += (shift[i][0] / d) * Math.min(d, temperature);
+    p[1] += (shift[i][1] / d) * Math.min(d, temperature);
+  });
+}
+const [xs, ys] = [pos.map((p) => p[0]), pos.map((p) => p[1])];
+const pad = 40;
+const fit = (p: Point): Point => [
+  pad + ((p[0] - Math.min(...xs)) / (Math.max(...xs) - Math.min(...xs) || 1)) * (width - 2 * pad),
+  pad + ((p[1] - Math.min(...ys)) / (Math.max(...ys) - Math.min(...ys) || 1)) * (height - 2 * pad),
+];
+const at = pos.map(fit);
+const radius = people.map((p) => 3.5 + Math.sqrt(shared.get(p) ?? 1) * 1.1);
+
+const f = (v: number) => v.toFixed(1);
+const axons = edges.map(({ pair: [i, j], w }) => {
+  const [a, b] = [at[i], at[j]], [dx, dy] = [b[0] - a[0], b[1] - a[1]], bend = (uniform() - 0.5) * 0.5;
+  const d = `M${f(a[0])},${f(a[1])} C${f(a[0] + dx / 3 - dy * bend)},${f(a[1] + dy / 3 + dx * bend)} ${f(a[0] + (2 * dx) / 3 + dy * bend)},${f(a[1] + (2 * dy) / 3 - dx * bend)} ${f(b[0])},${f(b[1])}`;
+  return { d, w, delay: uniform() * 6 };
+});
+const dendrites = at.map(([x, y], i) => Array.from({ length: 4 }, (_, n) => {
+  const a = (2 * Math.PI * n) / 4 + uniform() * 1.2, l = radius[i] + 6 + uniform() * 7;
+  return `M${f(x)},${f(y)} Q${f(x + Math.cos(a + 0.4) * l * 0.6)},${f(y + Math.sin(a + 0.4) * l * 0.6)} ${f(x + Math.cos(a) * l)},${f(y + Math.sin(a) * l)}`;
+}).join(" "));
+---
+
+<div class="fig collaborators">
+  <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`Co-author network with ${people.length - 1} recurring collaborators`}>
+    {axons.map((axon) => <path class="axon" d={axon.d} stroke-width={(0.5 + axon.w * 0.25).toFixed(2)} />)}
+    {axons.map((axon) => (
+      <path class="spike" d={axon.d} pathLength="1" style={`animation-duration: ${(9 / (1 + axon.w)).toFixed(2)}s; animation-delay: ${axon.delay.toFixed(2)}s`} />
+    ))}
+    {dendrites.map((d) => <path class="dendrite" d={d} />)}
+    {at.map(([x, y], i) => (
+      <circle class:list={["soma", { me: i === 0 }]} cx={f(x)} cy={f(y)} r={radius[i].toFixed(1)}>
+        <title>{i === 0 ? "Me" : `${name(people[i])} · ${shared.get(people[i])} shared works`}</title>
+      </circle>
+    ))}
+  </svg>
+</div>

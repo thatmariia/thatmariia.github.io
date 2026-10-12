@@ -1,0 +1,70 @@
+---
+// Awards as trophies: each is a wireframe surface of revolution whose profile (base, stem, cup) is
+// generated from the award's date, slowly rotating. Names below link to the awards.
+import { month } from "../../lib/career";
+import { data, refs, type Entry } from "../../lib/data";
+interface Props { seed: number; width: number; height: number }
+const { width, height } = Astro.props;
+
+const awards = (data.awards as Entry[]).map((a) => ({ t: month(a.periods[0].start!), title: a.title!, href: a.id && refs[a.id] ? refs[a.id].href : "/awards/" }))
+  .sort((a, b) => a.t - b.t);
+const columns = width > height ? awards.length : 2;
+const rows = Math.ceil(awards.length / columns);
+const [cellW, cellH] = [width / columns, height / rows];
+const size = Math.min(cellW * 0.42, (cellH - 40) * 0.45);
+// Profile r(z) for z from 0 (base) to 1 (rim), shaped by the award's month and year.
+const profiles = awards.map((a) => {
+  const cup = 0.55 + ((a.t % 12) / 12) * 0.4, stem = 0.12 + ((Math.floor(a.t / 12) % 4) / 4) * 0.1, waist = 0.35 + ((a.t % 5) / 5) * 0.2;
+  return Array.from({ length: 25 }, (_, k) => {
+    const z = k / 24;
+    const r = z < 0.08 ? 0.62 : z < 0.14 ? 0.62 - (z - 0.08) * 7 : z < waist ? stem : stem + (cup - stem) * Math.sin(((z - waist) / (1 - waist)) * Math.PI * 0.5) ** 0.8;
+    return [z, r];
+  });
+});
+const shapes = awards.map((a, i) => ({ ...a, cx: cellW * ((i % columns) + 0.5), cy: cellH * Math.floor(i / columns) + 10 + size * 2.1, profile: profiles[i] }));
+const short = (s: string) => (s.length > 24 ? `${s.slice(0, 22).trim()}…` : s);
+const f = (v: number) => v.toFixed(1);
+---
+
+<div class="fig trophies" data-size={size}>
+  <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`${awards.length} awards as rotating trophies`}>
+    {shapes.map((s) => (
+      <a href={s.href} class="trophy" data-cx={s.cx} data-cy={s.cy} data-profile={JSON.stringify(s.profile)}>
+        <title>{s.title}</title>
+        {s.profile.filter((_, k) => k % 3 === 0 || k === 24).map(([z, r]) => (
+          <ellipse class="parallel" cx={f(s.cx)} cy={f(s.cy - z * size * 2)} rx={f(r * size)} ry={f(r * size * 0.22)} />
+        ))}
+        <g class="meridians"></g>
+        <text x={f(s.cx)} y={f(s.cy + 22)} text-anchor="middle">{short(s.title)}</text>
+        <text class="year" x={f(s.cx)} y={f(s.cy + 35)} text-anchor="middle">{Math.floor(s.t / 12)}</text>
+      </a>
+    ))}
+  </svg>
+</div>
+
+<script>
+  // Meridians of each surface of revolution, redrawn as the trophy turns (only while on screen).
+  for (const figure of document.querySelectorAll<HTMLElement>(".fig.trophies")) {
+    const size = Number(figure.dataset.size);
+    const trophies = [...figure.querySelectorAll<SVGElement>(".trophy")].map((t) => ({
+      group: t.querySelector(".meridians")!, cx: Number(t.dataset.cx), cy: Number(t.dataset.cy), profile: JSON.parse(t.dataset.profile!) as number[][],
+    }));
+    const draw = (phase: number) => {
+      for (const { group, cx, cy, profile } of trophies) {
+        group.innerHTML = Array.from({ length: 10 }, (_, k) => {
+          const angle = phase + (k * Math.PI) / 5, front = Math.cos(angle) > 0;
+          const d = profile.map(([z, r], i) => `${i ? "L" : "M"}${(cx + Math.sin(angle) * r * size).toFixed(1)},${(cy - z * size * 2 + Math.cos(angle) * r * size * 0.22).toFixed(1)}`).join("");
+          return `<path class="${front ? "front" : "back"}" d="${d}" />`;
+        }).join("");
+      }
+    };
+    draw(0);
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) continue;
+    let visible = false;
+    new IntersectionObserver(([entry]) => {
+      const wasVisible = visible;
+      visible = entry.isIntersecting;
+      if (visible && !wasVisible) requestAnimationFrame(function turn(time) { draw(time / 2400); if (visible) requestAnimationFrame(turn); });
+    }).observe(figure);
+  }
+</script>

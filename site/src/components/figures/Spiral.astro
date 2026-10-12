@@ -2,8 +2,10 @@
 // A career on a time spiral, one turn per year (January at the top), from the centre to now. The
 // band along the spiral swells with the number of roles held; ticks bristling outwards are daily
 // GitHub contributions; filled dots are outputs and open dots events. A pulse keeps flowing to now.
+// Moving along the spiral reads out that month; dots link to their items.
 import external from "../../data/external.json";
-import { events, firstYear, month, now, roles, works } from "../../lib/career";
+import { firstYear, month, now } from "../../lib/career";
+import { data, PAGE_OF, refs, type Entry, type Work } from "../../lib/data";
 import { points, random, type Point } from "../../lib/random";
 interface Props { seed: number; width: number; height: number }
 const { seed, width, height } = Astro.props;
@@ -18,10 +20,22 @@ const at = (t: number, offset = 0): Point => {
 };
 const f = (v: number) => v.toFixed(1);
 const steps = Array.from({ length: Math.ceil((end - start) / 0.25) + 1 }, (_, k) => start + k * 0.25);
+const href = (section: string, id?: string) => (id && refs[id] ? refs[id].href : PAGE_OF[section]);
+
+// Roles (with titles), outputs and events (with links) as dated items.
+const ROLE_SECTIONS = ["research", "teaching", "leadership", "service", "other"];
+const roles = ROLE_SECTIONS.flatMap((s) => ((data as any)[s] as Entry[]).flatMap((e) => e.periods.map((p) => ({
+  title: e.title!, from: month(p.start!), to: p.end === "present" ? now + 1 : p.end ? month(p.end) + 1 : month(p.start!) + 1,
+}))));
+const WORK_SECTIONS = ["publications", "preprints", "software", "datasets", "posters", "presentations", "reports", "websites", "theses"];
+const items = [
+  ...WORK_SECTIONS.flatMap((s) => ((data as any)[s] as Work[]).map((w) => ({ t: w.year * 12 + Math.floor(uniform() * 12), title: w.title, href: href(s, w.id), kind: "output" }))),
+  ...(["events", "outreach"] as const).flatMap((s) => (data[s] as Entry[]).map((e) => ({ t: month(e.periods[0].start!), title: e.title!, href: href(s, e.id), kind: "event" }))),
+];
 
 // Band: half-width grows with the number of roles active at that time.
-const active = (t: number) => roles.filter((r) => r.span[0] <= t && t < Math.max(r.span[1], r.span[0] + 1)).length;
-const half = (t: number) => Math.min(spacing * 0.42, active(t) * spacing * 0.1);
+const active = (t: number) => roles.filter((r) => r.from <= t && t < r.to);
+const half = (t: number) => Math.min(spacing * 0.42, active(t).length * spacing * 0.1);
 const band = [...steps.map((t) => at(t, half(t))), ...[...steps].reverse().map((t) => at(t, -half(t)))];
 
 // Contributions: a short outward tick per day, longer for more contributions.
@@ -33,21 +47,75 @@ for (const { t, count } of contributions) {
   const [a, b] = [at(t, half(t) + 1), at(t, half(t) + 1 + Math.min(spacing * 0.55, 1.5 + Math.log2(1 + count) * 1.4))];
   ticks += `M${f(a[0])},${f(a[1])}L${f(b[0])},${f(b[1])}`;
 }
-const outputs = works.map((w) => at(w.year * 12 + uniform() * 12));
-const happenings = events.map((e) => at(e.start + 0.5));
 const years = Array.from({ length: Math.floor(now / 12) - firstYear + 1 }, (_, i) => firstYear + i)
   .filter((y) => spacing >= 11 || (y - firstYear) % 2 === 0);
+
+// What each month held, for the readout.
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const monthly = Array.from({ length: end - start }, (_, k) => {
+  const m = start + k;
+  return {
+    label: `${MONTHS[m % 12]} ${Math.floor(m / 12)}`,
+    roles: [...new Set(active(m + 0.5).map((r) => r.title))],
+    items: items.filter((i) => i.t === m).map(({ title, href, kind }) => ({ title, href, kind })),
+    contributions: contributions.filter((c) => Math.floor(c.t) === m).reduce((s, c) => s + c.count, 0),
+  };
+});
+const geometry = { cx, cy, r0, R, start, end };
 ---
 
 <div class="fig spiral">
-  <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`A time spiral from ${firstYear} to now: roles, daily GitHub contributions, outputs and events`}>
+  <svg viewBox={`0 0 ${width} ${height}`} role="img" data-geometry={JSON.stringify(geometry)}
+    aria-label={`A time spiral from ${firstYear} to now: roles, daily GitHub contributions, outputs and events`}>
     <polygon class="band" points={points(band)} />
     <polyline class="guide" points={points(steps.map((t) => at(t)))} />
     <path class="ticks" d={ticks} />
     <polyline class="flow" points={points(steps.map((t) => at(t)))} pathLength="1" />
-    {outputs.map(([x, y]) => <circle class="output" cx={f(x)} cy={f(y)} r="2.2" />)}
-    {happenings.map(([x, y]) => <circle class="event" cx={f(x)} cy={f(y)} r="2.4" />)}
+    {items.map((item) => {
+      const [x, y] = at(item.t + 0.5);
+      return <a href={item.href}><title>{item.title}</title><circle class={item.kind} cx={f(x)} cy={f(y)} r={item.kind === "output" ? 2.4 : 2.6} /></a>;
+    })}
     <circle class="now" cx={f(at(now)[0])} cy={f(at(now)[1])} r="4"><title>now</title></circle>
     {years.map((y) => <text x={f(at(y * 12)[0] + 4)} y={f(at(y * 12)[1] + 3)}>{y}</text>)}
+    <circle class="cursor" r="6" cx="-20" cy="-20" />
   </svg>
+  <div class="readout" aria-live="polite"><span class="hint">Move along the spiral to travel through time</span></div>
+  <script is:inline type="application/json" set:html={JSON.stringify(monthly)} />
 </div>
+
+<script>
+  // Map a pointer position to the nearest point in time on the spiral and show that month.
+  for (const figure of document.querySelectorAll<HTMLElement>(".fig.spiral")) {
+    const svg = figure.querySelector("svg")!;
+    const cursor = svg.querySelector<SVGCircleElement>(".cursor")!;
+    const readout = figure.querySelector<HTMLElement>(".readout")!;
+    const g = JSON.parse(svg.dataset.geometry!);
+    const months = JSON.parse(figure.querySelector("script[type='application/json']")!.textContent!);
+    const radius = (t: number) => g.r0 + ((t - g.start) / (g.end - g.start)) * (g.R - g.r0);
+    const escape = (s: string) => s.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
+    const show = (event: PointerEvent) => {
+      const p = new DOMPoint(event.clientX, event.clientY).matrixTransform(svg.getScreenCTM()!.inverse());
+      const [dx, dy] = [p.x - g.cx, p.y - g.cy], r = Math.hypot(dx, dy);
+      const turn = (((Math.atan2(dy, dx) + Math.PI / 2) / (2 * Math.PI)) % 1 + 1) % 1;
+      let best = g.start, bestGap = Infinity;
+      for (let n = 0; n <= (g.end - g.start) / 12; n++) {
+        const t = g.start + 12 * (turn + n);
+        if (t > g.end - 0.01) break;
+        if (Math.abs(radius(t) - r) < bestGap) [best, bestGap] = [t, Math.abs(radius(t) - r)];
+      }
+      const a = -Math.PI / 2 + (2 * Math.PI * (best - g.start)) / 12;
+      cursor.setAttribute("cx", String(g.cx + radius(best) * Math.cos(a)));
+      cursor.setAttribute("cy", String(g.cy + radius(best) * Math.sin(a)));
+      const m = months[Math.min(months.length - 1, Math.floor(best - g.start))];
+      const parts = [
+        `<strong>${m.label}</strong>`,
+        m.roles.length ? `${m.roles.length} ${m.roles.length === 1 ? "role" : "roles"}: ${m.roles.map(escape).join(", ")}` : "",
+        ...m.items.map((i: { title: string; href: string; kind: string }) => `<a href="${i.href}">${i.kind === "event" ? "○" : "●"} ${escape(i.title)}</a>`),
+        m.contributions ? `${m.contributions} GitHub ${m.contributions === 1 ? "contribution" : "contributions"}` : "",
+      ];
+      readout.innerHTML = parts.filter(Boolean).join(" · ");
+    };
+    svg.addEventListener("pointermove", show);
+    svg.addEventListener("pointerdown", show);
+  }
+</script>

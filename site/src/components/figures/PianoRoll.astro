@@ -1,0 +1,98 @@
+---
+// The path as a piano roll: each role is a note held for as long as it lasted, one voice per kind
+// of role; outputs and events are short clicks on the top row. Play turns the career into sound
+// (a year takes about half a second) with the Web Audio API; nothing plays until asked.
+import { firstYear, month, now } from "../../lib/career";
+import { data, items, type Entry } from "../../lib/data";
+interface Props { seed: number; width: number; height: number }
+const { width, height } = Astro.props;
+
+const VOICES = [
+  { label: "research", sections: ["research"], pitch: 261.63 },
+  { label: "teaching", sections: ["teaching"], pitch: 329.63 },
+  { label: "leadership", sections: ["leadership", "service"], pitch: 392.0 },
+  { label: "other", sections: ["other"], pitch: 493.88 },
+];
+const [start, end] = [firstYear * 12, now + 1];
+const [left, right, top, bottom] = [86, width - 14, 34, height - 26];
+const rowHeight = (bottom - top) / (VOICES.length + 1);
+const x = (t: number) => left + ((t - start) / (end - start)) * (right - left);
+const notes = VOICES.flatMap((v, row) => v.sections.flatMap((s) => ((data as any)[s] as Entry[])).flatMap((e) => e.periods.map((p, k) => {
+  const from = month(p.start!), to = p.end === "present" ? now + 1 : p.end ? month(p.end) + 1 : from + 1;
+  return { title: e.title!, from, to, row: row + 1, pitch: v.pitch, lane: k };
+})));
+// Clicks: works only have a year, so they sit mid-year.
+const clicks = items.map((i) => ({ t: i.year * 12 + ((i.month ?? 6.5) - 1), title: i.title }));
+const f = (v: number) => v.toFixed(1);
+const years = Array.from({ length: Math.floor(now / 12) - firstYear + 1 }, (_, i) => firstYear + i).filter((y) => (y - firstYear) % (width > height ? 2 : 4) === 0);
+const score = { start, end, notes: notes.map(({ from, to, pitch }) => ({ from, to, pitch })), clicks: clicks.map((c) => c.t) };
+---
+
+<div class="fig piano" data-left={left} data-right={right}>
+  <button class="pill play" type="button">▶ Play the path</button>
+  <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Roles as notes on a piano roll; outputs and events as clicks">
+    {[{ label: "outputs & events" }, ...VOICES].map((v, row) => (
+      <g>
+        <line class="row" x1={left} x2={right} y1={f(top + rowHeight * (row + 1))} y2={f(top + rowHeight * (row + 1))} />
+        <text x={left - 8} y={f(top + rowHeight * (row + 0.55))} text-anchor="end">{v.label}</text>
+      </g>
+    ))}
+    {notes.map((n) => (
+      <rect class="note" x={f(x(n.from))} y={f(top + rowHeight * n.row + 4 + (n.lane % 3) * 3)} width={f(Math.max(2, x(n.to) - x(n.from)))} height={f(rowHeight - 14)} rx="4">
+        <title>{n.title}</title>
+      </rect>
+    ))}
+    {clicks.map((c) => <line class="click" x1={f(x(c.t))} x2={f(x(c.t))} y1={f(top + 6)} y2={f(top + rowHeight - 6)}><title>{c.title}</title></line>)}
+    {years.map((y) => <text x={f(x(y * 12))} y={height - 8} text-anchor="middle">{y}</text>)}
+    <line class="cursor" x1={left} x2={left} y1={top} y2={bottom} />
+  </svg>
+  <script is:inline type="application/json" set:html={JSON.stringify(score)} />
+</div>
+
+<script>
+  for (const figure of document.querySelectorAll<HTMLElement>(".fig.piano")) {
+    const button = figure.querySelector<HTMLButtonElement>(".play")!;
+    const cursor = figure.querySelector<SVGLineElement>(".cursor")!;
+    const score = JSON.parse(figure.querySelector("script[type='application/json']")!.textContent!);
+    const [left, right] = [Number(figure.dataset.left), Number(figure.dataset.right)];
+    const perMonth = 0.045;  // seconds of sound per month of career
+    let context: AudioContext | null = null;
+    button.addEventListener("click", () => {
+      context?.close();
+      context = new AudioContext();
+      const t0 = context.currentTime + 0.1, length = (score.end - score.start) * perMonth;
+      const master = context.createGain();
+      master.gain.value = 0.12;
+      master.connect(context.destination);
+      for (const n of score.notes) {
+        const osc = context.createOscillator(), gain = context.createGain();
+        osc.type = "triangle";
+        osc.frequency.value = n.pitch;
+        const [a, b] = [t0 + (n.from - score.start) * perMonth, t0 + (n.to - score.start) * perMonth];
+        gain.gain.setValueAtTime(0, a);
+        gain.gain.linearRampToValueAtTime(0.5, a + 0.03);
+        gain.gain.setValueAtTime(0.5, Math.max(a + 0.03, b - 0.05));
+        gain.gain.linearRampToValueAtTime(0, b);
+        osc.connect(gain).connect(master);
+        osc.start(a);
+        osc.stop(b + 0.05);
+      }
+      for (const c of score.clicks) {
+        const osc = context.createOscillator(), gain = context.createGain(), at = t0 + (c - score.start) * perMonth;
+        osc.frequency.value = 1046.5;
+        gain.gain.setValueAtTime(0.6, at);
+        gain.gain.exponentialRampToValueAtTime(0.001, at + 0.08);
+        osc.connect(gain).connect(master);
+        osc.start(at);
+        osc.stop(at + 0.1);
+      }
+      const ctx = context;
+      const move = () => {
+        const progress = (ctx.currentTime - t0) / length;
+        cursor.style.transform = `translateX(${Math.max(0, Math.min(1, progress)) * (right - left)}px)`;
+        if (progress < 1 && ctx.state !== "closed") requestAnimationFrame(move);
+      };
+      requestAnimationFrame(move);
+    });
+  }
+</script>

@@ -2,8 +2,6 @@
 
 Run by hand when updating the data, like sync. Writes one JSON file with:
 - coordinates of every location in the content (OpenStreetMap Nominatim; known ones are reused),
-- co-author institutions with coordinates (OpenAlex, by ORCID),
-- views and downloads of Zenodo records (by ORCID),
 - daily contributions from the public GitHub contribution calendar (what the profile shows).
 Every value comes from a public source.
 """
@@ -12,7 +10,6 @@ import json
 import re
 import time
 import urllib.request
-from collections import Counter
 from datetime import date
 from pathlib import Path
 from urllib.parse import quote
@@ -51,34 +48,6 @@ def locations(content: Content, known: dict) -> dict:
     return result
 
 
-def institutions(orcid: str) -> list:
-    author = get_json(f"https://api.openalex.org/authors/orcid:{orcid}")["id"].split("/")[-1]
-    works = get_json(f"https://api.openalex.org/works?filter=author.id:{author}&per-page=200&select=id,authorships")["results"]
-    counts = Counter(i for w in works for i in {i["id"].split("/")[-1] for a in w["authorships"] for i in a.get("institutions", [])})
-    result, ids = [], list(counts)
-    for k in range(0, len(ids), 50):
-        batch = "|".join(ids[k:k + 50])
-        for inst in get_json(f"https://api.openalex.org/institutions?filter=openalex_id:{batch}&per-page=50&select=id,display_name,country_code,geo")["results"]:
-            geo = inst.get("geo") or {}
-            if geo.get("latitude") is not None:
-                result.append({"name": inst["display_name"], "country": inst["country_code"], "city": geo.get("city"),
-                               "lat": round(geo["latitude"], 3), "lon": round(geo["longitude"], 3),
-                               "works": counts[inst["id"].split("/")[-1]]})
-    return sorted(result, key=lambda i: -i["works"])
-
-
-def usage(orcid: str) -> dict:
-    result, page = {}, 1
-    while True:
-        hits = get_json(f"https://zenodo.org/api/records?q=creators.orcid:%22{orcid}%22&size=25&page={page}")["hits"]["hits"]
-        for hit in hits:
-            stats = hit.get("stats", {})
-            result[hit["conceptdoi"]] = {"views": stats.get("unique_views", 0), "downloads": stats.get("unique_downloads", 0)}
-        if len(hits) < 25:
-            return result
-        page += 1
-
-
 def contributions(user: str, since: int) -> dict:
     """Days with contributions, from the public profile calendar, one year at a time."""
     days = {}
@@ -94,16 +63,11 @@ def contributions(user: str, since: int) -> dict:
 
 def external(content: Content, output: Path) -> None:
     previous = json.loads(output.read_text()) if output.exists() else {}
-    orcid = handle(content, "orcid.org")
     github = handle(content, "github.com")
     data = {"locations": locations(content, previous.get("locations", {}))}
-    if orcid:
-        data["institutions"] = institutions(orcid)
-        data["usage"] = usage(orcid)
     if github:
         first = get_json(f"https://api.github.com/users/{github}")["created_at"][:4]
         data["contributions"] = contributions(github, int(first))
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(data, ensure_ascii=False, indent=1) + "\n")
-    print(f"wrote {output}: {len(data['locations'])} locations, {len(data.get('institutions', []))} institutions, "
-          f"{len(data.get('usage', {}))} Zenodo records, {len(data.get('contributions', {}))} days with contributions")
+    print(f"wrote {output}: {len(data['locations'])} locations, {len(data.get('contributions', {}))} days with contributions")

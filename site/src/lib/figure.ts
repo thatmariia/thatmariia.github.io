@@ -45,3 +45,48 @@ export const hoverCss = (id: string, n: number) =>
     .map((i) => `.${id}:has([data-node="${i}"]:hover) .line:not([data-touches~="${i}"]) { opacity: 0.06; }
 .${id}:has([data-node="${i}"]:hover) .line[data-touches~="${i}"] { opacity: 1; stroke-width: 1.3; }`)
     .join("\n");
+
+/** Force-directed layout (Fruchterman–Reingold) of n nodes and weighted edges, fitted to the figure. */
+export function forceLayout(n: number, edges: { pair: number[]; w: number }[], width: number, height: number, pad: number, uniform: () => number): Point[] {
+  const k = Math.sqrt((width * height) / n) * 0.75;
+  const pos: Point[] = Array.from({ length: n }, () => [uniform() * width, uniform() * height]);
+  for (let iteration = 0; iteration < 400; iteration++) {
+    const shift = pos.map(() => [0, 0]);
+    for (let i = 0; i < n; i++) {
+      for (let j = 0; j < n; j++) {
+        if (i === j) continue;
+        const [dx, dy] = [pos[i][0] - pos[j][0], pos[i][1] - pos[j][1]], d = Math.max(1, Math.hypot(dx, dy));
+        shift[i][0] += (dx / d) * (k * k) / d;
+        shift[i][1] += (dy / d) * (k * k) / d;
+      }
+    }
+    for (const { pair: [i, j], w } of edges) {
+      const [dx, dy] = [pos[i][0] - pos[j][0], pos[i][1] - pos[j][1]], d = Math.max(1, Math.hypot(dx, dy));
+      const pull = ((d * d) / k) * (0.4 + 0.15 * w);
+      shift[i][0] -= (dx / d) * pull; shift[i][1] -= (dy / d) * pull;
+      shift[j][0] += (dx / d) * pull; shift[j][1] += (dy / d) * pull;
+    }
+    // Gentle gravity towards the centre, so separate groups stay close instead of drifting apart.
+    pos.forEach(([x, y], i) => {
+      const [dx, dy] = [x - width / 2, y - height / 2], d = Math.max(1, Math.hypot(dx, dy));
+      shift[i][0] -= (dx / d) * ((d * d) / k) * 0.06;
+      shift[i][1] -= (dy / d) * ((d * d) / k) * 0.06;
+    });
+    const temperature = (Math.min(width, height) / 8) * (1 - iteration / 400) + 1;
+    pos.forEach((p, i) => {
+      const d = Math.max(1, Math.hypot(shift[i][0], shift[i][1]));
+      p[0] += (shift[i][0] / d) * Math.min(d, temperature);
+      p[1] += (shift[i][1] / d) * Math.min(d, temperature);
+    });
+  }
+  const [xs, ys] = [pos.map((p) => p[0]), pos.map((p) => p[1])];
+  const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+  return pos.map(([x, y]) => [pad + ((x - x0) / (x1 - x0 || 1)) * (width - 2 * pad), pad + ((y - y0) / (y1 - y0 || 1)) * (height - 2 * pad)]);
+}
+
+/** A gently curved cubic Bézier path from a to b. */
+export function curve(a: Point, b: Point, bend: number) {
+  const f = (v: number) => v.toFixed(1);
+  const [dx, dy] = [b[0] - a[0], b[1] - a[1]];
+  return `M${f(a[0])},${f(a[1])} C${f(a[0] + dx / 3 - dy * bend)},${f(a[1] + dy / 3 + dx * bend)} ${f(a[0] + (2 * dx) / 3 + dy * bend)},${f(a[1] + (2 * dy) / 3 - dx * bend)} ${f(b[0])},${f(b[1])}`;
+}

@@ -24,6 +24,36 @@
         "label": "LinkedIn",
         "url": "https://linkedin.com/in/thatmariia"
       }
+    ],
+    "walk": [
+      {
+        "label": "Computer science",
+        "year": 2011
+      },
+      {
+        "label": "Physics",
+        "year": 2015
+      },
+      {
+        "label": "Electrical engineering",
+        "year": 2018
+      },
+      {
+        "label": "Mathematics",
+        "year": 2019
+      },
+      {
+        "label": "Machine learning",
+        "year": 2019
+      },
+      {
+        "label": "Neuroscience",
+        "year": 2021
+      },
+      {
+        "label": "Research software",
+        "year": 2024
+      }
     ]
   },
   "education": [

@@ -1,20 +1,20 @@
 ---
-import "@fontsource/instrument-serif/400.css";
-import "@fontsource/instrument-serif/400-italic.css";
 import "@fontsource-variable/hanken-grotesk/index.css";
 import "@fontsource/space-mono/400.css";
 import "../styles/global.css";
 import EntryItem from "../components/EntryItem.astro";
+import Route from "../components/Route.astro";
 import Section from "../components/Section.astro";
-import Walk from "../components/Walk.astro";
 import WorkItem from "../components/WorkItem.astro";
 import { data, firstSentence, isUpcoming, markup, outputSections, restOfText, type Entry } from "../lib/data";
 
 const { profile } = data;
 const [firstName, ...lastNames] = profile.name.split(" ");
-const current = (data.research as Entry[]).flatMap((entry) =>
+const research = data.research as Entry[];
+const current = research.flatMap((entry) =>
   entry.periods.filter((p) => p.end === "present").map((p) => ({ role: p.title, org: entry.title })),
 );
+const places = [...new Set(research.filter((e) => e.periods.some((p) => p.end === "present")).map((e) => e.location))];
 const path = [
   ["Research", data.research], ["Teaching", data.teaching], ["Leadership", data.leadership],
   ["Service", data.service], ["Awards", data.awards], ["Funding", data.funding], ["Also", data.other],
@@ -24,6 +24,12 @@ const upcoming = events.filter(isUpcoming).reverse();
 const past = events.filter((e) => !isUpcoming(e));
 const studies = (data.education as Entry[]).flatMap((e) => e.periods.map((p) => p.title));
 const thesis = (data.education as Entry[]).flatMap((e) => e.related ?? []);
+const pad = (n: number) => String(n).padStart(2, "0");
+const counts = [
+  { label: "Publications", value: data.publications.length + data.preprints.length, href: "#work" },
+  { label: "Open outputs", value: outputSections.reduce((n, s) => n + s.items.length, 0), href: "#outputs" },
+  { label: "Events", value: events.length, href: "#events" },
+];
 ---
 
 <!doctype html>
@@ -43,50 +49,64 @@ const thesis = (data.education as Entry[]).flatMap((e) => e.related ?? []);
   </head>
   <body>
     <header class="top">
-      <a class="mono" href="#">{profile.name}</a>
-      <nav class="mono">
+      <a href="#">{profile.name}</a>
+      <nav>
         <a href="#work">Work</a>
         <a href="#path">Path</a>
         <a href="#events">Events</a>
         <a href="#elsewhere">Elsewhere</a>
-        <button class="theme" type="button" aria-label="Switch light or dark theme" onclick="
+        <button class="theme" type="button" onclick="
           const root = document.documentElement;
           const dark = root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
           root.dataset.theme = dark ? 'light' : 'dark';
           try { localStorage.setItem('theme', root.dataset.theme); } catch {}
-        "><span aria-hidden="true">◐</span></button>
+        "><span class="to-dark">Dark</span><span class="to-light">Light</span></button>
       </nav>
     </header>
 
     <main>
       <section class="hero">
-        <div class="aura cobalt" aria-hidden="true"></div>
-        <div class="aura vermilion" aria-hidden="true"></div>
-        <div class="aura ochre" aria-hidden="true"></div>
-        <p class="mono kicker">{profile.headline}</p>
-        <h1>{firstName}<em>{lastNames.join(" ")}</em></h1>
-        <Walk text={firstSentence(profile.bio)} seed={11} width={1200} height={420} />
-        <p class="walk-caption">{firstSentence(profile.bio)}</p>
-        {current.length > 0 && (
-          <dl class="now">
-            <dt class="mono">Currently</dt>
-            {current.map((c) => <dd>{c.role}<span>{c.org}</span></dd>)}
-          </dl>
-        )}
+        <p class="cell intro">{profile.headline}</p>
+        <p class="cell place">{places.map((p) => <span>{p}</span>)}</p>
+        <h1 class="cell name">{firstName}<br />{lastNames.join(" ")}</h1>
+        <figure class="cell figure">
+          <Route stops={profile.walk} seed={42} />
+          <Route stops={profile.walk} seed={42} vertical />
+          <figcaption>
+            <span class="mono">Fig. 1</span>
+            <span>{firstSentence(profile.bio)}</span>
+            <span class="key mono" aria-hidden="true">
+              <span><i class="key-line"></i>route</span>
+              <span><i class="key-pin"></i>field entered</span>
+              <span><i class="key-tail"></i>still walking</span>
+            </span>
+          </figcaption>
+        </figure>
+        {counts.map((c) => (
+          <a class="cell count" href={c.href}>
+            <span class="mono">{c.label}</span>
+            <span class="value">{pad(c.value)}</span>
+            <span class="arrow" aria-hidden="true">↘</span>
+          </a>
+        ))}
+        <div class="cell now">
+          <span class="mono">Now</span>
+          {current.map((c) => <p>{c.role}<span>{c.org}</span></p>)}
+        </div>
       </section>
 
       <Section id="about" number="01" title="About">
         <div class="prose" set:html={markup(restOfText(profile.bio) || profile.bio)} />
-        <dl class="studies">
+        <dl class="facts">
           <dt class="mono">Studied</dt>
           <dd>
-            {studies.join(" · ")}
+            {studies.join(", ")}
             {thesis.map((id) => <a class="mono" href={`#${id}`}>↔ thesis</a>)}
           </dd>
           {data.skills.map((group) => (
             <>
               <dt class="mono">{group.title}</dt>
-              <dd>{Object.values(group.levels).flat().join(" · ")}</dd>
+              <dd>{Object.values(group.levels).flat().join(", ")}</dd>
             </>
           ))}
         </dl>
@@ -94,15 +114,18 @@ const thesis = (data.education as Entry[]).flatMap((e) => e.related ?? []);
 
       <Section id="work" number="02" title="Publications">
         {data.publications.map((work) => <WorkItem work={work as any} />)}
-        {data.preprints.length > 0 && <h3 class="group">Preprints</h3>}
+        {data.preprints.length > 0 && <h3 class="group">Preprints<span>{pad(data.preprints.length)}</span></h3>}
         {data.preprints.map((work) => <WorkItem work={work as any} label="preprint" />)}
       </Section>
 
-      <Section id="outputs" number="03" title="Open science outputs">
+      <Section id="outputs" number="03" title="Open science">
+        <p class="key mono legend">
+          {outputSections.map((s) => <span><i class:list={["key-dot", s.color]} />{s.key}</span>)}
+        </p>
         {outputSections.map((section) => (
           <>
-            <h3 class="group">{section.key[0].toUpperCase() + section.key.slice(1)}<span class="mono">{section.items.length}</span></h3>
-            {section.items.map((work) => <WorkItem work={work} label={section.label.toLowerCase()} />)}
+            <h3 class="group">{section.key[0].toUpperCase() + section.key.slice(1)}<span>{pad(section.items.length)}</span></h3>
+            {section.items.map((work) => <WorkItem work={work} label={section.label.toLowerCase()} color={section.color} />)}
           </>
         ))}
       </Section>
@@ -110,35 +133,32 @@ const thesis = (data.education as Entry[]).flatMap((e) => e.related ?? []);
       <Section id="path" number="04" title="Path">
         {path.map(([title, items]) => (
           <>
-            <h3 class="group">{title}</h3>
+            <h3 class="group">{title}<span>{pad(items.length)}</span></h3>
             {items.map((entry) => <EntryItem entry={entry} />)}
           </>
         ))}
       </Section>
 
-      <Section id="events" number="05" title="Events & outreach">
-        {upcoming.length > 0 && <h3 class="group">Upcoming</h3>}
+      <Section id="events" number="05" title="Events">
+        {upcoming.length > 0 && <h3 class="group">Upcoming<span>{pad(upcoming.length)}</span></h3>}
         {upcoming.map((entry) => <EntryItem entry={entry} upcoming />)}
-        <h3 class="group">Conferences & events</h3>
+        <h3 class="group">Conferences & events<span>{pad(past.length)}</span></h3>
         {past.map((entry) => <EntryItem entry={entry} />)}
-        {data.outreach.length > 0 && <h3 class="group">Outreach</h3>}
+        {data.outreach.length > 0 && <h3 class="group">Outreach<span>{pad(data.outreach.length)}</span></h3>}
         {(data.outreach as Entry[]).map((entry) => <EntryItem entry={entry} />)}
       </Section>
-    </main>
 
-    <footer class="section" id="elsewhere">
-      <header class="section-head">
-        <span class="mono">06</span>
-        <h2>Elsewhere</h2>
-      </header>
-      <div class="section-body">
+      <Section id="elsewhere" number="06" title="Elsewhere">
         <ul class="elsewhere">
           {profile.links.map((link) => <li><a href={link.url}>{link.label}<span aria-hidden="true">↗</span></a></li>)}
         </ul>
-        <p class="mono colophon">
-          Set in Instrument Serif, Hanken Grotesk &amp; Space Mono · Updated {new Date().toISOString().slice(0, 10)}
-        </p>
-      </div>
+      </Section>
+    </main>
+
+    <footer class="colophon mono">
+      <span>{profile.name}</span>
+      <span>Set in Hanken Grotesk &amp; Space Mono</span>
+      <span>Updated {new Date().toISOString().slice(0, 10)}</span>
     </footer>
   </body>
 </html>

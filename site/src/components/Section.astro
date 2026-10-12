@@ -5,7 +5,8 @@ const { id, number, title } = Astro.props;
 
 <section class="section" id={id}>
   <header class="section-head">
-    <span class="mono">{number}</span>
+    <span class="number">{number}</span>
+    <span class="rule" aria-hidden="true"></span>
     <h2>{title}</h2>
   </header>
   <div class="section-body"><slot /></div>

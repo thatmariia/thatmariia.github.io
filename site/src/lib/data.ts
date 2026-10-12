@@ -47,12 +47,24 @@ const KIND: Record<string, string> = {
   service: "Service", awards: "Award", funding: "Funding", events: "Event", outreach: "Outreach", other: "Experience",
 };
 
+/** The site's pages, and which page each content section lives on. */
+export const PAGES = [
+  ["/", "Home"], ["/publications/", "Publications"], ["/open-science/", "Open science"], ["/path/", "Path"], ["/events/", "Events"],
+] as const;
+const PAGE_OF: Record<string, string> = {
+  publications: "/publications/", preprints: "/publications/",
+  software: "/open-science/", datasets: "/open-science/", posters: "/open-science/", presentations: "/open-science/",
+  reports: "/open-science/", websites: "/open-science/", theses: "/open-science/",
+  education: "/path/", research: "/path/", teaching: "/path/", leadership: "/path/", service: "/path/",
+  awards: "/path/", funding: "/path/", other: "/path/", events: "/events/", outreach: "/events/",
+};
+
 export const outputSections = ["software", "datasets", "posters", "presentations", "reports", "websites", "theses"]
-  .map((key) => ({ key, title: key[0].toUpperCase() + key.slice(1), items: (data as any)[key] as Work[] }))
+  .map((key) => ({ id: key, title: key[0].toUpperCase() + key.slice(1), items: (data as any)[key] as Work[] }))
   .filter((s) => s.items.length);
 
 /** Every linkable item by id: its kind, title and a one-line summary for previews. */
-export const refs: Record<string, { kind: string; title: string; summary: string }> = {};
+export const refs: Record<string, { kind: string; title: string; summary: string; href: string }> = {};
 for (const [section, items] of Object.entries(data)) {
   if (!(section in KIND)) continue;
   for (const item of items as (Entry | Work)[]) {
@@ -61,6 +73,7 @@ for (const [section, items] of Object.entries(data)) {
       const status = STATUS[item.status];
       refs[item.id] = {
         kind: KIND[section],
+        href: `${PAGE_OF[section]}#${item.id}`,
         title: item.title,
         summary: [item.venue, status || item.year].filter(Boolean).join(" · "),
       };
@@ -69,6 +82,7 @@ for (const [section, items] of Object.entries(data)) {
       const roles = entry.periods.map((p) => p.title).filter(Boolean);
       refs[item.id] = {
         kind: KIND[section],
+        href: `${PAGE_OF[section]}#${item.id}`,
         title: entry.title ?? roles.join(", "),
         summary: [entry.title ? roles.join(", ") : "", entry.location, entry.title ? dates(entry.periods[0]) : ""]
           .filter(Boolean).join(" · "),
@@ -89,14 +103,11 @@ export const isUpcoming = (e: Entry) => (e.periods[0].start ?? "") > today;
 
 export const pathSections = (
   [
-    ["Research", data.research], ["Teaching", data.teaching], ["Leadership", data.leadership],
-    ["Service", data.service], ["Awards", data.awards], ["Funding", data.funding], ["Other", data.other],
-  ] as [string, Entry[]][]
-).filter(([, items]) => items.length);
+    ["research", "Research", data.research], ["teaching", "Teaching", data.teaching],
+    ["leadership", "Leadership", data.leadership], ["service", "Service", data.service], ["awards", "Awards", data.awards],
+    ["funding", "Funding", data.funding], ["other", "Other", data.other],
+  ] as [string, string, Entry[]][]
+).map(([id, title, items]) => ({ id, title, items })).filter((s) => s.items.length);
 
 export const studies = (data.education as Entry[]).flatMap((e) => e.periods.map((p) => p.title!));
 export const thesisLinks = (data.education as Entry[]).flatMap((e) => e.related ?? []);
-
-export const NAV = [
-  ["about", "About"], ["publications", "Publications"], ["open-science", "Open science"], ["path", "Path"], ["events", "Events"],
-] as const;

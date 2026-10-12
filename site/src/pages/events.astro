@@ -1,0 +1,21 @@
+---
+import EntryItem from "../components/EntryItem.astro";
+import Base from "../layouts/Base.astro";
+import { data, isUpcoming, type Entry } from "../lib/data";
+
+const events = data.events as Entry[];
+const sections = [
+  { id: "upcoming", title: "Upcoming", items: events.filter(isUpcoming).reverse() },
+  { id: "past", title: "Past", items: events.filter((e) => !isUpcoming(e)) },
+  { id: "outreach", title: "Outreach", items: data.outreach as Entry[] },
+].filter((s) => s.items.length);
+---
+
+<Base title="Events" sections={sections}>
+  {sections.map((s) => (
+    <section class="block" id={s.id}>
+      <h2>{s.title}</h2>
+      {s.items.map((entry) => <EntryItem entry={entry} />)}
+    </section>
+  ))}
+</Base>

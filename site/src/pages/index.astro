@@ -1,4 +1,31 @@
 ---
-// Temporary while choosing a design: the mockups replace the home page.
-return Astro.redirect("/mockups/");
+import EntryItem from "../components/EntryItem.astro";
+import Figure from "../components/Figure.astro";
+import WorkItem from "../components/WorkItem.astro";
+import Base from "../layouts/Base.astro";
+import { data, isUpcoming, markup, outputSections, type Entry, type Work } from "../lib/data";
+
+const upcoming = (data.events as Entry[]).filter(isUpcoming).reverse();
+const recent = [data.publications, data.preprints, ...outputSections.map((s) => s.items)]
+  .flat()
+  .filter((w: Work) => w.status === "published")
+  .sort((a: Work, b: Work) => b.year - a.year)
+  .slice(0, 4) as Work[];
 ---
+
+<Base>
+  <Figure />
+  <div class="prose intro" set:html={markup(data.profile.bio)} />
+  {upcoming.length > 0 && (
+    <section class="block">
+      <h2>Upcoming</h2>
+      {upcoming.map((entry) => <EntryItem entry={entry} />)}
+      <a class="more" href="/events/">All events →</a>
+    </section>
+  )}
+  <section class="block">
+    <h2>Recent work</h2>
+    {recent.map((work) => <WorkItem work={work} />)}
+    <a class="more" href="/publications/">All publications →</a>
+  </section>
+</Base>

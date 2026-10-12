@@ -1,0 +1,22 @@
+---
+import EntryItem from "../components/EntryItem.astro";
+import Related from "../components/Related.astro";
+import Base from "../layouts/Base.astro";
+import { pathSections, studies, thesisLinks } from "../lib/data";
+
+const sections = [...pathSections, { id: "education", title: "Education" }];
+---
+
+<Base title="Path" sections={sections}>
+  {pathSections.map((s) => (
+    <section class="block" id={s.id}>
+      <h2>{s.title}</h2>
+      {s.items.map((entry) => <EntryItem entry={entry} notes={false} />)}
+    </section>
+  ))}
+  <section class="block" id="education">
+    <h2>Education</h2>
+    <ul class="studies">{studies.map((field) => <li>{field}</li>)}</ul>
+    <Related related={thesisLinks} />
+  </section>
+</Base>

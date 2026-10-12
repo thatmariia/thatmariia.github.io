@@ -1,5 +1,5 @@
 ---
-// Fields as point charges (alternating + and −) with the electric field lines between them.
+// Fields as point charges with the electric field lines between them.
 // With labels, each charge is a pill (all alike, so no field stands out) and hovering one shows
 // only the lines that touch it (CSS only).
 // Without labels it is a small mark, e.g. next to page titles.
@@ -7,13 +7,40 @@ import { points, random, type Point } from "../lib/random";
 interface Props { fields: string[]; seed: number; width: number; height: number; labels?: boolean }
 const { fields, seed, width, height, labels = true } = Astro.props;
 
+// Charges sit on a jittered ellipse in shuffled order with alternating signs, so every field has
+// neighbours of the opposite sign; negative charges are scaled so the total is zero, so every line
+// runs from one field to another instead of leaving the figure.
 const uniform = random(seed);
-const pad = labels ? 54 : 14, minGap = Math.min(width, height) * (labels ? 0.32 : 0.4);
+const n = fields.length, positives = Math.ceil(n / 2), negatives = n - positives;
+const [padX, padY] = labels ? [Math.max(70, width * 0.13), 56] : [14, 14];
+const slots = [...Array(n).keys()].sort(() => uniform() - 0.5);
 const charges: { at: Point; q: number }[] = [];
-for (let tries = 0; charges.length < fields.length; tries++) {
-  const p: Point = [pad + uniform() * (width - 2 * pad), pad + uniform() * (height - 2 * pad)];
-  const gap = tries > 3000 ? 0 : minGap * (1 - tries / 4000);
-  if (charges.every((c) => Math.hypot(p[0] - c.at[0], p[1] - c.at[1]) > gap)) charges.push({ at: p, q: charges.length % 2 ? -1 : 1 });
+slots.forEach((field, slot) => {
+  const a = -Math.PI / 2 + (2 * Math.PI * slot) / n + (uniform() - 0.5) * 0.35;
+  const rx = (width / 2 - padX) * (0.82 + uniform() * 0.18), ry = (height / 2 - padY) * (0.82 + uniform() * 0.18);
+  charges[field] = { at: [width / 2 + rx * Math.cos(a), height / 2 + ry * Math.sin(a)], q: slot % 2 ? -positives / negatives : 1 };
+});
+
+// Nudge apart labelled charges whose pills would overlap (pill size estimated in figure units).
+if (labels) {
+  const size = fields.map((f) => [f.length * 7.6 + 30, 30]);
+  for (let round = 0; round < 60; round++) {
+    for (let i = 0; i < n; i++) {
+      for (let j = i + 1; j < n; j++) {
+        const a = charges[i].at, b = charges[j].at;
+        const ox = (size[i][0] + size[j][0]) / 2 + 8 - Math.abs(a[0] - b[0]);
+        const oy = (size[i][1] + size[j][1]) / 2 + 8 - Math.abs(a[1] - b[1]);
+        if (ox <= 0 || oy <= 0) continue;
+        const axis = oy < ox ? 1 : 0, push = (Math.min(ox, oy) / 2) * Math.sign(a[axis] - b[axis] || 1);
+        a[axis] += push;
+        b[axis] -= push;
+      }
+    }
+    charges.forEach(({ at }, i) => {
+      at[0] = Math.min(width - size[i][0] / 2, Math.max(size[i][0] / 2, at[0]));
+      at[1] = Math.min(height - padY, Math.max(padY, at[1]));
+    });
+  }
 }
 
 function field([x, y]: Point): Point {
@@ -28,7 +55,7 @@ function field([x, y]: Point): Point {
 
 // Trace lines out of each positive charge until they reach a negative one or leave the figure.
 // Each line remembers the charges it touches, for the hover highlight.
-const perCharge = labels ? 14 : 9;
+const perCharge = labels ? 16 : 9;
 const lines: { path: Point[]; touches: number[] }[] = [];
 charges.forEach(({ at: [cx, cy], q }, source) => {
   if (q < 0) return;

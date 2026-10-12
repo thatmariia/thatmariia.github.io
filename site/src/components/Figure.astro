@@ -2,17 +2,18 @@
 // The figure at the top of a page. A page names the figures that suit its data; while choosing,
 // pill buttons (plain radio inputs, no JavaScript) switch between them when there is more than one.
 import CartPole from "./figures/CartPole.astro";
+import Circuit from "./figures/Circuit.astro";
 import Collaborators from "./figures/Collaborators.astro";
-import EEG from "./figures/EEG.astro";
-import Feynman from "./figures/Feynman.astro";
 import Fireflies from "./figures/Fireflies.astro";
 import Fireworks from "./figures/Fireworks.astro";
 import Flanker from "./figures/Flanker.astro";
 import GrowthCone from "./figures/GrowthCone.astro";
 import NeuralNet from "./figures/NeuralNet.astro";
 import NeuronGame from "./figures/NeuronGame.astro";
+import Orrery from "./figures/Orrery.astro";
 import PerceptronPong from "./figures/PerceptronPong.astro";
 import Saltatory from "./figures/Saltatory.astro";
+import Raster from "./figures/Raster.astro";
 import Sieve from "./figures/Sieve.astro";
 import Spiral from "./figures/Spiral.astro";
 import Topo from "./figures/Topo.astro";
@@ -31,9 +32,10 @@ const FIGURES = {
   spiral: { label: "Spiral explorer", Figure: Spiral, seed: 2 },
   collaborators: { label: "Collaborators", Figure: Collaborators, seed: 7 },
   topo: { label: "Topographic map", Figure: Topo, seed: 1 },
-  feynman: { label: "Feynman diagram", Figure: Feynman, seed: 1 },
   neuralnet: { label: "Neural network", Figure: NeuralNet, seed: 1 },
-  eeg: { label: "EEG", Figure: EEG, seed: 5 },
+  circuit: { label: "Circuit", Figure: Circuit, seed: 1 },
+  orrery: { label: "Orrery", Figure: Orrery, seed: 1 },
+  raster: { label: "Raster plot", Figure: Raster, seed: 1 },
   travels: { label: "Travels", Figure: Travels, seed: 2 },
   fireworks: { label: "Fireworks", Figure: Fireworks, seed: 6 },
   volleyball: { label: "Volleyball", Figure: Volleyball, seed: 3 },

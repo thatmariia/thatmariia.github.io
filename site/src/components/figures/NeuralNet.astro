@@ -31,10 +31,11 @@ const weights: number[][][] = [
   sections.map((s) => kinds.map((k) => links.filter((l) => l.section === s && l.kind === k).length)),
 ];
 
-// Positions: layers as columns, nodes spread evenly.
-const columns = narrow ? [158, 202, 246, 290] : [250, 430, 600, 770];
-const [top, bottom] = [24, height - 20];
+// Positions: layers as columns, nodes spread evenly below a bias unit (+1).
+const columns = narrow ? [150, 200, 250, 296] : [250, 430, 600, 770];
+const [top, bottom] = [narrow ? 48 : 52, height - 18];
 const nodes = layers.map((layer, l) => layer.map((name, i) => ({ name, x: columns[l], y: top + ((i + 0.5) / layer.length) * (bottom - top) })));
+const bias = columns.slice(0, 3).map((x) => ({ x, y: top - 22 }));
 // Activation: weighted input, normalised per layer (inputs are all on).
 const activation = layers.map((layer, l) => {
   if (l === 0) return layer.map(() => 1);
@@ -46,31 +47,33 @@ const edges = weights.flatMap((matrix, l) => {
   const most = Math.max(1, ...matrix.flat());
   return matrix.flatMap((row, i) => row.map((w, j) => ({ l, a: nodes[l][i], b: nodes[l + 1][j], w: w / most })));
 });
-const curve = (a: { x: number; y: number }, b: { x: number; y: number }) => {
-  const mid = (a.x + b.x) / 2;
-  return `M${f(a.x)},${f(a.y)} C${f(mid)},${f(a.y)} ${f(mid)},${f(b.y)} ${f(b.x)},${f(b.y)}`;
-};
+const line = (a: { x: number; y: number }, b: { x: number; y: number }) => `M${f(a.x)},${f(a.y)} L${f(b.x)},${f(b.y)}`;
 const outputs = count(links, (l) => l.kind);
+const r = narrow ? 6 : 8;
+const NAMES = narrow ? ["x", "h¹", "h²", "ŷ"] : ["x · studies", "h¹ · organisations", "h² · roles", "ŷ · linked work"];
 ---
 
 <div class="fig neuralnet">
   <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Path as a neural network: studies, organisations, kinds of role and kinds of output, weighted by the links between them">
-    {edges.filter((e) => e.w === 0).map((e) => <path class="dense" d={curve(e.a, e.b)} />)}
-    {edges.filter((e) => e.w > 0).map((e) => <path class="weight" d={curve(e.a, e.b)} stroke-width={f(0.6 + e.w * 2.6)} />)}
+    {edges.map((e) => <path class:list={["edge", { weighted: e.w > 0 }]} d={line(e.a, e.b)} stroke-width={e.w > 0 ? f(0.7 + e.w * 1.3) : undefined} />)}
+    {bias.map((b, l) => nodes[l + 1].map((n) => <path class="bias-edge" d={line(b, n)} />))}
     {edges.filter((e) => e.w > 0).map((e, k) => (
-      <path class="signal" d={curve(e.a, e.b)} pathLength="1" style={`animation-delay: ${(e.l * 1.1 + (k % 5) * 0.08).toFixed(2)}s`} />
+      <path class="signal" d={line(e.a, e.b)} pathLength="1" style={`animation-delay: ${(e.l * 1.1 + (k % 5) * 0.08).toFixed(2)}s`} />
+    ))}
+    {bias.map((b) => (
+      <g class="bias"><title>bias</title><rect x={f(b.x - 9)} y={f(b.y - 7)} width="18" height="14" rx="3" /><text x={f(b.x)} y={f(b.y + 3.5)} text-anchor="middle">+1</text></g>
     ))}
     {nodes.map((layer, l) => layer.map((n, i) => (
       <g class="unit">
-        <title>{n.name}{l === 3 ? ` · ${outputs.get(n.name)}` : ""}</title>
-        <circle cx={f(n.x)} cy={f(n.y)} r={narrow ? 5 : 7} style={`--a: ${activation[l][i].toFixed(2)}; animation-delay: ${(l * 1.1).toFixed(2)}s`} />
-        {l === 0 && <text x={f(n.x - 12)} y={f(n.y + 3.5)} text-anchor="end">{cut(n.name, narrow ? 17 : 31)}</text>}
-        {l === 3 && <text x={f(n.x + 12)} y={f(n.y + 3.5)}>{cut(n.name, narrow ? 10 : 22)} · {outputs.get(n.name)}</text>}
-        {l === 2 && !narrow && <text class="hidden-label" x={f(n.x)} y={f(n.y - 12)} text-anchor="middle">{n.name}</text>}
+        <title>{n.name}{l === 3 ? ` · ${outputs.get(n.name)}` : ""} · activation {activation[l][i].toFixed(2)}</title>
+        <circle cx={f(n.x)} cy={f(n.y)} r={r} style={`--a: ${activation[l][i].toFixed(2)}; animation-delay: ${(l * 1.1).toFixed(2)}s`} />
+        {(l === 1 || l === 2) && !narrow && <text class:list={["sigma", { on: activation[l][i] > 0.55 }]} x={f(n.x)} y={f(n.y + 3.5)} text-anchor="middle">σ</text>}
+        {l === 0 && <text x={f(n.x - r - 6)} y={f(n.y + 3.5)} text-anchor="end">{cut(n.name, narrow ? 17 : 31)}</text>}
+        {l === 3 && <text x={f(n.x + r + 6)} y={f(n.y + 3.5)}>{cut(n.name, narrow ? 10 : 22)} · {outputs.get(n.name)}</text>}
+        {l === 2 && !narrow && <text class="hidden-label" x={f(n.x)} y={f(n.y - r - 6)} text-anchor="middle">{n.name}</text>}
       </g>
     )))}
-    {!narrow && ["input: studies", "organisations", "roles", "output: linked work"].map((label, l) => (
-      <text class="layer" x={columns[l]} y={height - 4} text-anchor="middle">{label}</text>
-    ))}
+    {NAMES.map((label, l) => <text class="layer" x={columns[l]} y={narrow ? 12 : 14} text-anchor="middle">{label}</text>)}
   </svg>
+  <p class="key">A feed-forward network whose weights are my links: studies that led to roles at organisations, roles of each kind held there, and outputs and events linked to roles of each kind. Darker units are more strongly activated.</p>
 </div>

@@ -1,0 +1,69 @@
+---
+// Path as a raster plot, the neuroscientist's favourite. Each role is a trial (a row, grouped by
+// kind), its span a faint line; its linked outputs and events are spikes. On top, the peri-stimulus
+// time histogram (PSTH) counts spikes per half year. A playhead sweeps; spikes flash as it passes.
+import { dated, firstYear, now, roleEntries, shortName } from "../../lib/career";
+import { pathSections, refs } from "../../lib/data";
+interface Props { seed: number; width: number; height: number }
+const { width, height } = Astro.props;
+
+const narrow = width < 600;
+const f = (v: number) => v.toFixed(1);
+const [start, end] = [firstYear * 12, now + 2];
+const [left, right] = [narrow ? 110 : 190, width - (narrow ? 12 : 70)];
+const x = (t: number) => left + ((t - start) / (end - start)) * (right - left);
+const [histTop, histBottom] = [16, narrow ? 84 : 92];
+const sections = pathSections.filter((p) => roleEntries.some((r) => r.section === p.id));
+const rows = sections.flatMap((s) => roleEntries.filter((r) => r.section === s.id).sort((a, b) => a.from - b.from).map((r) => ({ ...r, kind: s.title })));
+const [rowsTop, rowsBottom] = [histBottom + 18, height - 26];
+const step = (rowsBottom - rowsTop) / rows.length;
+const spikes = rows.flatMap((r, i) => r.related.filter((id) => id in dated && refs[id]).map((id) => ({ id, t: dated[id].t, y: rowsTop + (i + 0.5) * step })));
+// The PSTH: spikes per half year, as a smooth outline.
+const bins = Array.from({ length: Math.ceil((end - start) / 6) }, (_, b) => spikes.filter((s) => Math.floor((s.t - start) / 6) === b).length);
+const most = Math.max(1, ...bins);
+const outline = bins.map((n, b) => `${b ? "L" : "M"}${f(x(start + b * 6))},${f(histBottom - (n / most) * (histBottom - histTop))} L${f(x(start + (b + 1) * 6))},${f(histBottom - (n / most) * (histBottom - histTop))}`).join(" ");
+const years = Array.from({ length: Math.floor(now / 12) - firstYear + 1 }, (_, i) => firstYear + i).filter((y) => (y - firstYear) % (narrow ? 3 : 1) === 0);
+const sweep = 12, span = right - left;
+const groups = sections.map((s) => {
+  const idx = rows.map((r, i) => (r.section === s.id ? i : -1)).filter((i) => i >= 0);
+  return { title: s.title, y1: rowsTop + idx[0] * step, y2: rowsTop + (idx[idx.length - 1] + 1) * step };
+});
+---
+
+<div class="fig raster" style={`--sweep: ${sweep}s; --span: ${span}`}>
+  <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`Path since ${firstYear} as a raster plot: roles as trials, linked outputs and events as spikes, with a histogram on top`}>
+    <path class="psth" d={`${outline} L${f(right)},${histBottom} L${left},${histBottom} Z`} />
+    <text class="axis-label" x={left - 8} y={histTop + 8} text-anchor="end">PSTH</text>
+    <text class="axis-label" x={left - 8} y={histBottom} text-anchor="end">{most}/½ yr</text>
+    {years.map((y) => (
+      <g>
+        <line class="grid" x1={f(x(y * 12))} x2={f(x(y * 12))} y1={histBottom + 4} y2={rowsBottom} />
+        <text class="year" x={f(x(y * 12))} y={height - 8} text-anchor="middle">{y}</text>
+      </g>
+    ))}
+    {rows.map((r, i) => {
+      const y = rowsTop + (i + 0.5) * step;
+      return (
+        <g class="trial">
+          <title>{r.org} · {r.role}</title>
+          <line x1={f(x(r.from))} x2={f(Math.max(x(r.from) + 2, x(r.to)))} y1={f(y)} y2={f(y)} />
+          {step >= 9 && <text x={left - 8} y={f(y + 3)} text-anchor="end">{shortName(r.org, narrow ? 15 : 26)}</text>}
+        </g>
+      );
+    })}
+    {!narrow && groups.map((g) => (
+      <g class="group">
+        <path d={`M${right + 8},${f(g.y1 + 2)} L${right + 12},${f(g.y1 + 2)} L${right + 12},${f(g.y2 - 2)} L${right + 8},${f(g.y2 - 2)}`} />
+        <text x={right + 16} y={f((g.y1 + g.y2) / 2 + 3)}>{g.title.toLowerCase()}</text>
+      </g>
+    ))}
+    {spikes.map((s) => (
+      <a href={refs[s.id].href} class="spike" style={`animation-delay: ${(((x(s.t) - left) / span) * sweep).toFixed(2)}s`}>
+        <title>{refs[s.id].kind}: {refs[s.id].title}</title>
+        <line x1={f(x(s.t))} x2={f(x(s.t))} y1={f(s.y - Math.min(6, step * 0.45))} y2={f(s.y + Math.min(6, step * 0.45))} />
+      </a>
+    ))}
+    <line class="playhead" x1={left} x2={left} y1={histTop} y2={rowsBottom} />
+  </svg>
+  <p class="key">Each row is a role (a trial), grouped by kind; its faint line is how long it lasted and each tick a linked output or event (a spike). The histogram on top counts spikes per half year.</p>
+</div>

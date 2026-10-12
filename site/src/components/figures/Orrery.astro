@@ -1,0 +1,54 @@
+---
+// Path as an orrery around now. Every organisation is a planet on its own orbit: the earlier I
+// started there, the further out it orbits (and, by Kepler's third law, the slower). Planets are
+// sized by the months spent there and filled while still current; linked outputs and events are
+// its moons. Names run along the orbits.
+import { dated, now, roleEntries, shortName } from "../../lib/career";
+import { refs } from "../../lib/data";
+interface Props { seed: number; width: number; height: number }
+const { width, height } = Astro.props;
+
+const f = (v: number) => v.toFixed(1);
+const [cx, cy] = [width / 2, height / 2], R = Math.min(width, height) / 2 - 16, r0 = R * 0.16;
+const orgs = [...new Set(roleEntries.map((r) => r.org))].map((org) => {
+  const roles = roleEntries.filter((r) => r.org === org), from = Math.min(...roles.map((r) => r.from));
+  const months = roles.reduce((s, r) => s + (r.to - r.from), 0), moons = [...new Set(roles.flatMap((r) => r.related.filter((id) => id in dated && refs[id])))];
+  return { org, from, months, moons, current: roles.some((r) => r.to >= now), id: roles.find((r) => r.id)?.id };
+}).sort((a, b) => b.from - a.from);
+const [newest, oldest] = [orgs[0].from, orgs[orgs.length - 1].from];
+// Orbits by start time (newest innermost), spread evenly enough to read; periods by Kepler (T ∝ r^1.5).
+const planets = orgs.map((o, i) => {
+  const r = r0 + (R - r0) * (0.55 * ((newest - o.from) / Math.max(1, newest - oldest)) + 0.45 * (i / Math.max(1, orgs.length - 1)));
+  return { ...o, r, size: 2.5 + Math.sqrt(o.months) * 0.7, period: 9 * (r / r0) ** 1.5, phase: (i * 137.5) % 360 };
+});
+const orbitPath = (r: number) => `M${f(cx - r)},${f(cy)} A${f(r)},${f(r)} 0 1 1 ${f(cx + r)},${f(cy)} A${f(r)},${f(r)} 0 1 1 ${f(cx - r)},${f(cy)}`;
+---
+
+<div class="fig orrery">
+  <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Path as an orrery: organisations orbit now, the earliest furthest out, with linked work as moons">
+    <defs>{planets.map((p, i) => <path id={`orbit-${width}-${i}`} d={orbitPath(p.r)} />)}</defs>
+    {planets.map((p, i) => (
+      <g>
+        <circle class="orbit" cx={cx} cy={cy} r={f(p.r)} />
+        <text class="orbit-label"><textPath href={`#orbit-${width}-${i}`} startOffset={`${((i * 38.2) % 100).toFixed(1)}%`}>{shortName(p.org, 20)} · {Math.floor(p.from / 12)}</textPath></text>
+      </g>
+    ))}
+    <circle class="sun" cx={cx} cy={cy} r={f(r0 * 0.45)}><title>now</title></circle>
+    <text class="now" x={cx} y={f(cy + 3.5)} text-anchor="middle">now</text>
+    {planets.map((p) => (
+      <g class="revolve" style={`--period: ${p.period.toFixed(1)}s; --phase: ${p.phase.toFixed(0)}deg; transform-origin: ${f(cx)}px ${f(cy)}px`}>
+        <a href={p.id && refs[p.id] ? refs[p.id].href : "/path/"}>
+          <title>{p.org} · since {Math.floor(p.from / 12)} · {p.months} months{p.moons.length ? ` · ${p.moons.length} linked` : ""}</title>
+          <circle class:list={["planet", { current: p.current }]} cx={f(cx + p.r)} cy={cy} r={f(p.size)} />
+        </a>
+        <g class="moons" style={`transform-origin: ${f(cx + p.r)}px ${f(cy)}px; --period: ${(2 + p.moons.length * 0.3).toFixed(1)}s`}>
+          {p.moons.map((id, k) => {
+            const a = (k / p.moons.length) * Math.PI * 2, d = p.size + 4 + (k % 2) * 3;
+            return <a href={refs[id].href}><title>{refs[id].kind}: {refs[id].title}</title><circle class="moon" cx={f(cx + p.r + Math.cos(a) * d)} cy={f(cy + Math.sin(a) * d)} r="1.6" /></a>;
+          })}
+        </g>
+      </g>
+    ))}
+  </svg>
+  <p class="key">Each organisation is a planet: the earlier I started there, the further out (and slower, by Kepler) it orbits now; bigger for more months, filled while still current. Its moons are linked outputs and events.</p>
+</div>

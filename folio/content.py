@@ -38,12 +38,18 @@ class Item(Model):
     cv: bool = True
 
 
+class Stop(Model):
+    label: str
+    year: int
+
+
 class Profile(Model):
     name: str
     headline: Text
     bio: Text
     author_names: list[str] = Field(min_length=1)  # highlighted in author lists
     links: list[Link] = []
+    walk: list[Stop] = []  # fields passed through, in order; drawn as a route on the website
     email: str | None = None
     phone: str | None = None
 

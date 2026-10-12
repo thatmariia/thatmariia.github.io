@@ -7,18 +7,12 @@ import Fireworks from "./figures/Fireworks.astro";
 import NeuronGame from "./figures/NeuronGame.astro";
 import PianoRoll from "./figures/PianoRoll.astro";
 import Spiral from "./figures/Spiral.astro";
-import StarChart from "./figures/StarChart.astro";
-import SynapseGame from "./figures/SynapseGame.astro";
 import Travels from "./figures/Travels.astro";
-import Trophies from "./figures/Trophies.astro";
 import Volleyball from "./figures/Volleyball.astro";
-import WhenGame from "./figures/WhenGame.astro";
 import Worldline from "./figures/Worldline.astro";
 
 const FIGURES = {
   game: { label: "Neuron game", Figure: NeuronGame, seed: 1 },
-  synapses: { label: "Synapse memory", Figure: SynapseGame, seed: 1 },
-  when: { label: "When was it?", Figure: WhenGame, seed: 1 },
   spiral: { label: "Spiral explorer", Figure: Spiral, seed: 2 },
   collaborators: { label: "Collaborators", Figure: Collaborators, seed: 7 },
   worldline: { label: "Worldline", Figure: Worldline, seed: 1 },
@@ -26,8 +20,6 @@ const FIGURES = {
   piano: { label: "Piano roll", Figure: PianoRoll, seed: 1 },
   travels: { label: "Travels", Figure: Travels, seed: 2 },
   fireworks: { label: "Fireworks", Figure: Fireworks, seed: 6 },
-  starchart: { label: "Star chart", Figure: StarChart, seed: 4 },
-  trophies: { label: "Trophies", Figure: Trophies, seed: 1 },
   volleyball: { label: "Volleyball", Figure: Volleyball, seed: 3 },
 };
 interface Props { show: (keyof typeof FIGURES)[] }

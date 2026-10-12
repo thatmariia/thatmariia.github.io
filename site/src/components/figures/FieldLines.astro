@@ -1,0 +1,66 @@
+---
+// Fields as point charges with the electric field lines between them. Signs alternate around the
+// ellipse and negative charges are scaled so the total is zero: every line runs between two fields.
+// Without labels it is a small mark, e.g. next to page titles.
+import { ellipse, hoverCss, place, separate } from "../../lib/figure";
+import { points, random, type Point } from "../../lib/random";
+interface Props { fields: string[]; seed: number; width: number; height: number; labels?: boolean }
+const { fields, seed, width, height, labels = true } = Astro.props;
+
+const uniform = random(seed);
+const n = fields.length, positives = Math.ceil(n / 2), negatives = n - positives;
+const [padX, padY] = labels ? [Math.max(70, width * 0.13), 56] : [14, 14];
+const charges = ellipse(n, width, height, padX, padY, uniform).map(({ at, slot }) => ({
+  at, q: slot % 2 ? -positives / negatives : 1,
+}));
+if (labels) separate(charges.map((c) => c.at), fields, width, height, padY);
+
+function field([x, y]: Point): Point {
+  let ex = 0, ey = 0;
+  for (const { at: [cx, cy], q } of charges) {
+    const dx = x - cx, dy = y - cy, r3 = Math.max(1, Math.hypot(dx, dy)) ** 3;
+    ex += (q * dx) / r3;
+    ey += (q * dy) / r3;
+  }
+  return [ex, ey];
+}
+
+// Trace lines out of each positive charge until they reach a negative one or leave the figure.
+const perCharge = labels ? 16 : 9;
+const lines: { path: Point[]; touches: number[] }[] = [];
+charges.forEach(({ at: [cx, cy], q }, source) => {
+  if (q < 0) return;
+  for (let k = 0; k < perCharge; k++) {
+    const a = (2 * Math.PI * k) / perCharge + 0.13;
+    let p: Point = [cx + 6 * Math.cos(a), cy + 6 * Math.sin(a)];
+    const path: Point[] = [p];
+    const touches = [source];
+    for (let step = 0; step < 1500; step++) {
+      const [ex, ey] = field(p);
+      const norm = Math.hypot(ex, ey) || 1;
+      p = [p[0] + (2 * ex) / norm, p[1] + (2 * ey) / norm];
+      path.push(p);
+      const sink = charges.findIndex((c) => c.q < 0 && Math.hypot(p[0] - c.at[0], p[1] - c.at[1]) < 6);
+      if (sink >= 0) touches.push(sink);
+      if (sink >= 0 || p[0] < -40 || p[0] > width + 40 || p[1] < -40 || p[1] > height + 40) break;
+    }
+    lines.push({ path, touches });
+  }
+});
+
+const id = `fl-${seed}-${width}`;
+---
+
+<div class:list={["fig", id, { mark: !labels }]}>
+  <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={labels ? `Fields: ${fields.join(", ")}` : undefined} aria-hidden={labels ? undefined : "true"}>
+    <clipPath id={`${id}-clip`}><rect width={width} height={height} /></clipPath>
+    <g clip-path={`url(#${id}-clip)`}>
+      {lines.map((line, i) => (
+        <polyline class="line" data-touches={line.touches.join(" ")} style={`--i: ${i % 9}`} points={points(line.path)} pathLength="1" />
+      ))}
+    </g>
+    {!labels && charges.map(({ at: [x, y] }) => <circle class="dot" cx={x} cy={y} r="4" />)}
+  </svg>
+  {labels && charges.map(({ at }, i) => <span class="node" data-node={i} style={place(at, width, height)}>{fields[i]}</span>)}
+  {labels && <style is:inline set:html={hoverCss(id, n)} />}
+</div>

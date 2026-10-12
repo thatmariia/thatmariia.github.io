@@ -73,6 +73,14 @@ class Entry(Item):
     periods: list[Period] = Field(min_length=1)
 
 
+class Activity(Item):
+    """Something beyond science: a hobby, sport or course, as one short line."""
+
+    title: Text
+    note: Text | None = None
+    since: Date | None = None
+
+
 class Work(Item):
     """A publication or research output; its category is the file it is in."""
 
@@ -110,7 +118,7 @@ class Content(Model):
     events: list[Entry] = []
     outreach: list[Entry] = []
     other: list[Entry] = []
-    beyond: list[Entry] = []  # beyond science: hobbies, sports, volunteering, other qualifications
+    beyond: list[Activity] = []  # beyond science: hobbies, sports, volunteering, courses
     publications: list[Work] = []  # peer-reviewed articles and papers
     preprints: list[Work] = []
     software: list[Work] = []

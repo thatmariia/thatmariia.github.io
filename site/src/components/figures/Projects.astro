@@ -47,8 +47,8 @@ const columns = width > height ? Math.ceil(Math.sqrt(projects.length * 1.6)) : 2
 const rows = Math.ceil(projects.length / columns);
 const [cellW, cellH] = [width / columns, (height - 8) / rows];
 const f = (v: number) => v.toFixed(1);
-// Names are cut to fit their cell (about 6.4 units per mono character).
-const fits = Math.floor((cellW - 10) / 6.4);
+// Names are cut to fit their cell (Martian Mono is wide: about 8 units per character).
+const fits = Math.floor((cellW - 10) / 8);
 const short = (s: string) => (s.length > fits ? `${s.slice(0, fits - 1).trim()}…` : s);
 const drawn = projects.map((project, k) => {
   const [ox, oy] = [(k % columns) * cellW, Math.floor(k / columns) * cellH];

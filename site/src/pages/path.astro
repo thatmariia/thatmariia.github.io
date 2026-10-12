@@ -7,7 +7,7 @@ import { pathSections, studies, thesisLinks } from "../lib/data";
 const sections = [{ id: "education", title: "Education" }, ...pathSections];
 ---
 
-<Base title="Path" sections={sections} mark={9}>
+<Base title="Path" sections={sections} figures={["dendrite", "places"]}>
   <section class="block" id="education">
     <h2>Education</h2>
     <ul class="studies">{studies.map((field) => <li>{field}</li>)}</ul>

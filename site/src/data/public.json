@@ -1,0 +1,1393 @@
+{
+  "profile": {
+    "name": "Mariia Steeghs-Turchina",
+    "headline": "Computational neuroscientist & research software engineer",
+    "bio": "My background is a random walk through physics, machine learning, computer\nscience, electrical engineering, and especially mathematics, with a focus on\nmodeling. At the University of Amsterdam I work on mathematical and\ncomputational models of EEG. At Leiden University Medical Center and ELIXIR\nI build software and infrastructure for open science, FAIR research software,\nand interoperability in bioinformatics.\n",
+    "author_names": [
+      "M. Steeghs-Turchina",
+      "M.A. Turchina"
+    ],
+    "links": [
+      {
+        "label": "GitHub",
+        "url": "https://github.com/thatmariia"
+      },
+      {
+        "label": "ORCID",
+        "url": "https://orcid.org/0000-0002-0852-4752"
+      },
+      {
+        "label": "Google Scholar",
+        "url": "https://scholar.google.com/citations?user=edRVcrkAAAAJ"
+      },
+      {
+        "label": "LinkedIn",
+        "url": "https://linkedin.com/in/thatmariia"
+      }
+    ]
+  },
+  "education": [
+    {
+      "periods": [
+        {
+          "title": "Behavioral Data Science"
+        }
+      ]
+    },
+    {
+      "id": "tue",
+      "periods": [
+        {
+          "title": "Applied Mathematics"
+        },
+        {
+          "title": "Artificial Intelligence Honors Program"
+        },
+        {
+          "title": "Technology Entrepreneurship Certificate Program"
+        },
+        {
+          "title": "Electrical (Automotive) Engineering"
+        }
+      ],
+      "related": [
+        "thesis-figure-ground"
+      ]
+    },
+    {
+      "periods": [
+        {
+          "title": "Natural Sciences / Physics"
+        }
+      ]
+    },
+    {
+      "periods": [
+        {
+          "title": "Competitive Programming"
+        }
+      ]
+    }
+  ],
+  "research": [
+    {
+      "id": "lumc",
+      "title": "Leiden University Medical Center",
+      "location": "Leiden, NL",
+      "periods": [
+        {
+          "title": "Research Software Engineer",
+          "unit": "Caecilia Institute for Population Health and Data Sciences, Advanced Data Management",
+          "start": "2026-09",
+          "end": "present",
+          "notes": [
+            "Developing research software and FAIR bioinformatics workflows to improve interoperability across heterogeneous biomedical data resources",
+            "Implementing and demonstrating proteomics use cases, developing workflows that connect proteomics data with genomic, structural, and molecular-interaction resources",
+            "Collaborating with ELIXIR to develop tools enabling FAIR principles and open-source practices for research software"
+          ]
+        },
+        {
+          "title": "Research Software Steward",
+          "unit": "Caecilia Institute for Population Health and Data Sciences, Advanced Data Management",
+          "start": "2024-08",
+          "end": "2026-09",
+          "notes": [
+            "Shaped institutional policies and best practices for research software development, grounded in FAIR principles, open-source practices, and Open Science",
+            "Developed and deployed tools and infrastructure that support sustainable research software",
+            "Collaborated with national (e.g., TDCC) and international (e.g., ELIXIR) initiatives to align policies and tools, contributed to shared work packages, events, and grant proposals",
+            "Won SURF **Research Support Luminary Award**"
+          ]
+        }
+      ],
+      "related": [
+        "research-software-guidelines"
+      ]
+    },
+    {
+      "id": "uva-nunez-lab",
+      "title": "University of Amsterdam",
+      "location": "Amsterdam, NL",
+      "periods": [
+        {
+          "title": "Research Assistant",
+          "unit": "Psychological Methods, Mathematical Cognitive Neuroscience Lab",
+          "start": "2024-01",
+          "end": "present",
+          "notes": [
+            "Developing theoretical models of EEG dynamics",
+            "Conducting experiments involving (simultaneous) EEG and eye-tracking data collection; writing experimental protocols",
+            "Providing mathematical and software support to related projects",
+            "Supervisor: Dr. Michael Nunez"
+          ]
+        }
+      ],
+      "related": [
+        "slow-wave-eeg",
+        "macro-eeg-model"
+      ]
+    },
+    {
+      "id": "maastricht-ccn-lab",
+      "title": "Maastricht University",
+      "location": "Maastricht, NL",
+      "periods": [
+        {
+          "title": "Research Intern",
+          "unit": "Cognitive Computational Neuroscience Lab",
+          "start": "2021-07",
+          "end": "2023-04",
+          "notes": [
+            "Developed computational models for perceptual learning and figure-ground segregation in the early visual cortex",
+            "Created visual Gabor stimuli for psychophysics experiments",
+            "Supervisors: Dr. Maryam Karimian and Dr. Jim Portegies (from the Eindhoven University of Technology)"
+          ]
+        }
+      ],
+      "related": [
+        "thesis-figure-ground"
+      ]
+    },
+    {
+      "title": "Human Augmentation Research & Technology (HART)",
+      "location": "Eindhoven, NL",
+      "periods": [
+        {
+          "title": "Research Lead",
+          "start": "2020-12",
+          "end": "2022-06",
+          "notes": [
+            "Led and supervised research on sensory substitution, developing models for data classification and haptic information mapping",
+            "Applied generative AI-driven frameworks for distinguishable haptic patterns",
+            "Designed and conducted experiments on tactile pattern recognition"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Eindhoven University of Technology",
+      "location": "Eindhoven, NL",
+      "periods": [
+        {
+          "title": "Research Intern",
+          "unit": "Data Mining Group (as part of Honors Program)",
+          "start": "2019-09",
+          "end": "2020-06",
+          "notes": [
+            "Conducted literature studies on bias overestimation in Reinforcement Learning and reproduced the TD3 algorithm",
+            "Investigated human feedback methods in Reinforcement Learning",
+            "Supervisor: Dr. Decebal Mocanu"
+          ]
+        },
+        {
+          "title": "Research Intern",
+          "unit": "Neuromorphic Engineering Lab",
+          "start": "2021-01",
+          "notes": [
+            "Assisted in developing a real-time cancer cell detection model by using neural networks with optical and impedance sensor data",
+            "Supervisor: Dr. Yoeri van de Burgt"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Maastricht University",
+      "location": "Maastricht, NL",
+      "periods": [
+        {
+          "title": "Student Researcher",
+          "start": "2018-05",
+          "end": "2018-07",
+          "notes": [
+            "Researched the impact of noise on autonomous search strategies in AI agents and the lack of evolution in *Drosophila melanogaster* in noisy environments"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "spb-academic-university",
+      "title": "St-Petersburg National Research Academic University of the Russian Academy of Sciences",
+      "location": "St-Petersburg, RU",
+      "periods": [
+        {
+          "title": "Research Intern",
+          "unit": "Nanotechnology Research Center, Physics of Nanostructures Lab",
+          "start": "2015-09",
+          "end": "2017-01",
+          "notes": [
+            "Researched the evolution of radius distribution in GaAs nanowire growth and analyzed vertical and radial growth rates of Ga droplets",
+            "Supervisor: Dr. Vladimir Dubrovskii"
+          ]
+        }
+      ],
+      "related": [
+        "gaas-self-equilibration",
+        "gaas-initial-stage"
+      ]
+    }
+  ],
+  "teaching": [
+    {
+      "id": "lumc-course-software-management",
+      "title": "Leiden University Medical Center",
+      "location": "Leiden, NL",
+      "periods": [
+        {
+          "title": "Lecturer",
+          "start": "2026-06",
+          "notes": [
+            "Co-organized and taught a course “Bioinformatics Software Management and Metadata Curation” aimed at PhD students, postdocs, scientific programmers, researchers, and managers",
+            "Focus on Software Management Plans (research software lifecycle planning, documentation, versioning, licensing, testing, and long-term maintenance) and software metadata curation"
+          ]
+        }
+      ],
+      "related": [
+        "dbc-2026"
+      ]
+    },
+    {
+      "title": "Technasium, Newmann College",
+      "location": "Breda, NL",
+      "periods": [
+        {
+          "title": "Project Supervisor",
+          "start": "2021-05",
+          "end": "2021-07",
+          "notes": [
+            "Developed projects to enhance human abilities and supervised two groups of high school students"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Eindhoven University of Technology",
+      "location": "Eindhoven, NL",
+      "periods": [
+        {
+          "title": "Grading Teaching Assistant",
+          "unit": "Software Development for Engineers course",
+          "start": "2020-04",
+          "end": "2020-07",
+          "notes": [
+            "Assisted with Git and software development in Python, graded three homework projects of >20 groups"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "H.S.A. Confluente",
+      "location": "Eindhoven, NL",
+      "periods": [
+        {
+          "title": "Educational Committee Member",
+          "start": "2019-10",
+          "end": "2020-06",
+          "notes": [
+            "Organized >10 educational activities and events (e.g., workshops, lunch lectures, personal development courses, presentations) for honors students"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Eindhoven University of Technology",
+      "location": "Eindhoven, NL",
+      "periods": [
+        {
+          "title": "Student Assistant",
+          "start": "2019-04",
+          "end": "2019-07",
+          "notes": [
+            "Participated in a test-run of the revised User, Society, and Enterprise course, developed a new project presentation delivery scheme for the course"
+          ]
+        },
+        {
+          "title": "Student Assistant",
+          "start": "2018-11",
+          "notes": [
+            "Worked on the development and production of an online teamwork course"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Freelance Tutor",
+      "location": "St-Petersburg, RU",
+      "periods": [
+        {
+          "start": "2015-08",
+          "end": "2016-06",
+          "notes": [
+            "Successfully prepared two students for the Russian Unified State Exams in physics, mathematics, and English language"
+          ]
+        }
+      ]
+    }
+  ],
+  "leadership": [
+    {
+      "title": "Human Augmentation Research & Technology (HART)",
+      "location": "Eindhoven, NL",
+      "periods": [
+        {
+          "title": "Advisory Board Member",
+          "start": "2022-09",
+          "end": "2023-06"
+        }
+      ]
+    },
+    {
+      "title": "H.S.A. Confluente",
+      "location": "Eindhoven, NL",
+      "periods": [
+        {
+          "title": "Advisory Board Member",
+          "start": "2021-10",
+          "end": "2022-10"
+        }
+      ]
+    },
+    {
+      "title": "Human Brain Project (HBP)",
+      "location": "Virtual",
+      "periods": [
+        {
+          "title": "Partnering Project Representative",
+          "start": "2021-08",
+          "end": "2022-06",
+          "notes": [
+            "Authorized representative of the HART project at HBP (EU-Flagship project), submitted and secured approval for the project reviewed by the HBP Science and Infrastructure Board"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Human Augmentation Research & Technology (HART)",
+      "location": "Eindhoven, NL",
+      "periods": [
+        {
+          "title": "Co-founder & Chair",
+          "start": "2020-08",
+          "end": "2022-06",
+          "notes": [
+            "Founded and led a multidisciplinary team focused on sensory substitution/addition technologies and human augmentation ethics, accredited by Eindhoven University of Technology in record time"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Eindhoven University of Technology",
+      "location": "Eindhoven, NL",
+      "periods": [
+        {
+          "title": "Student Council Representative",
+          "unit": "Honors Academy",
+          "start": "2019-09",
+          "end": "2021-06",
+          "notes": [
+            "Represented the AI track of the Honors Academy in the student council for two years, contributing to a 30% increase in student satisfaction with the track"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "H.S.A. Confluente",
+      "location": "Eindhoven, NL",
+      "periods": [
+        {
+          "title": "Chair of Acquisition Committee",
+          "start": "2019-10",
+          "end": "2020-06",
+          "notes": [
+            "Managed and instructed nine honors students, established industry partnerships, and organized professional development workshops"
+          ]
+        }
+      ]
+    }
+  ],
+  "service": [],
+  "awards": [],
+  "funding": [],
+  "events": [
+    {
+      "title": "BioHackathon 2026",
+      "location": "Barcelona, ES",
+      "periods": [
+        {
+          "start": "2026-11"
+        }
+      ]
+    },
+    {
+      "id": "dbc-2026",
+      "title": "10th Annual Danish Bioinformatics Conference 2026",
+      "location": "Odense, DK",
+      "periods": [
+        {
+          "start": "2026-10",
+          "notes": [
+            "Gave a **workshop** “Bioinformatics Software Management and Metadata Curation”",
+            "Presented a **poster** “Automating software curation loop: Bidirectional bridge GitHub ↔ bio.tools”",
+            "Presented a **poster** “A Metadata-driven Infrastructure Supporting FAIR and Open-Source Practices Throughout the Research Software Lifecycle”"
+          ]
+        }
+      ],
+      "related": [
+        "lumc-course-software-management",
+        "bidirectional-bridge",
+        "metadata-driven-infrastructure"
+      ]
+    },
+    {
+      "title": "European Conference on Computational Biology 2026",
+      "location": "Geneva, CH",
+      "periods": [
+        {
+          "start": "2026-09",
+          "notes": [
+            "Gave a **workshop** “FAIR metadata for bioinformatics software”"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "elixir-all-hands-2026",
+      "title": "ELIXIR All Hands",
+      "location": "Lyon, FR",
+      "periods": [
+        {
+          "start": "2026-06",
+          "notes": [
+            "Presented a **poster** “Automating software curation loop: Bidirectional bridge GitHub ↔ bio.tools”",
+            "Won the best early career researcher **poster award**",
+            "Co-presented a **poster** “Update of the bio.tools registry for software in the life sciences”"
+          ]
+        }
+      ],
+      "related": [
+        "bidirectional-bridge",
+        "software-curation-loop-poster"
+      ]
+    },
+    {
+      "title": "SURF Research Day 2026",
+      "location": "Amsterdam, NL",
+      "periods": [
+        {
+          "start": "2026-05",
+          "notes": [
+            "Won **Research Support Luminary Award**"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "ELIXIR-NL Symposium 2025",
+      "location": "Amsterdam, NL",
+      "periods": [
+        {
+          "start": "2025-12",
+          "notes": [
+            "Gave a **talk** “Software Stewardship and ELIXIR's Research Software Ecosystem”"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "biohackathon-2025",
+      "title": "BioHackathon 2025",
+      "location": "Bad Saarow, DE",
+      "periods": [
+        {
+          "start": "2025-11",
+          "notes": [
+            "Co-led a **project** “Bidirectional bridge: GitHub ↔ bio.tools” alongside Dr. Veit Schwämmle and Dr. Anna Niehues"
+          ]
+        }
+      ],
+      "related": [
+        "bidirectional-bridge"
+      ]
+    },
+    {
+      "title": "Bioinformatics Open Days XIV Edition",
+      "location": "Braga, PT",
+      "periods": [
+        {
+          "start": "2025-03",
+          "notes": [
+            "Gave a **workshop** “Software curation in *bio.tools*”"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "FAIRfest (FAIR-IMPACT & FAIRCORE4EOSC)",
+      "location": "The Hague, NL",
+      "periods": [
+        {
+          "start": "2025-02",
+          "notes": [
+            "Presented a **poster** “FAIR Implementation at LUMC DCC: Enabling FAIR Practices at a University Medical Center”"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathpsych-2024",
+      "title": "MathPsych/ICCM 2024",
+      "location": "Tilburg, NL",
+      "periods": [
+        {
+          "start": "2024-07",
+          "notes": [
+            "Gave a **talk** “Modeling EEG with axon delay times”"
+          ]
+        }
+      ],
+      "related": [
+        "slow-wave-eeg"
+      ]
+    },
+    {
+      "id": "virtual-mathpsych-2024",
+      "title": "Virtual MathPsych/ICCM 2024",
+      "location": "Virtual",
+      "periods": [
+        {
+          "start": "2024-06",
+          "notes": [
+            "Gave a **talk** “Modeling EEG with axon delay times”",
+            "Won the people's choice **award for the talk**"
+          ]
+        }
+      ],
+      "related": [
+        "slow-wave-eeg"
+      ]
+    },
+    {
+      "title": "The future impact of AI, EAISI Summit",
+      "location": "Eindhoven, NL",
+      "periods": [
+        {
+          "start": "2021-11",
+          "notes": [
+            "Gave a **talk** “Extending human senses with AI”",
+            "Won the best pitch audience award"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Human Brain Project Summit 2021",
+      "location": "Virtual",
+      "periods": [
+        {
+          "start": "2021-10",
+          "notes": [
+            "Presented a **poster** “Towards a general model for the transformation of data into tactile patterns”",
+            "Chaired a **discussion session** on challenges in the field of sensory augmentation"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Transhuman Race: The Symposium",
+      "location": "Virtual",
+      "periods": [
+        {
+          "start": "2021-06",
+          "notes": [
+            "Co-led a **panel discussion** with Dr. Ed Boyden, Dr. Kevin Esvelt, Dr. Anders Sandberg, Dr. Yoeri van de Burgt, and Peter Joosten",
+            "Gave a **talk** about Human Augmentation Research & Technology (HART)"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Honors Academy Symposium",
+      "location": "Eindhoven, NL",
+      "periods": [
+        {
+          "start": "2020-07",
+          "notes": [
+            "Presented a **poster** “State-of-the-art Reinforcement Learning and the Role of Human Involvement”"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Dutch Honours Conference: Homo Deus",
+      "location": "Eindhoven, NL",
+      "periods": [
+        {
+          "start": "2019-12",
+          "notes": [
+            "One of 100 honors students in the Netherlands selected to attend"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Intelligent Transport Systems European Congress",
+      "location": "Helmond, NL",
+      "periods": [
+        {
+          "start": "2019-06",
+          "notes": [
+            "Presented a **demo** of 5G autonomous connected driving"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Maastricht University Undergraduate Project Fair",
+      "location": "Maastricht, NL",
+      "periods": [
+        {
+          "start": "2018-07",
+          "notes": [
+            "Presented a **poster** “The impact of noise in autonomous search strategies by artificially intelligent agents”"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lasers-photonics-2016",
+      "title": "Lasers and Photonics Congress",
+      "location": "Peterhof, RU",
+      "periods": [
+        {
+          "start": "2016-06",
+          "notes": [
+            "Presented a **poster** “Narrowing of the diameter distribution during growth of Ga-catalyzed GaAs nanowires”"
+          ]
+        }
+      ],
+      "related": [
+        "gaas-self-equilibration"
+      ]
+    },
+    {
+      "id": "spb-open-2016",
+      "title": "Saint-Petersburg OPEN 2016",
+      "location": "St-Petersburg, RU",
+      "periods": [
+        {
+          "start": "2016-03",
+          "notes": [
+            "Presented a **poster** “Self-equilibration of the radius distribution in self-catalyzed GaAs nanowires”"
+          ]
+        }
+      ],
+      "related": [
+        "gaas-self-equilibration"
+      ]
+    }
+  ],
+  "outreach": [
+    {
+      "title": "News: Interviews & Contributions",
+      "location": "NL, Virtual",
+      "periods": [
+        {
+          "start": "2020-12",
+          "end": "2022-06",
+          "notes": [
+            "Contributed to articles and gave interviews about human augmentation to dozens of local (Eindhovens Dagblad), regional (Brainport), national (NU.nl), and international (Associated Press) news agencies"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Eindhoven University of Technology",
+      "location": "Eindhoven, NL",
+      "periods": [
+        {
+          "start": "2021-11",
+          "notes": [
+            "Hosted and presented an open showcase demonstrating the progress of team HART since its formation"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "University Club, Eindhoven University of Technology",
+      "location": "Eindhoven, NL",
+      "periods": [
+        {
+          "start": "2021-09",
+          "notes": [
+            "Was selected as one of the 30 young scientists from the university to participate in the College Tour with Dr. Robbert Dijkgraaf"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Honors Academies Netherlands",
+      "location": "Eindhoven, NL",
+      "periods": [
+        {
+          "start": "2021-06",
+          "notes": [
+            "Gave a presentation about the AI Honors track to deans of Leiden University, University of Twente, University of Amsterdam, Wageningen University, and TU Delft Honors Academies"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Brainport Eindhoven",
+      "location": "Eindhoven, NL",
+      "periods": [
+        {
+          "start": "2021-06",
+          "notes": [
+            "Gave an interview as a pioneer in the Brainport region about my experiences as a student and the local academic environment"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Famelab",
+      "location": "Virtual",
+      "periods": [
+        {
+          "start": "2021-04",
+          "notes": [
+            "Gave a talk about sensory enhancement",
+            "Top 3 at the Eindhoven University of Technology edition (science communication competition)"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "High School 189 “Chance”",
+      "location": "St-Petersburg, RU",
+      "periods": [
+        {
+          "start": "2016-05",
+          "notes": [
+            "Gave a lecture about the research in semiconductor nanowires and combining full-time studies with a lab internship"
+          ]
+        }
+      ]
+    }
+  ],
+  "other": [
+    {
+      "title": "De Beachvolleybalschool",
+      "location": "The Hague, NL",
+      "periods": [
+        {
+          "title": "Beach Volleyball Coach",
+          "start": "2026-03",
+          "end": "present"
+        }
+      ]
+    },
+    {
+      "title": "Support Initiatives for Ukraine",
+      "location": "Global / Virtual",
+      "periods": [
+        {
+          "start": "2022-02",
+          "end": "present",
+          "notes": [
+            "Collaborated with an international volunteer team to build and maintain a global map of donation drop-off points for humanitarian aid (featured by BBC)",
+            "Created visual materials for “Dance for Ukraine”, a series of charity dance events to raise funds and awareness for Ukraine"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Human Augmentation Research & Technology (HART)",
+      "location": "Eindhoven, NL",
+      "periods": [
+        {
+          "title": "Marketing Assistant",
+          "start": "2020-12",
+          "end": "2022-06",
+          "notes": [
+            "Developed a roadmap for raising awareness about human augmentation",
+            "Designed the brand style guide, managed and created visual and textual content for social media profiles and newsletters"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "H.S.A. Confluente",
+      "location": "Eindhoven, NL",
+      "periods": [
+        {
+          "title": "Committee Member",
+          "unit": "Financial Committee",
+          "start": "2020-10",
+          "end": "2021-10",
+          "notes": [
+            "Provided regular feedback on the expenditures and budget management"
+          ]
+        },
+        {
+          "title": "Committee Member",
+          "unit": "PR & Lustrum Committees",
+          "start": "2019-10",
+          "end": "2020-06",
+          "notes": [
+            "Interviewed students and professors for the association magazine and redesigned event posters",
+            "Organized Lustrum activities for honors students"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Eindhoven University of Technology",
+      "location": "Eindhoven, NL",
+      "periods": [
+        {
+          "title": "Engineering Student Assistant",
+          "start": "2018-05",
+          "notes": [
+            "Developed and demonstrated an autonomous connected driving system; collaborated intensively with another student under a tight deadline and presented the project at the ITS Congress on the university's behalf"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "ATeam Eindhoven",
+      "location": "Eindhoven, NL",
+      "periods": [
+        {
+          "title": "Signal Processing Engineer",
+          "start": "2018-11",
+          "end": "2019-02",
+          "notes": [
+            "Contributed to a student team developing an autonomous car, successfully demonstrating it to Halimah Yacob, President of Singapore"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "EducationUSA",
+      "location": "St-Petersburg, RU",
+      "periods": [
+        {
+          "title": "Fair Assistant",
+          "start": "2015-11",
+          "notes": [
+            "Assisted a representative from Polytechnic School of Engineering at New York University during an educational fair for Russian students"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Global Voices Online",
+      "location": "Virtual",
+      "periods": [
+        {
+          "title": "Translator",
+          "start": "2015-07",
+          "end": "2015-10",
+          "notes": [
+            "Translated news articles from English to Russian, published an article in TJ"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "World Scout Jamboree, Summit Bechtel Family",
+      "location": "West Virginia, US",
+      "periods": [
+        {
+          "title": "Construction Assistant",
+          "start": "2013-07",
+          "notes": [
+            "Repaired a school for children from poor families with a group of scouts"
+          ]
+        }
+      ]
+    }
+  ],
+  "publications": [
+    {
+      "id": "metadata-driven-infrastructure",
+      "title": "A metadata-driven infrastructure for the research software lifecycle",
+      "authors": [
+        "M. Steeghs-Turchina",
+        "A. Niehues",
+        "M. Palmblad"
+      ],
+      "year": 2026,
+      "status": "in-progress",
+      "related": [
+        "dbc-2026"
+      ]
+    },
+    {
+      "id": "software-curation-loop",
+      "title": "Completing the software curation loop across registries and repositories",
+      "authors": [
+        "M. Steeghs-Turchina",
+        "A. Niehues",
+        "A.I. S. Mendes",
+        "O.J.R. Gustafsson",
+        "W. Baccinelli",
+        "V. Kasalica",
+        "M. Palmblad",
+        "V. Schwämmle"
+      ],
+      "year": 2026,
+      "status": "in-progress",
+      "related": [
+        "bidirectional-bridge"
+      ]
+    },
+    {
+      "id": "interoperable-research-software",
+      "title": "Towards Interoperable Research Software: Challenges, Practices, and Assessment Frameworks",
+      "authors": [
+        "W. Baccinelli",
+        "V. Kasalica",
+        "T. Abbassi-Daloii",
+        "M. Palmblad",
+        "T. Pronk",
+        "B. Bakker",
+        "I. Martorelli",
+        "M. Steeghs-Turchina",
+        "A. Niehues",
+        "T. Mathes"
+      ],
+      "year": 2026,
+      "status": "in-progress"
+    },
+    {
+      "id": "elixir-rse-ecosystem",
+      "title": "The ELIXIR Research Software Ecosystem: An Open Metadata Commons for Software",
+      "authors": [
+        "M. Anton",
+        "B. Batut",
+        "A. Gaignard",
+        "F. Bacall",
+        "S. Capella-Gutierrez",
+        "F. Coppens",
+        "C. Garrard",
+        "C. Goble",
+        "B. Grüning",
+        "O.J.R. Gustafsson",
+        "J. Harrow",
+        "A. Heidari",
+        "H. Ienasescu",
+        "M. Kalaš",
+        "A. Kadkhodaei Elyaderani",
+        "S. Manos",
+        "P. Maccallum",
+        "A. Mendes",
+        "S. Möller",
+        "K. Miura",
+        "S. Owen",
+        "M. Palmblad",
+        "P. Paul-Gilloteaux",
+        "H. Peterson",
+        "M. Pitoulias",
+        "Y. Perez-Riverol",
+        "D. Repchevsky",
+        "C. Rioualen",
+        "O. Sallou",
+        "V. Schwämmle",
+        "S. Soiland-Reyes",
+        "M. Steeghs-Turchina",
+        "M.A. Tangaro",
+        "J. Tedds",
+        "A. Tille",
+        "F. Zambelli",
+        "O. Zharkov",
+        "P. Zierep",
+        "H. Ménager",
+        "J.M. Fernández",
+        "J.Ll. Gelpi"
+      ],
+      "year": 2026,
+      "status": "in-progress"
+    },
+    {
+      "id": "biotools-nar",
+      "title": "bio.tools: an expanded web service for research software in the life sciences",
+      "authors": [
+        "A.I. da Silva Mendes",
+        "H. Ienasescu",
+        "C.A.T. Andersen",
+        "E. Calhoun",
+        "P.J. Chmura",
+        "I. Goga",
+        "O.J.R. Gustafsson",
+        "M. Kalaš",
+        "M. Kierkegaard",
+        "N. Kildegaard Nielsen",
+        "E. Jaaniso",
+        "J.R.B. Jensen",
+        "H. Ménager",
+        "M. Palmblad",
+        "Z. Magyar",
+        "T. Raček",
+        "A. Rošinec",
+        "F. Rusz",
+        "M. Steeghs-Turchina",
+        "A.W. Szmigiel",
+        "R. Svobodová",
+        "V. Schwämmle"
+      ],
+      "year": 2026,
+      "venue": "Nucleic Acids Research",
+      "status": "published",
+      "doi": "10.1093/nar/gkag420"
+    },
+    {
+      "id": "llm-neurocognition",
+      "title": "Large Language Models Show Signs of Alignment with Human Neurocognition During Abstract Reasoning",
+      "authors": [
+        "C. Pinier",
+        "S. Acuna Vargas",
+        "M. Steeghs-Turchina",
+        "D. Matzke",
+        "C.E. Stevenson",
+        "M.D. Nunez"
+      ],
+      "year": 2026,
+      "venue": "ICLR 2026 Workshop",
+      "status": "published",
+      "url": "https://openreview.net/forum?id=gyoSN8k9vR"
+    },
+    {
+      "id": "slow-wave-eeg",
+      "title": "Slow wave dynamics of scalp EEG can be explained by simple statistical models of long-range connections",
+      "authors": [
+        "M. Steeghs-Turchina",
+        "R. Srinivasan",
+        "P.L. Nunez",
+        "M.D. Nunez"
+      ],
+      "year": 2025,
+      "venue": "NeuroImage",
+      "status": "published",
+      "doi": "10.1016/j.neuroimage.2025.121418",
+      "related": [
+        "uva-nunez-lab",
+        "mathpsych-2024",
+        "virtual-mathpsych-2024",
+        "macro-eeg-model"
+      ]
+    },
+    {
+      "id": "gaas-self-equilibration",
+      "title": "Self-equilibration of the radius distribution in self-catalyzed GaAs nanowires",
+      "authors": [
+        "E.D. Leshchenko",
+        "M.A. Turchina",
+        "V.G. Dubrovskii"
+      ],
+      "year": 2016,
+      "venue": "Journal of Physics: Conference Series",
+      "status": "published",
+      "doi": "10.1088/1742-6596/741/1/012033",
+      "related": [
+        "spb-academic-university",
+        "lasers-photonics-2016",
+        "spb-open-2016"
+      ]
+    },
+    {
+      "id": "gaas-initial-stage",
+      "title": "The initial stage of autocatalytic growth of GaAs filamentary nanocrystals",
+      "authors": [
+        "E.D. Leshchenko",
+        "M.A. Turchina",
+        "V.G. Dubrovskii"
+      ],
+      "year": 2016,
+      "venue": "Technical Physics Letters",
+      "status": "published",
+      "doi": "10.1134/S1063785016080113",
+      "related": [
+        "spb-academic-university"
+      ]
+    }
+  ],
+  "preprints": [
+    {
+      "id": "ddm-brain-behavior",
+      "title": "Which model better predicts brain-behavior relationships during decision-making? A simulation-based comparison of single-trial directed and integrative drift-diffusion models",
+      "authors": [
+        "B. Krijgsman",
+        "M. Steeghs-Turchina",
+        "M.D. Nunez"
+      ],
+      "year": 2026,
+      "venue": "PsyArXiv",
+      "status": "published",
+      "doi": "10.31234/osf.io/7d46a_v1"
+    },
+    {
+      "id": "bidirectional-bridge",
+      "title": "Bidirectional bridge: GitHub ⇄ bio.tools",
+      "authors": [
+        "M. Steeghs-Turchina",
+        "A. Niehues",
+        "A. Mendes",
+        "E. Jaaniso",
+        "O.J.R. Gustafsson",
+        "W. Baccinelli",
+        "V. Kasalica",
+        "S. Cox",
+        "I. Topolsky",
+        "M. Palmblad",
+        "V. Schwämmle"
+      ],
+      "year": 2026,
+      "venue": "BioHackrXiv",
+      "status": "published",
+      "doi": "10.37044/osf.io/8ktd6_v1",
+      "related": [
+        "dbc-2026",
+        "elixir-all-hands-2026",
+        "biohackathon-2025",
+        "software-curation-loop",
+        "software-curation-loop-poster"
+      ]
+    },
+    {
+      "id": "software-quality-indicators-preprint",
+      "title": "Software Quality Indicators: extraction, categorisation and recommendations from canonical sources",
+      "authors": [
+        "E. Martin del Pico",
+        "F. Psomopoulos",
+        "L. Portell Silva",
+        "R. Alves",
+        "S. Moretti",
+        "S. Sufi",
+        "K.E.A. Bouhraoua",
+        "D. Steinberg",
+        "G. Farrell",
+        "M. Tsontaki",
+        "R. Andrade Buono",
+        "S. Beier",
+        "D. Garijo",
+        "J.M. Fernández González",
+        "M. Steeghs-Turchina",
+        "A. Mihail"
+      ],
+      "year": 2025,
+      "venue": "BioHackrXiv",
+      "status": "published",
+      "url": "https://osf.io/preprints/biohackrxiv/etp3g",
+      "related": [
+        "software-quality-indicators-data"
+      ]
+    }
+  ],
+  "software": [
+    {
+      "id": "gaussquad",
+      "title": "gaussquad: Gauss quadrature for arbitrary weights on finite intervals",
+      "authors": [
+        "M. Steeghs-Turchina"
+      ],
+      "year": 2025,
+      "venue": "Zenodo",
+      "status": "published",
+      "doi": "10.5281/zenodo.15468025"
+    },
+    {
+      "id": "macro-eeg-model",
+      "title": "Macro EEG model",
+      "authors": [
+        "M. Steeghs-Turchina",
+        "R. Srinivasan",
+        "P.L. Nunez",
+        "M.D. Nunez"
+      ],
+      "year": 2024,
+      "venue": "Zenodo",
+      "status": "published",
+      "doi": "10.5281/zenodo.13594675",
+      "related": [
+        "uva-nunez-lab",
+        "slow-wave-eeg"
+      ]
+    }
+  ],
+  "datasets": [
+    {
+      "id": "software-quality-indicators-data",
+      "title": "Software Quality Indicators: extraction, categorisation and recommendations from canonical sources",
+      "authors": [
+        "E. Martin del Pico",
+        "F. Psomopoulos",
+        "L. Portell Silva",
+        "R. Alves",
+        "S. Moretti",
+        "S. Sufi",
+        "K.E.A. Bouhraoua",
+        "D. Steinberg",
+        "G. Farrell",
+        "M. Tsontaki",
+        "R. Andrade Buono",
+        "S. Beier",
+        "D. Garijo",
+        "J.M. Fernández González",
+        "M. Steeghs-Turchina",
+        "A. Mihail"
+      ],
+      "year": 2025,
+      "venue": "Zenodo",
+      "status": "published",
+      "doi": "10.5281/zenodo.14834245",
+      "related": [
+        "software-quality-indicators-preprint"
+      ]
+    }
+  ],
+  "posters": [
+    {
+      "id": "software-curation-loop-poster",
+      "title": "Automating the software curation loop",
+      "authors": [
+        "M. Steeghs-Turchina",
+        "A. Niehues",
+        "A. Mendes",
+        "E. Jaaniso",
+        "O.J.R. Gustafsson",
+        "W. Baccinelli",
+        "V. Kasalica",
+        "S. Cox",
+        "I. Topolsky",
+        "M. Palmblad",
+        "V. Schwämmle"
+      ],
+      "year": 2026,
+      "venue": "F1000Research",
+      "status": "published",
+      "doi": "10.7490/f1000research.1120667.1",
+      "related": [
+        "elixir-all-hands-2026",
+        "bidirectional-bridge"
+      ]
+    }
+  ],
+  "presentations": [],
+  "reports": [],
+  "websites": [
+    {
+      "id": "research-software-guidelines",
+      "title": "Research Software Guidelines",
+      "authors": [
+        "M. Steeghs-Turchina",
+        "A. Niehues"
+      ],
+      "year": 2025,
+      "venue": "Zenodo",
+      "status": "published",
+      "doi": "10.5281/zenodo.17475631",
+      "related": [
+        "lumc"
+      ]
+    }
+  ],
+  "theses": [
+    {
+      "id": "thesis-figure-ground",
+      "title": "Figure-Ground Segregation: Prediction with Gamma Oscillations in PING Networks",
+      "authors": [
+        "M. Steeghs-Turchina"
+      ],
+      "year": 2023,
+      "venue": "Research portal TU/e",
+      "status": "published",
+      "url": "https://research.tue.nl/en/studentTheses/figure-ground-segregation",
+      "related": [
+        "tue",
+        "maastricht-ccn-lab"
+      ]
+    }
+  ],
+  "skills": [
+    {
+      "title": "Programming & Scripting",
+      "levels": {
+        "Experienced": [
+          "Python",
+          "SwiftUI / Swift",
+          "LaTeX",
+          "Git"
+        ],
+        "Familiar": [
+          "C",
+          "C++",
+          "MATLAB",
+          "Mathematica",
+          "Java",
+          "React",
+          "CSS",
+          "HTML",
+          "Arduino",
+          "SQL",
+          "TypeScript",
+          "JavaScript",
+          "Pascal"
+        ]
+      }
+    },
+    {
+      "title": "Data & Machine Learning",
+      "levels": {
+        "Experienced": [
+          "NumPy",
+          "SciPy",
+          "TensorFlow",
+          "Keras",
+          "Firebase",
+          "OR-Tools"
+        ],
+        "Familiar": [
+          "BayesFlow",
+          "CloudKit",
+          "Spark"
+        ]
+      }
+    },
+    {
+      "title": "Lab",
+      "levels": {
+        "Familiar": [
+          "EEG (BioSemi, 64-channel gel-based setup with facial electrodes)",
+          "Eye-tracking (EyeLink)"
+        ]
+      }
+    },
+    {
+      "title": "Visual Tools",
+      "levels": {
+        "Experienced": [
+          "Adobe Illustrator"
+        ],
+        "Familiar": [
+          "Adobe Photoshop",
+          "Adobe Lightroom",
+          "Adobe InDesign",
+          "Adobe After Effects",
+          "Adobe XD",
+          "Adobe Premiere"
+        ]
+      }
+    },
+    {
+      "title": "Natural Languages",
+      "levels": {
+        "Fluent": [
+          "English",
+          "Russian"
+        ],
+        "Elementary": [
+          "Dutch (learning)"
+        ]
+      }
+    }
+  ]
+}

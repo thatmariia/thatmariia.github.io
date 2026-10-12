@@ -1,0 +1,63 @@
+---
+// A small network of neurons: each field is a cell body with dendrites, and curved axons with
+// synaptic boutons connect every field to its neighbours and to fields across the network.
+import { ellipse, hoverCss, place, separate } from "../../lib/figure";
+import { random, type Point } from "../../lib/random";
+interface Props { fields: string[]; seed: number; width: number; height: number }
+const { fields, seed, width, height } = Astro.props;
+
+const uniform = random(seed);
+const n = fields.length;
+const nodes = ellipse(n, width, height, Math.max(70, width * 0.13), 56, uniform);
+const at = nodes.map((node) => node.at);
+separate(at, fields, width, height, 56);
+
+// Connect neighbours around the ring and each field to the one three places further on.
+const bySlot = [...nodes.keys()].sort((a, b) => nodes[a].slot - nodes[b].slot);
+const pairs = new Set<string>();
+bySlot.forEach((node, k) => {
+  for (const step of [1, 3]) pairs.add([node, bySlot[(k + step) % n]].sort().join(" "));
+});
+const f = (v: number) => v.toFixed(1);
+const axons = [...pairs].map((pair) => {
+  const [i, j] = pair.split(" ").map(Number);
+  const [a, b] = [at[i], at[j]];
+  const [dx, dy] = [b[0] - a[0], b[1] - a[1]];
+  const bend = (uniform() < 0.5 ? -1 : 1) * (0.18 + uniform() * 0.18);
+  const c1: Point = [a[0] + dx / 3 - dy * bend, a[1] + dy / 3 + dx * bend];
+  const c2: Point = [a[0] + (2 * dx) / 3 - dy * bend, a[1] + (2 * dy) / 3 + dx * bend];
+  // Bouton just before the target, on the curve.
+  const t = 0.9, u = 1 - t;
+  const bouton = [0, 1].map((k) => u ** 3 * a[k] + 3 * u * u * t * c1[k] + 3 * u * t * t * c2[k] + t ** 3 * b[k]);
+  return { d: `M${f(a[0])},${f(a[1])} C${f(c1[0])},${f(c1[1])} ${f(c2[0])},${f(c2[1])} ${f(b[0])},${f(b[1])}`, touches: pair, bouton };
+});
+
+// Dendrites: short forking curves starting at the edge of each pill.
+const dendrites = at.map(([x, y], i) => {
+  const halfWidth = (fields[i].length * 7.6 + 30) / 2;
+  return Array.from({ length: 8 }, (_, k) => {
+    const a = (2 * Math.PI * k) / 8 + uniform() * 0.5;
+    const [sx, sy] = [x + Math.cos(a) * halfWidth, y + Math.sin(a) * 15];
+    const length = 14 + uniform() * 16, bend = (uniform() - 0.5) * 1.2;
+    const [ex, ey] = [sx + Math.cos(a + bend * 0.4) * length, sy + Math.sin(a + bend * 0.4) * length];
+    const [mx, my] = [(sx + ex) / 2, (sy + ey) / 2];
+    const twig = [mx + Math.cos(a + bend) * length * 0.5, my + Math.sin(a + bend) * length * 0.5];
+    return `M${f(sx)},${f(sy)} Q${f(sx + Math.cos(a) * length * 0.6)},${f(sy + Math.sin(a) * length * 0.6)} ${f(ex)},${f(ey)} M${f(mx)},${f(my)} L${f(twig[0])},${f(twig[1])}`;
+  }).join(" ");
+});
+const id = `nn-${seed}-${width}`;
+---
+
+<div class:list={["fig neurons", id]}>
+  <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`Fields as a network of neurons: ${fields.join(", ")}`}>
+    {dendrites.map((d) => <path class="dendrite" d={d} />)}
+    {axons.map((axon, i) => (
+      <g class="line" data-touches={axon.touches} style={`--i: ${i % 9}`}>
+        <path class="axon" d={axon.d} pathLength="1" />
+        <circle cx={axon.bouton[0]} cy={axon.bouton[1]} r="2.6" />
+      </g>
+    ))}
+  </svg>
+  {at.map((p, i) => <span class="node" data-node={i} style={place(p, width, height)}>{fields[i]}</span>)}
+  <style is:inline set:html={hoverCss(id, n)} />
+</div>

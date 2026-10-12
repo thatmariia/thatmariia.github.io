@@ -1,6 +1,7 @@
 ---
 // Fields as point charges (alternating + and −) with the electric field lines between them.
-// With labels, each charge is a pill and hovering it shows only the lines that touch it (CSS only).
+// With labels, each charge is a pill (all alike, so no field stands out) and hovering one shows
+// only the lines that touch it (CSS only).
 // Without labels it is a small mark, e.g. next to page titles.
 import { points, random, type Point } from "../lib/random";
 interface Props { fields: string[]; seed: number; width: number; height: number; labels?: boolean }
@@ -64,12 +65,11 @@ const hover = charges
         <polyline class="line" data-touches={line.touches.join(" ")} style={`--i: ${i % 9}`} points={points(line.path)} pathLength="1" />
       ))}
     </g>
-    {!labels && charges.map(({ at: [x, y], q }) => <circle class:list={["dot", q > 0 ? "plus" : "minus"]} cx={x} cy={y} r="4" />)}
+    {!labels && charges.map(({ at: [x, y] }) => <circle class="dot" cx={x} cy={y} r="4" />)}
   </svg>
-  {labels && charges.map(({ at: [x, y], q }, i) => (
-    <span class:list={["charge", q > 0 ? "plus" : "minus"]} data-charge={i}
-      style={`left: ${((x / width) * 100).toFixed(2)}%; top: ${((y / height) * 100).toFixed(2)}%`}>
-      <span class="sign" aria-hidden="true">{q > 0 ? "+" : "−"}</span>{fields[i]}
+  {labels && charges.map(({ at: [x, y] }, i) => (
+    <span class="charge" data-charge={i} style={`left: ${((x / width) * 100).toFixed(2)}%; top: ${((y / height) * 100).toFixed(2)}%`}>
+      {fields[i]}
     </span>
   ))}
   {labels && <style is:inline set:html={hover} />}

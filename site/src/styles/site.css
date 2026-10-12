@@ -146,6 +146,8 @@ a.pill:hover, .pill.solid, .pill[aria-current="page"] { background: var(--ink); 
 }
 .fig .node:hover { background: var(--ink); color: var(--bg); }
 
+.places .line { stroke-width: 0.8; opacity: 0.6; animation-duration: 0.12s; animation-timing-function: linear; animation-delay: calc(var(--i) * 0.06s); }
+.places .place circle { fill: var(--ink); }
 .fig text { font: 10.5px var(--mono); fill: var(--muted); stroke: var(--bg); stroke-width: 4px; paint-order: stroke; }
 
 /* Pulses travelling along paths: a short dash looping from start to end. */
@@ -162,16 +164,30 @@ a.pill:hover, .pill.solid, .pill[aria-current="page"] { background: var(--ink); 
 .potentials .axis { stroke: var(--ink); stroke-width: 1; }
 @keyframes reveal { from { transform: scaleX(0); } }
 
-.connections .line { opacity: 1; stroke-dasharray: none; animation: appear 1.2s ease; }
-.connections .arc { fill: none; stroke: var(--ink); stroke-width: 0.9; opacity: 0.5; }
-.connections .pulse { animation-duration: 4s; }
-.connections .axis { stroke: var(--ink); stroke-width: 1; }
-.connections .tick { stroke: var(--ink); stroke-width: 1; opacity: 0.35; }
-.connections .item { cursor: pointer; }
-.connections .item :is(circle, rect) { stroke: var(--ink); stroke-width: 1.5; transform-box: fill-box; transform-origin: center; transition: transform 0.2s; }
-.connections .paper :is(circle, rect), .connections .output :is(circle, rect) { fill: var(--ink); }
-.connections .event :is(circle, rect), .connections .role :is(circle, rect) { fill: var(--bg); }
-.connections .item:hover :is(circle, rect) { transform: scale(1.6); }
+.projects .link { stroke: var(--ink); stroke-width: 0.8; opacity: 0.5; }
+.projects .pulse { stroke-width: 2.4; animation-duration: 5s; }
+.projects .star :is(circle, rect) { stroke: var(--ink); stroke-width: 1.4; }
+.projects .paper :is(circle, rect), .projects .output :is(circle, rect) { fill: var(--ink); }
+.projects .event :is(circle, rect), .projects .role :is(circle, rect) { fill: var(--bg); }
+.projects .star { animation: twinkle 3s ease-in-out infinite; }
+.projects .star:hover { animation: none; opacity: 1; }
+@keyframes twinkle { 50% { opacity: 0.35; } }
+
+.spiral .band { fill: var(--ink); opacity: 0.12; }
+.spiral .guide { fill: none; stroke: var(--ink); stroke-width: 0.6; opacity: 0.5; }
+.spiral .ticks { stroke: var(--ink); stroke-width: 0.8; opacity: 0.75; }
+.spiral .flow { fill: none; stroke: var(--ink); stroke-width: 2.4; stroke-linecap: round; stroke-dasharray: 0.006 0.994; stroke-dashoffset: 1; animation: travel 24s linear infinite; }
+.spiral .output { fill: var(--ink); }
+.spiral .event { fill: var(--bg); stroke: var(--ink); stroke-width: 1.1; }
+.spiral .now { fill: var(--ink); animation: pulse 2s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes pulse { 50% { transform: scale(1.8); } }
+
+.dendrite .trunk { fill: none; stroke: var(--ink); stroke-width: 3; stroke-linecap: round; }
+.dendrite .branch path { fill: none; stroke: var(--ink); stroke-linecap: round; }
+.dendrite .sap { fill: none; stroke: var(--bg); stroke-width: 2; stroke-linecap: round; stroke-dasharray: 0.02 0.98; stroke-dashoffset: 1; animation: travel 6s linear infinite; }
+.dendrite .spine line { stroke: var(--ink); stroke-width: 0.9; }
+.dendrite .spine.output circle { fill: var(--ink); }
+.dendrite .spine.event circle { fill: var(--bg); stroke: var(--ink); stroke-width: 1.1; }
 
 .world .meridian { stroke: var(--ink); stroke-width: 0.6; opacity: 0.15; }
 .world .ring circle { fill: none; stroke: var(--ink); stroke-width: 0.8; stroke-dasharray: 2 4; opacity: 0.35; }
@@ -180,14 +196,6 @@ a.pill:hover, .pill.solid, .pill[aria-current="page"] { background: var(--ink); 
 .world .city { fill: var(--ink); }
 .world .home { fill: var(--bg); stroke: var(--ink); stroke-width: 2; }
 
-.ripples .ripple {
-  fill: none; stroke: var(--ink); stroke-width: 1; vector-effect: non-scaling-stroke;
-  transform-box: fill-box; transform-origin: center; animation: ripple 4s linear infinite;
-}
-.ripples .core { fill: var(--ink); }
-.ripples .grid line { stroke: var(--ink); stroke-width: 0.6; stroke-dasharray: 2 4; opacity: 0.3; }
-.ripples .axis { stroke: var(--ink); stroke-width: 1; }
-@keyframes ripple { from { transform: scale(1); opacity: 0.8; } to { transform: scale(var(--spread)); opacity: 0; } }
 
 .travels .ring circle { fill: none; stroke: var(--ink); stroke-width: 0.8; stroke-dasharray: 2 4; opacity: 0.35; }
 .travels .north { fill: var(--ink); }
@@ -211,9 +219,9 @@ a.pill:hover, .pill.solid, .pill[aria-current="page"] { background: var(--ink); 
 .collaborators .ring circle { fill: none; stroke: var(--ink); stroke-width: 0.8; stroke-dasharray: 2 4; opacity: 0.35; }
 .collaborators .axon { fill: none; stroke: var(--ink); stroke-width: 0.8; opacity: 0.4; }
 .collaborators .spike { stroke-width: 2.4; }
-.collaborators .dendrite { fill: none; stroke: var(--ink); stroke-width: 1.2; stroke-linecap: round; }
+.collaborators .dendrite { fill: none; stroke: var(--ink); stroke-linecap: round; }
 .collaborators .soma { fill: var(--ink); stroke: var(--ink); stroke-width: 1.5; stroke-linejoin: round; }
-.collaborators .me .soma { fill: var(--bg); stroke-width: 2.5; }
+.collaborators .soma.me { fill: var(--bg); stroke-width: 2.5; }
 .collaborators .neuron { animation: appear 1.2s ease; }
 
 
@@ -248,3 +256,4 @@ a.pill:hover, .pill.solid, .pill[aria-current="page"] { background: var(--ink); 
   .narrow { display: block; }
   .fig .node { font-size: 0.68rem; }
 }
+

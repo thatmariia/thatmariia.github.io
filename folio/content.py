@@ -110,6 +110,7 @@ class Content(Model):
     events: list[Entry] = []
     outreach: list[Entry] = []
     other: list[Entry] = []
+    beyond: list[Entry] = []  # beyond science: hobbies, sports, volunteering, other qualifications
     publications: list[Work] = []  # peer-reviewed articles and papers
     preprints: list[Work] = []
     software: list[Work] = []

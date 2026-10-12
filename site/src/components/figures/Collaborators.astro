@@ -1,8 +1,9 @@
 ---
-// Recurring collaborators (at least two distinct shared works) as neurons projecting onto me.
-// Distance from the centre shows how many works we share (closer is more, on labelled rings);
-// direction groups people into communities found from who co-authors with whom. Spikes travel
-// inwards along the axons, more often for closer collaborators. Hover shows names.
+// Recurring collaborators (at least two distinct shared works) as a tangle of neurons around me.
+// Distance from the centre still shows how many works we share (closer is more, labelled rings),
+// but direction and orientation are irregular, like real tissue. Each collaborator is a pyramidal
+// neuron with branching, tapering dendrites; wavy axons run to me and to the collaborators they
+// co-authored with, and spikes keep travelling along them. Hover shows names.
 import { myWorks } from "../../lib/career";
 import { isMe } from "../../lib/data";
 import { random, type Point } from "../../lib/random";
@@ -25,93 +26,79 @@ for (const work of distinct) {
 }
 const people = [...shared].filter(([k, n]) => k !== "me" && n >= 2).sort((a, b) => b[1] - a[1]).map(([k]) => k);
 const name = (k: string) => [...spellings.get(k)!].sort((a, b) => b[1] - a[1])[0][0];
-
-// Communities by label propagation over co-authorship between collaborators.
-const together = (a: string, b: string) => distinct.filter((w) => {
-  const keys = new Set(w.authors.map(key));
-  return keys.has(a) && keys.has(b);
-}).length;
-const label = new Map(people.map((p) => [p, p]));
-for (let round = 0; round < 20; round++) {
-  for (const p of people) {
-    const votes = new Map<string, number>();
-    for (const q of people) if (q !== p && together(p, q)) votes.set(label.get(q)!, (votes.get(label.get(q)!) ?? 0) + together(p, q));
-    const best = [...votes].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0];
-    if (best) label.set(p, best[0]);
-  }
-}
-const groups = [...new Set(people.map((p) => label.get(p)!))]
-  .map((l) => people.filter((p) => label.get(p) === l))
-  .sort((a, b) => b.length - a.length);
-
-// Angles: one sector per community, sized by its members, with gaps between communities.
-const [cx, cy] = [width / 2, height / 2], outer = Math.min(width, height) / 2 - 40, inner = outer * 0.42;
-const gap = 0.35, total = 2 * Math.PI - gap * groups.length;
-const maxShared = Math.max(...people.map((p) => shared.get(p)!));
-const radiusFor = (n: number) => inner + (outer - inner) * (1 - Math.log(n - 1) / Math.log(maxShared - 1 || 2));
-let angle = -Math.PI / 2;
-const neurons = groups.flatMap((group) => {
-  const step = (total * group.length) / people.length / group.length;
-  return group.map((p, i) => {
-    const a = angle + step * (i + 0.5);
-    if (i === group.length - 1) angle += step * group.length + gap;
-    const r = radiusFor(shared.get(p)!);
-    return { p, a, at: [cx + r * Math.cos(a), cy + r * Math.sin(a)] as Point, n: shared.get(p)! };
-  });
-});
+const together = (a: string, b: string) => distinct.filter((w) => { const keys = new Set(w.authors.map(key)); return keys.has(a) && keys.has(b); }).length;
 
 const uniform = random(seed);
-const f = (v: number) => v.toFixed(1);
-// A stylised pyramidal neuron: triangular soma pointing away from me, an apical dendrite with a
-// small tuft outwards, two basal dendrites, and an axon curving in to my dendrites.
-const drawn = neurons.map(({ p, a, at: [x, y], n }) => {
-  const [ux, uy] = [Math.cos(a), Math.sin(a)], [nx, ny] = [-uy, ux], s = 4 + n * 0.45;
-  const soma = `M${f(x + ux * s * 1.3)},${f(y + uy * s * 1.3)} L${f(x - ux * s * 0.7 + nx * s * 0.8)},${f(y - uy * s * 0.7 + ny * s * 0.8)} L${f(x - ux * s * 0.7 - nx * s * 0.8)},${f(y - uy * s * 0.7 - ny * s * 0.8)} Z`;
-  const tip = [x + ux * s * 4.2, y + uy * s * 4.2], bend = (uniform() - 0.5) * s;
-  let dendrites = `M${f(x + ux * s * 1.3)},${f(y + uy * s * 1.3)} Q${f(x + ux * s * 2.8 + nx * bend)},${f(y + uy * s * 2.8 + ny * bend)} ${f(tip[0])},${f(tip[1])}`;
-  for (const spread of [-0.7, 0, 0.7]) {
-    const b = a + spread;
-    dendrites += ` M${f(tip[0])},${f(tip[1])} q${f(Math.cos(b) * s * 0.9 + nx * spread * 2)},${f(Math.sin(b) * s * 0.9 + ny * spread * 2)} ${f(Math.cos(b) * s * 1.6)},${f(Math.sin(b) * s * 1.6)}`;
+const [cx, cy] = [width / 2, height / 2], outer = Math.min(width, height) / 2 - 36, inner = outer * 0.4;
+const maxShared = Math.max(...people.map((p) => shared.get(p)!));
+const radiusFor = (n: number) => inner + (outer - inner) * (1 - Math.log(n - 1) / Math.log(maxShared - 1 || 2));
+// Irregular placement: random direction (kept apart a little), radius by shared works with jitter.
+const angles: number[] = [];
+const neurons = people.map((p) => {
+  let a = 0;
+  for (let tries = 0; tries < 200; tries++) {
+    a = uniform() * 2 * Math.PI;
+    if (angles.every((b) => Math.abs(Math.atan2(Math.sin(a - b), Math.cos(a - b))) > 0.32)) break;
   }
-  for (const side of [-1, 1]) {
-    const [bx, by] = [x - ux * s * 0.7 + nx * s * 0.8 * side, y - uy * s * 0.7 + ny * s * 0.8 * side];
-    dendrites += ` M${f(bx)},${f(by)} q${f(nx * side * s * 1.4 - ux * s * 0.4)},${f(ny * side * s * 1.4 - uy * s * 0.4)} ${f(nx * side * s * 2 - ux * s * 1.6)},${f(ny * side * s * 2 - uy * s * 1.6)}`;
-  }
-  // Axon from the base of the soma to the edge of my dendritic field, curving slightly.
-  const [sx, sy] = [x - ux * s * 0.7, y - uy * s * 0.7], end = [cx + ux * 22, cy + uy * 22];
-  const mid = [(sx + end[0]) / 2 + nx * (uniform() - 0.5) * 30, (sy + end[1]) / 2 + ny * (uniform() - 0.5) * 30];
-  const axon = `M${f(sx)},${f(sy)} Q${f(mid[0])},${f(mid[1])} ${f(end[0])},${f(end[1])}`;
-  return { p, n, soma, dendrites, axon, delay: uniform() * 4 };
+  angles.push(a);
+  const r = radiusFor(shared.get(p)!) * (0.92 + uniform() * 0.16);
+  return { p, n: shared.get(p)!, at: [cx + r * Math.cos(a), cy + r * Math.sin(a)] as Point, facing: a + (uniform() - 0.5) * 1.6 };
 });
-// Me: a round cell with dendrites all around, receiving the axons.
-const myDendrites = Array.from({ length: 10 }, (_, k) => {
-  const a = (2 * Math.PI * k) / 10 + uniform() * 0.4, l = 20 + uniform() * 6;
-  return `M${f(cx + Math.cos(a) * 7)},${f(cy + Math.sin(a) * 7)} Q${f(cx + Math.cos(a + 0.25) * l * 0.6)},${f(cy + Math.sin(a + 0.25) * l * 0.6)} ${f(cx + Math.cos(a) * l)},${f(cy + Math.sin(a) * l)}`;
-}).join(" ");
+
+const f = (v: number) => v.toFixed(1);
+// Dendrites: curved branches that fork and taper; strokes are grouped by width.
+const strokes = new Map<string, string>();
+function branch(x: number, y: number, angle: number, length: number, thickness: number, depth: number) {
+  const [ex, ey] = [x + Math.cos(angle) * length, y + Math.sin(angle) * length];
+  const bend = (uniform() - 0.5) * 0.6 * length;
+  const key = thickness.toFixed(2);
+  strokes.set(key, (strokes.get(key) ?? "") + `M${f(x)},${f(y)} Q${f((x + ex) / 2 - Math.sin(angle) * bend)},${f((y + ey) / 2 + Math.cos(angle) * bend)} ${f(ex)},${f(ey)}`);
+  if (depth === 0) return;
+  for (const side of [-1, 1]) {
+    if (depth < 2 && uniform() < 0.3) continue;  // not every branch forks
+    branch(ex, ey, angle + side * (0.25 + uniform() * 0.45), length * (0.55 + uniform() * 0.2), thickness * 0.68, depth - 1);
+  }
+}
+const somas = neurons.map(({ at: [x, y], facing, n }) => {
+  const [ux, uy] = [Math.cos(facing), Math.sin(facing)], [nx, ny] = [-uy, ux], s = 4 + n * 0.45;
+  // Apical dendrite out of the tip, with a tuft; basal dendrites out of the base corners.
+  branch(x + ux * s * 1.2, y + uy * s * 1.2, facing + (uniform() - 0.5) * 0.3, s * 3.2, 1.8, 3);
+  for (const side of [-1, 1]) branch(x - ux * s * 0.5 + nx * s * 0.7 * side, y - uy * s * 0.5 + ny * s * 0.7 * side, facing + Math.PI + side * (0.6 + uniform() * 0.6), s * 1.7, 1.3, 2);
+  // Rounded triangle soma.
+  const [tip, left, right] = [[x + ux * s * 1.3, y + uy * s * 1.3], [x - ux * s * 0.7 + nx * s * 0.85, y - uy * s * 0.7 + ny * s * 0.85], [x - ux * s * 0.7 - nx * s * 0.85, y - uy * s * 0.7 - ny * s * 0.85]];
+  return { d: `M${f(tip[0])},${f(tip[1])} Q${f(x + nx * s * 0.6)},${f(y + ny * s * 0.6)} ${f(left[0])},${f(left[1])} Q${f(x - ux * s * 1.0)},${f(y - uy * s * 1.0)} ${f(right[0])},${f(right[1])} Q${f(x - nx * s * 0.6)},${f(y - ny * s * 0.6)} ${f(tip[0])},${f(tip[1])}Z`, base: [x - ux * s * 0.75, y - uy * s * 0.75] as Point };
+});
+// Me: a multipolar neuron with dendrites all around.
+for (let k = 0; k < 7; k++) branch(cx, cy, (2 * Math.PI * k) / 7 + uniform() * 0.5, 16, 2, 2);
+
+// Axons: wavy paths from each soma's base to me and to co-authors, ending in a bouton.
+const wavy = (a: Point, b: Point) => {
+  const [dx, dy] = [b[0] - a[0], b[1] - a[1]], wobble = () => (uniform() - 0.5) * 0.5;
+  const [w1, w2] = [wobble(), wobble()];
+  return `M${f(a[0])},${f(a[1])} C${f(a[0] + dx / 3 - dy * w1)},${f(a[1] + dy / 3 + dx * w1)} ${f(a[0] + (2 * dx) / 3 - dy * w2)},${f(a[1] + (2 * dy) / 3 + dx * w2)} ${f(b[0])},${f(b[1])}`;
+};
+const axons = [
+  ...neurons.map((neuron, i) => ({ d: wavy(somas[i].base, [cx + (uniform() - 0.5) * 20, cy + (uniform() - 0.5) * 20]), n: neuron.n })),
+  ...neurons.flatMap((a, i) => neurons.slice(i + 1).flatMap((b, j) => {
+    const w = together(a.p, b.p);
+    return w ? [{ d: wavy(somas[i].base, neurons[i + 1 + j].at), n: w }] : [];
+  })),
+].map((axon) => ({ ...axon, delay: uniform() * 6 }));
 const rings = [...new Set([2, Math.round(Math.sqrt(2 * maxShared)), maxShared])].filter((n) => n >= 2 && n <= maxShared);
 ---
 
 <div class="fig collaborators">
-  <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`${people.length} recurring collaborators in ${groups.length} communities; closer means more shared works`}>
+  <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`${people.length} recurring collaborators as neurons; closer means more shared works`}>
     {rings.map((n) => (
       <g class="ring">
         <circle cx={f(cx)} cy={f(cy)} r={f(radiusFor(n))} />
         <text x={f(cx)} y={f(cy + radiusFor(n) + 12)} text-anchor="middle">{n} works</text>
       </g>
     ))}
-    {drawn.map((d) => <path class="axon" d={d.axon} />)}
-    {drawn.map((d) => <path class="spike" d={d.axon} pathLength="1" style={`animation-duration: ${(8 / d.n).toFixed(2)}s; animation-delay: ${d.delay.toFixed(2)}s`} />)}
-    {drawn.map((d) => (
-      <g class="neuron">
-        <title>{name(d.p)} · {d.n} shared works</title>
-        <path class="dendrite" d={d.dendrites} />
-        <path class="soma" d={d.soma} />
-      </g>
-    ))}
-    <g class="neuron me">
-      <title>Me</title>
-      <path class="dendrite" d={myDendrites} />
-      <circle class="soma" cx={f(cx)} cy={f(cy)} r="8" />
-    </g>
+    {axons.map((axon) => <path class="axon" d={axon.d} />)}
+    {axons.map((axon) => <path class="spike" d={axon.d} pathLength="1" style={`animation-duration: ${(9 / (1 + axon.n)).toFixed(2)}s; animation-delay: ${axon.delay.toFixed(2)}s`} />)}
+    {[...strokes].map(([w, d]) => <path class="dendrite" d={d} stroke-width={w} />)}
+    {somas.map((soma, i) => <path class="soma" d={soma.d}><title>{name(neurons[i].p)} · {neurons[i].n} shared works</title></path>)}
+    <circle class="soma me" cx={f(cx)} cy={f(cy)} r="7"><title>Me</title></circle>
   </svg>
 </div>

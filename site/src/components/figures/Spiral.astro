@@ -1,0 +1,53 @@
+---
+// A career on a time spiral, one turn per year (January at the top), from the centre to now. The
+// band along the spiral swells with the number of roles held; ticks bristling outwards are daily
+// GitHub contributions; filled dots are outputs and open dots events. A pulse keeps flowing to now.
+import external from "../../data/external.json";
+import { events, firstYear, month, now, roles, works } from "../../lib/career";
+import { points, random, type Point } from "../../lib/random";
+interface Props { seed: number; width: number; height: number }
+const { seed, width, height } = Astro.props;
+
+const uniform = random(seed);
+const [start, end] = [firstYear * 12, now + 1];
+const [cx, cy] = [width / 2, height / 2 + 6], R = Math.min(width, height) / 2 - 24, r0 = R * 0.12;
+const spacing = (R - r0) / ((end - start) / 12);
+const at = (t: number, offset = 0): Point => {
+  const r = r0 + ((t - start) / (end - start)) * (R - r0) + offset, a = -Math.PI / 2 + (2 * Math.PI * (t - start)) / 12;
+  return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
+};
+const f = (v: number) => v.toFixed(1);
+const steps = Array.from({ length: Math.ceil((end - start) / 0.25) + 1 }, (_, k) => start + k * 0.25);
+
+// Band: half-width grows with the number of roles active at that time.
+const active = (t: number) => roles.filter((r) => r.span[0] <= t && t < Math.max(r.span[1], r.span[0] + 1)).length;
+const half = (t: number) => Math.min(spacing * 0.42, active(t) * spacing * 0.1);
+const band = [...steps.map((t) => at(t, half(t))), ...[...steps].reverse().map((t) => at(t, -half(t)))];
+
+// Contributions: a short outward tick per day, longer for more contributions.
+const contributions = Object.entries(external.contributions as Record<string, number>)
+  .map(([day, count]) => ({ t: month(day.slice(0, 7)) + (Number(day.slice(8)) - 1) / 31, count }))
+  .filter((c) => c.t >= start);
+let ticks = "";
+for (const { t, count } of contributions) {
+  const [a, b] = [at(t, half(t) + 1), at(t, half(t) + 1 + Math.min(spacing * 0.55, 1.5 + Math.log2(1 + count) * 1.4))];
+  ticks += `M${f(a[0])},${f(a[1])}L${f(b[0])},${f(b[1])}`;
+}
+const outputs = works.map((w) => at(w.year * 12 + uniform() * 12));
+const happenings = events.map((e) => at(e.start + 0.5));
+const years = Array.from({ length: Math.floor(now / 12) - firstYear + 1 }, (_, i) => firstYear + i)
+  .filter((y) => spacing >= 11 || (y - firstYear) % 2 === 0);
+---
+
+<div class="fig spiral">
+  <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`A time spiral from ${firstYear} to now: roles, daily GitHub contributions, outputs and events`}>
+    <polygon class="band" points={points(band)} />
+    <polyline class="guide" points={points(steps.map((t) => at(t)))} />
+    <path class="ticks" d={ticks} />
+    <polyline class="flow" points={points(steps.map((t) => at(t)))} pathLength="1" />
+    {outputs.map(([x, y]) => <circle class="output" cx={f(x)} cy={f(y)} r="2.2" />)}
+    {happenings.map(([x, y]) => <circle class="event" cx={f(x)} cy={f(y)} r="2.4" />)}
+    <circle class="now" cx={f(at(now)[0])} cy={f(at(now)[1])} r="4"><title>now</title></circle>
+    {years.map((y) => <text x={f(at(y * 12)[0] + 4)} y={f(at(y * 12)[1] + 3)}>{y}</text>)}
+  </svg>
+</div>

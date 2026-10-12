@@ -3,9 +3,11 @@
 // inputs, no JavaScript) switch between them until one is chosen.
 import ActionPotentials from "./figures/ActionPotentials.astro";
 import Collaborators from "./figures/Collaborators.astro";
-import Connections from "./figures/Connections.astro";
+import Dendrite from "./figures/Dendrite.astro";
+import Places from "./figures/Places.astro";
+import Projects from "./figures/Projects.astro";
 import Raster from "./figures/Raster.astro";
-import Ripples from "./figures/Ripples.astro";
+import Spiral from "./figures/Spiral.astro";
 import Travels from "./figures/Travels.astro";
 import World from "./figures/World.astro";
 
@@ -13,10 +15,12 @@ const options = [
   { key: "raster", label: "Raster", Figure: Raster, seed: 5 },
   { key: "potentials", label: "Action potentials", Figure: ActionPotentials, seed: 5 },
   { key: "collaborators", label: "Collaborators", Figure: Collaborators, seed: 7 },
-  { key: "connections", label: "Connections", Figure: Connections, seed: 3 },
+  { key: "projects", label: "Projects", Figure: Projects, seed: 3 },
+  { key: "spiral", label: "Spiral", Figure: Spiral, seed: 2 },
+  { key: "dendrite", label: "Dendrite", Figure: Dendrite, seed: 4 },
+  { key: "places", label: "Places", Figure: Places, seed: 4 },
   { key: "travels", label: "Travels", Figure: Travels, seed: 2 },
   { key: "world", label: "World", Figure: World, seed: 4 },
-  { key: "ripples", label: "Ripples", Figure: Ripples, seed: 6 },
 ];
 const show = options.map(({ key }) => `.figure:has(input[value="${key}"]:checked) .option[data-option="${key}"] { display: block; }`).join("\n");
 ---

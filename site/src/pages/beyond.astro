@@ -1,0 +1,14 @@
+---
+import EntryItem from "../components/EntryItem.astro";
+import Base from "../layouts/Base.astro";
+import { data, type Entry } from "../lib/data";
+
+const activities = data.beyond as Entry[];
+---
+
+<Base title="Beyond science" mark={17}>
+  <section class="block" id="activities">
+    <h2>Activities</h2>
+    {activities.map((entry) => <EntryItem entry={entry} />)}
+  </section>
+</Base>

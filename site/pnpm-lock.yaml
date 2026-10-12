@@ -166,22 +166,10 @@ importers:
 
   .:
     dependencies:
-      '@fontsource-variable/lexend':
-        specifier: 5.3.0
-        version: 5.3.0
-      '@fontsource-variable/lexend-exa':
-        specifier: 5.3.0
-        version: 5.3.0
-      '@fontsource-variable/manrope':
-        specifier: 5.3.0
-        version: 5.3.0
       '@fontsource-variable/martian-mono':
         specifier: 5.3.0
         version: 5.3.0
       '@fontsource-variable/sora':
-        specifier: 5.3.0
-        version: 5.3.0
-      '@fontsource-variable/unbounded':
         specifier: 5.3.0
         version: 5.3.0
       astro:
@@ -371,23 +359,11 @@ packages:
   '@emnapi/wasi-threads@1.2.3':
     resolution: {integrity: sha512-ELEBe8PsLvvJ6QMr0zLt8ffvOHW/dc1m3CEzNMg7aJUv3bMaoDtw2TXyDAwkYBuroxxuHEwhRTLJSe5sya547g==}
 
-  '@fontsource-variable/lexend-exa@5.3.0':
-    resolution: {integrity: sha512-DdjlS/elb14Q/B2xUQfcCtMfiOUF2HJHtJZ3gKF1SwlvQfuEOmNwCxVd2Mcbs383ZvFkUHIXhtKGTmza8KP+Qw==}
-
-  '@fontsource-variable/lexend@5.3.0':
-    resolution: {integrity: sha512-3SXtiZ8rFbT0oaPzEboCG5RM3jtyhpNxandh1jWNLqvrJRfV/eP3R+GGw+o5e3hS1uqmAGutKxSvaWG5oyrimA==}
-
-  '@fontsource-variable/manrope@5.3.0':
-    resolution: {integrity: sha512-6D5dgokHsWDDMtmXHznKa0hK229NN+1a4BLPmUCLqcO1Pw5EEhWY5RFt0AcXnVRAljFFPfRtLkJePQj6LSsV6g==}
-
   '@fontsource-variable/martian-mono@5.3.0':
     resolution: {integrity: sha512-0wVODx9ILwNnaYC4XCuSaFRYtj1Prd89MRVaSuv2ng6zLiQkS4SepaWEPefs7vqCZS8sbEOA8jb/4F5KNMnGdg==}
 
   '@fontsource-variable/sora@5.3.0':
     resolution: {integrity: sha512-h8kHta4Z8SkfUGeI82TUy1n3rbrKpBRGwuk4t4qCwto5oEHxlbOFD2yGP+Df5fbmTXwKGn+o667vYp0E4K8Whw==}
-
-  '@fontsource-variable/unbounded@5.3.0':
-    resolution: {integrity: sha512-ea565Ncn4r7gPdBEHcmaF31V11hDfkL7b/JCklLobQbMfbu2ZZQrVWNgdeEFWFLqNh36yhieZWOgxdAnMTzrLg==}
 
   '@img/colour@1.1.0':
     resolution: {integrity: sha512-Td76q7j57o/tLVdgS746cYARfSyxk8iEfRxewL9h4OMzYhbW4TAcppl0mT4eyqXddh6L/jwoM75mo7ixa/pCeQ==}
@@ -1594,17 +1570,9 @@ snapshots:
       tslib: 2.8.1
     optional: true
 
-  '@fontsource-variable/lexend-exa@5.3.0': {}
-
-  '@fontsource-variable/lexend@5.3.0': {}
-
-  '@fontsource-variable/manrope@5.3.0': {}
-
   '@fontsource-variable/martian-mono@5.3.0': {}
 
   '@fontsource-variable/sora@5.3.0': {}
-
-  '@fontsource-variable/unbounded@5.3.0': {}
 
   '@img/colour@1.1.0':
     optional: true

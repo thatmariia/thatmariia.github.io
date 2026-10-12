@@ -1,15 +1,10 @@
 ---
 import "@fontsource-variable/sora/index.css";
-import "@fontsource-variable/lexend/index.css";
-import "@fontsource-variable/lexend-exa/index.css";
-import "@fontsource-variable/unbounded/index.css";
-import "@fontsource-variable/manrope/index.css";
 import "@fontsource-variable/martian-mono/index.css";
 import "../styles/base.css";
 import "../styles/site.css";
 import FieldLines from "../components/FieldLines.astro";
 import Head from "../components/Head.astro";
-import Options from "../components/Options.astro";
 import { affiliations, data, PAGES } from "../lib/data";
 
 interface Props { title?: string; sections?: { id: string; title: string }[]; mark?: number }
@@ -24,8 +19,6 @@ const here = Astro.url.pathname;
     <Head title={title} />
     <script is:inline>
       try {
-        const type = localStorage.getItem("option-type");
-        if (type) document.documentElement.dataset.type = type;
         const theme = localStorage.getItem("theme");
         if (theme) document.documentElement.dataset.theme = theme;
       } catch {}
@@ -68,6 +61,5 @@ const here = Astro.url.pathname;
       )}
       <slot />
     </main>
-    <Options />
   </body>
 </html>

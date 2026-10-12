@@ -1,21 +1,19 @@
 ---
 import Related from "./Related.astro";
-import { authors, markup, workUrl, type Work } from "../lib/data";
-interface Props { work: Work; label?: string; color?: string }
-const { work, label, color } = Astro.props;
+import { authors, markup, STATUS, workUrl, type Work } from "../lib/data";
+interface Props { work: Work }
+const { work } = Astro.props;
 const url = workUrl(work);
-const status = { "in-progress": "in progress", submitted: "submitted", published: "" }[work.status];
 ---
 
-<article class="row" id={work.id}>
-  <p class="meta">{work.year}</p>
-  <div>
+<article class="row work" id={work.id}>
+  <p class="meta">{STATUS[work.status] || work.year}</p>
+  <div class="body">
+    {work.venue && <p class="venue">{work.venue}</p>}
     <h4 class="title">
       {url ? <a href={url} set:html={markup(work.title)} /> : <span set:html={markup(work.title)} />}
     </h4>
     <p class="authors" set:html={authors(work.authors)} />
-    {work.venue && <p class="venue">{work.venue}</p>}
     <Related related={work.related} links={work.links} />
   </div>
-  <p class="meta tag">{color && <span class:list={["key-dot", color]} />}{status || label}</p>
 </article>

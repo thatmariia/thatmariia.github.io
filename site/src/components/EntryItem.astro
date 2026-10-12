@@ -1,26 +1,25 @@
 ---
 import Related from "./Related.astro";
 import { dates, markup, type Entry } from "../lib/data";
-interface Props { entry: Entry; upcoming?: boolean }
-const { entry, upcoming = false } = Astro.props;
+interface Props { entry: Entry; notes?: boolean }
+const { entry, notes = true } = Astro.props;
 ---
 
-<article class="row" id={entry.id}>
+<article class="row entry" id={entry.id}>
   <p class="meta">{dates(entry.periods[0])}</p>
-  <div>
-    <h4 class="title">{entry.title}</h4>
+  <div class="body">
+    <h4 class="title">{entry.title}{entry.location && <span class="place">{entry.location}</span>}</h4>
     {entry.periods.map((period, i) => (
-      <div class="period">
-        {(period.title || period.unit || (i > 0)) && (
+      <>
+        {(period.title || period.unit || i > 0) && (
           <p class="role">
-            {period.title}{period.title && period.unit && " · "}{period.unit && <span class="unit">{period.unit}</span>}
+            {period.title}{period.title && period.unit && ", "}{period.unit && <span class="unit">{period.unit}</span>}
             {i > 0 && <span class="meta inline">{dates(period)}</span>}
           </p>
         )}
-        {period.notes && <ul class="notes">{period.notes.map((note) => <li set:html={markup(note)} />)}</ul>}
-      </div>
+        {notes && period.notes && <ul class="notes">{period.notes.map((note) => <li set:html={markup(note)} />)}</ul>}
+      </>
     ))}
     <Related related={entry.related} links={entry.links} />
   </div>
-  <p class="meta tag">{upcoming ? "upcoming" : entry.location}</p>
 </article>

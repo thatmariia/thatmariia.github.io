@@ -37,28 +37,66 @@ export function authors(list: string[]): string {
 
 export const workUrl = (w: Work) => (w.doi ? `https://doi.org/${w.doi}` : w.url);
 
-// Output categories, each with its colour in the key.
-const OUTPUTS = {
-  software: ["Software", "blue"], datasets: ["Dataset", "ochre"], posters: ["Poster", "red"],
-  presentations: ["Presentation", "pink"], reports: ["Report", "brown"], websites: ["Website", "green"],
-  theses: ["Thesis", "teal"],
-} as const;
+export const STATUS = { "in-progress": "In progress", submitted: "Submitted", published: "" } as const;
 
-export const outputSections = Object.entries(OUTPUTS)
-  .map(([key, [label, color]]) => ({ key, label, color, items: (data as any)[key] as Work[] }))
+/** What one item of each section is called, e.g. in cross-links. */
+const KIND: Record<string, string> = {
+  publications: "Publication", preprints: "Preprint", software: "Software", datasets: "Dataset",
+  posters: "Poster", presentations: "Presentation", reports: "Report", websites: "Website", theses: "Thesis",
+  education: "Education", research: "Position", teaching: "Teaching", leadership: "Leadership",
+  service: "Service", awards: "Award", funding: "Funding", events: "Event", outreach: "Outreach", other: "Experience",
+};
+
+export const outputSections = ["software", "datasets", "posters", "presentations", "reports", "websites", "theses"]
+  .map((key) => ({ key, title: key[0].toUpperCase() + key.slice(1), items: (data as any)[key] as Work[] }))
   .filter((s) => s.items.length);
 
-/** Title of every linkable item, for labelling cross-links. */
-export const titles: Record<string, string> = {};
-for (const [key, value] of Object.entries(data)) {
-  if (!Array.isArray(value)) continue;
-  for (const item of value as (Entry | Work)[]) {
-    if (item.id) titles[item.id] = item.title ?? (item as Entry).periods.map((p) => p.title).join(", ");
+/** Every linkable item by id: its kind, title and a one-line summary for previews. */
+export const refs: Record<string, { kind: string; title: string; summary: string }> = {};
+for (const [section, items] of Object.entries(data)) {
+  if (!(section in KIND)) continue;
+  for (const item of items as (Entry | Work)[]) {
+    if (!item.id) continue;
+    if ("authors" in item) {
+      const status = STATUS[item.status];
+      refs[item.id] = {
+        kind: KIND[section],
+        title: item.title,
+        summary: [item.venue, status || item.year].filter(Boolean).join(" · "),
+      };
+    } else {
+      const entry = item as Entry;
+      const roles = entry.periods.map((p) => p.title).filter(Boolean);
+      refs[item.id] = {
+        kind: KIND[section],
+        title: entry.title ?? roles.join(", "),
+        summary: [entry.title ? roles.join(", ") : "", entry.location, entry.title ? dates(entry.periods[0]) : ""]
+          .filter(Boolean).join(" · "),
+      };
+    }
   }
 }
 
+/** Current affiliations: organisations of ongoing research positions. */
+export const affiliations = [
+  ...new Set((data.research as Entry[]).filter((e) => e.periods.some((p) => p.end === "present")).map((e) => e.title!)),
+];
+
 export const firstSentence = (s: string) => s.split(/(?<=\.)\s/)[0].trim();
-export const restOfText = (s: string) => s.slice(firstSentence(s).length).trim();
 
 const today = new Date().toISOString().slice(0, 7);
 export const isUpcoming = (e: Entry) => (e.periods[0].start ?? "") > today;
+
+export const pathSections = (
+  [
+    ["Research", data.research], ["Teaching", data.teaching], ["Leadership", data.leadership],
+    ["Service", data.service], ["Awards", data.awards], ["Funding", data.funding], ["Other", data.other],
+  ] as [string, Entry[]][]
+).filter(([, items]) => items.length);
+
+export const studies = (data.education as Entry[]).flatMap((e) => e.periods.map((p) => p.title!));
+export const thesisLinks = (data.education as Entry[]).flatMap((e) => e.related ?? []);
+
+export const NAV = [
+  ["about", "About"], ["publications", "Publications"], ["open-science", "Open science"], ["path", "Path"], ["events", "Events"],
+] as const;

@@ -1,18 +1,22 @@
 ---
 // The home-page figure. TEMPORARY: all options are rendered and pill buttons (plain radio
 // inputs, no JavaScript) switch between them until one is chosen.
+import ActionPotentials from "./figures/ActionPotentials.astro";
 import Collaborators from "./figures/Collaborators.astro";
-import PortfolioMap from "./figures/PortfolioMap.astro";
+import Connections from "./figures/Connections.astro";
 import Raster from "./figures/Raster.astro";
-import Topography from "./figures/Topography.astro";
+import Ripples from "./figures/Ripples.astro";
 import Travels from "./figures/Travels.astro";
+import World from "./figures/World.astro";
 
 const options = [
-  { key: "map", label: "Portfolio map", Figure: PortfolioMap, seed: 3 },
-  { key: "travels", label: "Travels", Figure: Travels, seed: 2 },
   { key: "raster", label: "Raster", Figure: Raster, seed: 5 },
+  { key: "potentials", label: "Action potentials", Figure: ActionPotentials, seed: 5 },
   { key: "collaborators", label: "Collaborators", Figure: Collaborators, seed: 7 },
-  { key: "topography", label: "Career phases", Figure: Topography, seed: 1 },
+  { key: "connections", label: "Connections", Figure: Connections, seed: 3 },
+  { key: "travels", label: "Travels", Figure: Travels, seed: 2 },
+  { key: "world", label: "World", Figure: World, seed: 4 },
+  { key: "ripples", label: "Ripples", Figure: Ripples, seed: 6 },
 ];
 const show = options.map(({ key }) => `.figure:has(input[value="${key}"]:checked) .option[data-option="${key}"] { display: block; }`).join("\n");
 ---

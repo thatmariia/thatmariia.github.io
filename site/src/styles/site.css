@@ -146,12 +146,19 @@ a.pill:hover, .pill.solid, .pill[aria-current="page"] { background: var(--ink); 
 }
 .fig .node:hover { background: var(--ink); color: var(--bg); }
 
-.bifurcation .dots { stroke: var(--ink); stroke-width: 1.1; stroke-linecap: round; opacity: 0.7; animation: appear 1.2s ease; }
-.neurons .line { opacity: 0.7; }
+.phase .axes line { stroke: var(--ink); stroke-width: 1; }
+.phase .axes text { font: 10.5px var(--mono); fill: var(--muted); }
+.phase .nullcline { fill: none; stroke: var(--ink); stroke-width: 1; stroke-dasharray: 4 5; opacity: 0.45; }
+.phase .line { opacity: 0.4; }
+.phase .cycle { stroke-width: 2; opacity: 1; }
+.attractors .line { opacity: 0.45; stroke-width: 0.75; }
+/* These fade in rather than draw: grouped paths do not draw in reliably. */
+.neurons .line { opacity: 0.75; stroke-width: 0.9; stroke-dasharray: none; animation: appear 1.4s ease; }
 .neurons .line circle { fill: var(--ink); stroke: none; }
-.neurons .dendrite { fill: none; stroke: var(--ink); stroke-width: 0.8; stroke-linecap: round; opacity: 0.55; animation: appear 1.2s ease; }
+.neurons .dendrite { fill: none; stroke: var(--ink); stroke-linecap: round; animation: appear 1.2s ease; }
+.neurons .faint { opacity: 0.22; }
+.neurons .soma { fill: var(--ink); }
 .connectome .line { opacity: 0.4; }
-.attractor .line { stroke-width: 0.7; opacity: 0.6; animation-delay: calc(var(--i) * 0.12s); }
 
 .mark .line { opacity: 0.75; animation-duration: 1.2s; }
 .mark .dot { fill: var(--bg); stroke: var(--ink); stroke-width: 1.2; }

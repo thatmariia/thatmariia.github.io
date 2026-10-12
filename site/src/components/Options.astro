@@ -1,0 +1,29 @@
+---
+// TEMPORARY design options panel, removed once a combination is chosen.
+const options = {
+  viz: [["threads", "Threads"], ["eeg", "EEG channels"], ["embedding", "Embedding"], ["fieldlines", "Field lines"]],
+  type: [["plex", "IBM Plex"], ["geist", "Geist"], ["instrument", "Instrument Sans"], ["hanken", "Hanken Grotesk"]],
+  tone: [["paper", "Paper"], ["sage", "Sage"], ["white", "White"]],
+};
+---
+
+<details class="options">
+  <summary>Design options</summary>
+  {Object.entries(options).map(([key, values]) => (
+    <label>
+      <span>{key === "viz" ? "Figure" : key === "type" ? "Typeface" : "Tone"}</span>
+      <select data-option={key}>{values.map(([value, label]) => <option value={value}>{label}</option>)}</select>
+    </label>
+  ))}
+</details>
+
+<script is:inline>
+  for (const select of document.querySelectorAll(".options select")) {
+    const key = select.dataset.option;
+    select.value = document.documentElement.dataset[key] || select.options[0].value;
+    select.addEventListener("change", () => {
+      document.documentElement.dataset[key] = select.value;
+      try { localStorage.setItem(`option-${key}`, select.value); } catch {}
+    });
+  }
+</script>

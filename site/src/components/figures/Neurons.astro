@@ -1,6 +1,7 @@
 ---
-// A small network of neurons: each field is a cell body with dendrites, and curved axons with
-// synaptic boutons connect every field to its neighbours and to fields across the network.
+// A piece of neural tissue drawn in the manner of Cajal: each field is a neuron with tapering,
+// branching dendrites; wavy axons with collaterals end in terminal arbours with synaptic boutons
+// next to other neurons; faint unlabelled neurons fill the background. Hover highlights connections.
 import { ellipse, hoverCss, place, separate } from "../../lib/figure";
 import { random, type Point } from "../../lib/random";
 interface Props { fields: string[]; seed: number; width: number; height: number }
@@ -11,50 +12,86 @@ const n = fields.length;
 const nodes = ellipse(n, width, height, Math.max(70, width * 0.13), 56, uniform);
 const at = nodes.map((node) => node.at);
 separate(at, fields, width, height, 56);
+const f = (v: number) => v.toFixed(1);
+const halfWidth = (i: number) => (fields[i].length * 7.6 + 30) / 2;
 
-// Connect neighbours around the ring and each field to the one three places further on.
-const bySlot = [...nodes.keys()].sort((a, b) => nodes[a].slot - nodes[b].slot);
+// Dendritic trees: curved branches that fork and taper, collected per stroke width.
+type Strokes = Map<string, string>;
+function branch(into: Strokes, x: number, y: number, angle: number, length: number, thickness: number, depth: number) {
+  const [ex, ey] = [x + Math.cos(angle) * length, y + Math.sin(angle) * length];
+  const bend = (uniform() - 0.5) * 0.5 * length;
+  const [qx, qy] = [(x + ex) / 2 - Math.sin(angle) * bend, (y + ey) / 2 + Math.cos(angle) * bend];
+  const key = thickness.toFixed(1);
+  into.set(key, (into.get(key) ?? "") + `M${f(x)},${f(y)} Q${f(qx)},${f(qy)} ${f(ex)},${f(ey)}`);
+  if (depth === 0) return;
+  for (const side of [-1, 1]) {
+    branch(into, ex, ey, angle + side * (0.3 + uniform() * 0.35), length * (0.62 + uniform() * 0.15), thickness * 0.65, depth - 1);
+  }
+}
+const dendrites: Strokes = new Map();
+at.forEach(([x, y], i) => {
+  for (let k = 0; k < 5; k++) {
+    const angle = (2 * Math.PI * k) / 5 + uniform() * 0.8;
+    branch(dendrites, x + Math.cos(angle) * halfWidth(i), y + Math.sin(angle) * 15, angle, 22 + uniform() * 12, 2, 3);
+  }
+});
+
+// Background neurons, kept away from the labelled ones.
+const background: Point[] = [];
+for (let tries = 0; background.length < Math.round((width * height) / 26000) && tries < 2000; tries++) {
+  const p: Point = [20 + uniform() * (width - 40), 20 + uniform() * (height - 40)];
+  if (at.every(([x, y], i) => Math.abs(p[0] - x) > halfWidth(i) + 40 || Math.abs(p[1] - y) > 55)) background.push(p);
+}
+const faint: Strokes = new Map();
+background.forEach(([x, y]) => {
+  for (let k = 0; k < 4; k++) branch(faint, x, y, (2 * Math.PI * k) / 4 + uniform(), 12 + uniform() * 8, 1.2, 2);
+});
+
+// Axons: every field to its neighbours around the ring and to the one three places on.
+const bySlot = [...nodes.keys()].sort((p, q) => nodes[p].slot - nodes[q].slot);
 const pairs = new Set<string>();
 bySlot.forEach((node, k) => {
-  for (const step of [1, 3]) pairs.add([node, bySlot[(k + step) % n]].sort().join(" "));
+  for (const step of [1, 3]) pairs.add([node, bySlot[(k + step) % n]].join(" "));
 });
-const f = (v: number) => v.toFixed(1);
+const bezier = (a: Point, c1: Point, c2: Point, b: Point, t: number): Point =>
+  [0, 1].map((k) => (1 - t) ** 3 * a[k] + 3 * (1 - t) ** 2 * t * c1[k] + 3 * (1 - t) * t * t * c2[k] + t ** 3 * b[k]) as Point;
 const axons = [...pairs].map((pair) => {
   const [i, j] = pair.split(" ").map(Number);
   const [a, b] = [at[i], at[j]];
   const [dx, dy] = [b[0] - a[0], b[1] - a[1]];
-  const bend = (uniform() < 0.5 ? -1 : 1) * (0.18 + uniform() * 0.18);
+  const bend = (uniform() < 0.5 ? -1 : 1) * (0.15 + uniform() * 0.2);
   const c1: Point = [a[0] + dx / 3 - dy * bend, a[1] + dy / 3 + dx * bend];
-  const c2: Point = [a[0] + (2 * dx) / 3 - dy * bend, a[1] + (2 * dy) / 3 + dx * bend];
-  // Bouton just before the target, on the curve.
-  const t = 0.9, u = 1 - t;
-  const bouton = [0, 1].map((k) => u ** 3 * a[k] + 3 * u * u * t * c1[k] + 3 * u * t * t * c2[k] + t ** 3 * b[k]);
-  return { d: `M${f(a[0])},${f(a[1])} C${f(c1[0])},${f(c1[1])} ${f(c2[0])},${f(c2[1])} ${f(b[0])},${f(b[1])}`, touches: pair, bouton };
-});
-
-// Dendrites: short forking curves starting at the edge of each pill.
-const dendrites = at.map(([x, y], i) => {
-  const halfWidth = (fields[i].length * 7.6 + 30) / 2;
-  return Array.from({ length: 8 }, (_, k) => {
-    const a = (2 * Math.PI * k) / 8 + uniform() * 0.5;
-    const [sx, sy] = [x + Math.cos(a) * halfWidth, y + Math.sin(a) * 15];
-    const length = 14 + uniform() * 16, bend = (uniform() - 0.5) * 1.2;
-    const [ex, ey] = [sx + Math.cos(a + bend * 0.4) * length, sy + Math.sin(a + bend * 0.4) * length];
-    const [mx, my] = [(sx + ex) / 2, (sy + ey) / 2];
-    const twig = [mx + Math.cos(a + bend) * length * 0.5, my + Math.sin(a + bend) * length * 0.5];
-    return `M${f(sx)},${f(sy)} Q${f(sx + Math.cos(a) * length * 0.6)},${f(sy + Math.sin(a) * length * 0.6)} ${f(ex)},${f(ey)} M${f(mx)},${f(my)} L${f(twig[0])},${f(twig[1])}`;
-  }).join(" ");
+  const c2: Point = [a[0] + (2 * dx) / 3 + dy * bend * 0.6, a[1] + (2 * dy) / 3 - dx * bend * 0.6];
+  const end = bezier(a, c1, c2, b, 0.86);
+  let d = `M${f(a[0])},${f(a[1])} C${f(c1[0])},${f(c1[1])} ${f(c2[0])},${f(c2[1])} ${f(end[0])},${f(end[1])}`;
+  const boutons: Point[] = [];
+  // A collateral branch partway along.
+  const [mx, my] = bezier(a, c1, c2, b, 0.45);
+  const ca = Math.atan2(dy, dx) + (uniform() < 0.5 ? -1 : 1) * (0.7 + uniform() * 0.5);
+  const tip: Point = [mx + Math.cos(ca) * 22, my + Math.sin(ca) * 22];
+  d += ` M${f(mx)},${f(my)} Q${f(mx + Math.cos(ca + 0.4) * 12)},${f(my + Math.sin(ca + 0.4) * 12)} ${f(tip[0])},${f(tip[1])}`;
+  boutons.push(tip);
+  // Terminal arbour: a few short twigs fanning towards the target, each ending in a bouton.
+  const toward = Math.atan2(b[1] - end[1], b[0] - end[0]);
+  for (const spread of [-0.6, 0, 0.6]) {
+    const twig: Point = [end[0] + Math.cos(toward + spread) * 12, end[1] + Math.sin(toward + spread) * 12];
+    d += ` M${f(end[0])},${f(end[1])} L${f(twig[0])},${f(twig[1])}`;
+    boutons.push(twig);
+  }
+  return { d, touches: pair, boutons };
 });
 const id = `nn-${seed}-${width}`;
 ---
 
 <div class:list={["fig neurons", id]}>
-  <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`Fields as a network of neurons: ${fields.join(", ")}`}>
-    {dendrites.map((d) => <path class="dendrite" d={d} />)}
+  <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`Fields as connected neurons: ${fields.join(", ")}`}>
+    {[...faint].map(([w, d]) => <path class="dendrite faint" d={d} stroke-width={w} />)}
+    {background.map(([x, y]) => <circle class="soma faint" cx={f(x)} cy={f(y)} r="3.5" />)}
+    {[...dendrites].map(([w, d]) => <path class="dendrite" d={d} stroke-width={w} />)}
     {axons.map((axon, i) => (
       <g class="line" data-touches={axon.touches} style={`--i: ${i % 9}`}>
         <path class="axon" d={axon.d} pathLength="1" />
-        <circle cx={axon.bouton[0]} cy={axon.bouton[1]} r="2.6" />
+        {axon.boutons.map(([x, y]) => <circle cx={f(x)} cy={f(y)} r="2.2" />)}
       </g>
     ))}
   </svg>

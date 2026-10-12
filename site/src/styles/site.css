@@ -208,8 +208,9 @@ a.pill:hover, .pill.solid, .pill[aria-current="page"] { background: var(--ink); 
 .volleyball .touch .move { fill: var(--muted); font-weight: 400; }
 .volleyball .ball .dark { fill: var(--ink); }
 .volleyball .ball .light { fill: var(--bg); }
-.volleyball .ball path { stroke: var(--ink); stroke-width: 0.6; }
-.volleyball .ball .rim { fill: none; stroke: var(--ink); stroke-width: 1.4; }
+.volleyball .ball .mid { fill: var(--ink); fill-opacity: 0.3; }
+.volleyball .ball path { stroke: var(--ink); stroke-width: 0.4; }
+.volleyball .ball .rim { fill: none; stroke: var(--ink); stroke-width: 1.1; }
 .volleyball .shadow { fill: var(--ink); opacity: 0.18; }
 
 .worldline .axis { stroke: var(--ink); stroke-width: 0.6; stroke-dasharray: 2 4; opacity: 0.3; }

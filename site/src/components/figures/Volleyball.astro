@@ -1,8 +1,8 @@
 ---
-// Beyond science as a beach-volleyball rally, two players a side. Each side plays three touches:
-// the back player passes, the net player sets, and the back player runs in, jumps and attacks over
-// the net. Every touch shows the next activity. The ball is a beach ball with swirled panels,
-// spinning, with its shadow on the sand. SMIL animations, paused for visitors who prefer reduced motion.
+// Beyond science as an endless beach-volleyball rally, two players a side, simulated in the browser.
+// Every rally is different: serves and passes go to random spots, players run to the ball, the
+// setter moves under the pass, attacks are dug, blocked (a block counts as a touch) or killed.
+// Each touch shows the next activity in the sand under the player. Static for reduced motion.
 import { data } from "../../lib/data";
 import { random } from "../../lib/random";
 interface Props { seed: number; width: number; height: number }
@@ -13,87 +13,28 @@ const activities = (data.beyond as { title: string }[]).map((a) => a.title);
 const f = (v: number) => v.toFixed(1);
 const k = Math.min(1.4, width / 330);  // player scale
 const sand = height - 40, net = width / 2, netTop = sand - 76 * k, half = net - 12;
+const geometry = { width, k, sand, net, netTop, half };
 
-// Body poses, relative to the feet and in player units: arms from the shoulder.
-const arms = (pose: "pass" | "set" | "attack", face: number) => {
-  const [a, b] = { pass: [[11, -36], [10, -34]], set: [[3, -68], [6, -67]], attack: [[5, -70], [-6, -52]] }[pose];
-  return `M0,-46 L${a[0] * face},${a[1]} M0,-46 L${b[0] * face},${b[1]}`;
-};
-const body = "M0,-51 L0,-24 M0,-24 L-6,0 M0,-24 L6,0";
-
-// Per side (left -1, right 1): positions, contact points (ball centres) and the touches.
-const n = 6, touch = 1.05, cycle = n * touch;
-const sides = [-1, 1].map((side, s) => {
-  const face = -side, at = (u: number) => net + side * half * u;
-  const [back, setter, attack] = [at(0.78), at(0.38), at(0.2)];
-  const jump = 26;
-  const contacts = [
-    { x: back + 12 * face * k, y: sand - 45 * k },
-    { x: setter + 4 * face * k, y: sand - 77 * k },
-    { x: attack + 7 * face * k, y: sand - 104 * k },
-  ];
-  // The back player's run, jump and return, timed to the rally (touches 3s, 3s+1, 3s+2).
-  const t = (u: number) => (3 * s + u) / n;
-  const dx = (attack - back) / k;
-  const keys: [number, string, "pass" | "attack"][] = [
-    [0, "0,0", "pass"], [t(0), "0,0", "pass"], [t(1), `${f(dx * 0.6)},0`, "pass"], [t(1.6), `${f(dx * 0.95)},0`, "pass"],
-    [t(2), `${f(dx)},${-jump}`, "attack"], [t(2.4), `${f(dx)},0`, "pass"], [t(3), "0,0", "pass"], [1, "0,0", "pass"],
-  ];
-  const unique = keys.filter(([time], i) => i === 0 || time > keys[i - 1][0]);
-  const [times, moves, poses] = [unique.map(([time]) => time.toFixed(4)), unique.map(([, m]) => m), unique.map(([, , pose]) => arms(pose, face))];
-  return { side, face, back, setter, contacts, times, moves, poses };
+// A Mikasa-style ball: curved panels from pole to pole, twisted, in three tones.
+const r = 8 * k, tilt = -0.6, twist = 0.55;
+const [u, v] = [[Math.cos(tilt), Math.sin(tilt)], [-Math.sin(tilt), Math.cos(tilt)]];
+const meridian = (phi: number) => Array.from({ length: 17 }, (_, i) => {
+  const t = (i / 16) * Math.PI, [a, b] = [r * Math.cos(t), r * Math.sin(t) * Math.cos(phi)];
+  const [x, y] = [u[0] * a + v[0] * b, u[1] * a + v[1] * b], turn = twist * Math.sin(t);
+  return [x * Math.cos(turn) - y * Math.sin(turn), x * Math.sin(turn) + y * Math.cos(turn)];
 });
-const touches = [...sides[0].contacts, ...sides[1].contacts];
-
-// The rally: quadratic arcs between touches.
-const loop = [...touches, touches[0]];
-const kinds = ["pass", "set", "attack", "pass", "set", "attack"];
-let path = `M${f(loop[0].x)},${f(loop[0].y)}`, shadow = `M${f(loop[0].x)},${f(sand + 3)}`;
-const lengths: number[] = [], shadowLengths: number[] = [];
-for (let i = 0; i < n; i++) {
-  const [a, b] = [loop[i], loop[i + 1]], top = Math.min(a.y, b.y);
-  // Attacks aim just over the tape; passes and sets peak high, half-way between the touches.
-  const peak = kinds[i] === "pass" ? top - (top - 24) * 0.8 : top - (top - 24) * 0.45;
-  const [qx, qy] = kinds[i] === "attack" ? [net, netTop - 22 * k] : [(a.x + b.x) / 2, 2 * peak - (a.y + b.y) / 2];
-  path += ` Q${f(qx)},${f(qy)} ${f(b.x)},${f(b.y)}`;
-  shadow += ` L${f(b.x)},${f(sand + 3)}`;
-  let length = 0, [px, py] = [a.x, a.y];
-  for (let j = 1; j <= 30; j++) {
-    const u = j / 30, [x, y] = [(1 - u) ** 2 * a.x + 2 * (1 - u) * u * qx + u * u * b.x, (1 - u) ** 2 * a.y + 2 * (1 - u) * u * qy + u * u * b.y];
-    length += Math.hypot(x - px, y - py);
-    [px, py] = [x, y];
-  }
-  lengths.push(length);
-  shadowLengths.push(Math.abs(b.x - a.x) || 1);
-}
-// Every touch takes the same time, for the ball and its shadow alike.
-const keyTimes = loop.map((_, i) => (i / n).toFixed(4)).join(";");
-const keyPoints = (ls: number[]) => {
-  const total = ls.reduce((s, l) => s + l, 0);
-  return loop.map((_, i) => (ls.slice(0, i).reduce((s, l) => s + l, 0) / total).toFixed(4)).join(";");
-};
-
-// Labels: touch j shows activity j (mod the number of activities) in the sand under the player,
-// until the next touch; the label cycle lasts until every activity has been shown at every touch.
-const rounds = activities.length * n;
-const labels = Array.from({ length: rounds }, (_, j) => {
-  const text = activities[j % activities.length], move = kinds[j % n], at = touches[j % n], w = (move.length + 1 + text.length) * 7.6;
-  return { text, move, j, x: Math.max(w / 2 + 4, Math.min(width - w / 2 - 4, at.x)), y: sand + 30 };
+const TONES = ["dark", "light", "mid", "light"];
+const panels = Array.from({ length: 8 }, (_, j) => {
+  const [a, b] = [meridian((j * Math.PI) / 8), meridian(((j + 1) * Math.PI) / 8)];
+  return { tone: TONES[(j + 2) % 4], d: `M${[...a, ...b.reverse()].map(([x, y]) => `${f(x)},${f(y)}`).join("L")}Z` };
 });
-
-// Beach ball: curved panels swirling out from the middle, every third one dark, with seams.
-const r = 8 * k, count = 9;
-const polar = (a: number, d: number) => `${f(Math.cos(a) * d)},${f(Math.sin(a) * d)}`;
-const swirl = (a: number) => `C${polar(a + 1.6, r * 0.35)} ${polar(a + 0.9, r * 0.75)} ${polar(a, r)}`;
-const panels = Array.from({ length: count }, (_, p) => {
-  const [a0, a1] = [(2 * p * Math.PI) / count, (2 * (p + 1) * Math.PI) / count];
-  const back = `C${polar(a1 + 0.9, r * 0.75)} ${polar(a1 + 1.6, r * 0.35)} 0,0`;
-  return `<path class="${p % 3 ? "light" : "dark"}" d="M0,0 ${swirl(a0)} A${f(r)},${f(r)} 0 0 1 ${polar(a1, r)} ${back}Z" />`;
-}).join("");
 const grains = Array.from({ length: Math.round(width / 3) }, () => [uniform() * width, sand + 3 + uniform() * 14]);
+// Starting line-up: left serves from the back.
+const start = [net - half * 0.95, net - half * 0.2, net + half * 0.15, net + half * 0.65];
+const READY = (face: number) => `M0,-46 L${8 * face},-38 M0,-46 L${7 * face},-36`;
 ---
 
-<div class="fig volleyball">
+<div class="fig volleyball" data-geometry={JSON.stringify(geometry)}>
   <svg viewBox={`0 0 ${width} ${height}`} role="img"
     aria-label={`A beach volleyball rally, three touches a side, each touch an activity: ${activities.join(", ")}`}>
     <line class="sand" x1="0" x2={width} y1={sand} y2={sand} />
@@ -101,52 +42,187 @@ const grains = Array.from({ length: Math.round(width / 3) }, () => [uniform() * 
     <line class="pole" x1={net} x2={net} y1={f(netTop - 4)} y2={sand} />
     {Array.from({ length: 4 }, (_, m) => <line class="mesh" x1={net - 5} x2={net + 5} y1={f(netTop + m * 8 * k)} y2={f(netTop + (m + 1) * 8 * k)} />)}
     <line class="tape" x1={net - 6} x2={net + 6} y1={f(netTop)} y2={f(netTop)} />
-    <path class="rally" d={path} />
-    {sides.map((p) => (
-      <g class="player" transform={`translate(${f(p.setter)},${f(sand)}) scale(${k})`}>
+    <path class="rally" d="" />
+    {start.map((x, i) => (
+      <g class="player" transform={`translate(${f(x)},${f(sand)}) scale(${k})`}>
         <circle cy="-56" r="5" />
-        <path d={body} />
-        <path d={arms("set", p.face)} />
+        <path d="M0,-51 L0,-24 M0,-24 L-6,0 M0,-24 L6,0" />
+        <path class="arms" d={READY(i < 2 ? 1 : -1)} />
       </g>
     ))}
-    {sides.map((p) => (
-      <g transform={`translate(${f(p.back)},${f(sand)}) scale(${k})`}>
-        <g class="player">
-          <animateTransform attributeName="transform" type="translate" dur={`${cycle.toFixed(2)}s`} repeatCount="indefinite"
-            keyTimes={p.times.join(";")} values={p.moves.join(";")} />
-          <circle cy="-56" r="5" />
-          <path d={body} />
-          <path d={p.poses[0]}>
-            <animate attributeName="d" dur={`${cycle.toFixed(2)}s`} repeatCount="indefinite" keyTimes={p.times.join(";")} values={p.poses.join(";")} />
-          </path>
-        </g>
-      </g>
-    ))}
-    {labels.map(({ text, move, j, x, y }) => (
-      <text class="touch" x={f(x)} y={f(y)} text-anchor="middle" opacity={j === 0 ? 1 : 0}>
-        <tspan class="move">{move}</tspan> {text}
-        <animate attributeName="opacity" dur={`${(rounds * touch).toFixed(2)}s`} repeatCount="indefinite" calcMode="discrete"
-          keyTimes={j === 0 ? `0;${(1 / rounds).toFixed(5)}` : `0;${(j / rounds).toFixed(5)};${((j + 1) / rounds).toFixed(5)}`}
-          values={j === 0 ? "1;0" : "0;1;0"} />
-      </text>
-    ))}
-    <ellipse class="shadow" rx={f(r)} ry="2.4">
-      <animateMotion dur={`${cycle.toFixed(2)}s`} repeatCount="indefinite" path={shadow} calcMode="linear" keyTimes={keyTimes} keyPoints={keyPoints(shadowLengths)} />
-    </ellipse>
-    <g class="ball">
-      <animateMotion dur={`${cycle.toFixed(2)}s`} repeatCount="indefinite" path={path} calcMode="linear" keyTimes={keyTimes} keyPoints={keyPoints(lengths)} />
-      <g>
-        <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="0.9s" repeatCount="indefinite" />
-        <g set:html={panels} />
+    <text class="touch" x={f(start[0])} y={f(sand + 30)} text-anchor="middle"><tspan class="move">serve</tspan> {activities[0]}</text>
+    <ellipse class="shadow" cx={f(start[0])} cy={f(sand + 3)} rx={f(r)} ry="2.4" />
+    <g class="ball" transform={`translate(${f(start[0] + 7 * k)},${f(sand - 95 * k)})`}>
+      <g class="spin">
+        {panels.map((p) => <path class={p.tone} d={p.d} />)}
         <circle class="rim" r={f(r)} />
       </g>
     </g>
   </svg>
+  <script is:inline type="application/json" set:html={JSON.stringify(activities)} />
 </div>
 
 <script>
-  // SMIL animations ignore CSS, so pause them by hand for visitors who prefer reduced motion.
-  if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    for (const svg of document.querySelectorAll<SVGSVGElement>(".fig.volleyball svg")) svg.pauseAnimations();
+  type Point = { x: number; y: number };
+  type Kind = "serve" | "pass" | "dig" | "set" | "attack" | "block";
+  // Arm end points per pose, in player units relative to the feet; the shoulder is at (0, -46).
+  const POSES: Record<string, number[][]> = {
+    ready: [[8, -38], [7, -36]], pass: [[12, -36], [11, -34]], dig: [[12, -32], [11, -30]], set: [[3, -68], [6, -67]],
+    attack: [[5, -70], [-6, -52]], serve: [[5, -70], [-6, -52]], block: [[2, -73], [5, -72]],
+  };
+  // Where the ball is (relative to the feet, in player units) when each touch meets it.
+  const CONTACT: Record<Kind, [number, number]> = { serve: [7, -78], pass: [13, -45], dig: [13, -41], set: [4, -77], attack: [7, -78], block: [14, -80] };
+  const JUMP: Partial<Record<Kind, number>> = { attack: 26, block: 22, serve: 14 };
+
+  for (const figure of document.querySelectorAll<HTMLElement>(".fig.volleyball")) {
+    const svg = figure.querySelector("svg")!;
+    const { width, k, sand, net, netTop, half } = JSON.parse(figure.dataset.geometry!);
+    const activities: string[] = JSON.parse(figure.querySelector("script[type='application/json']")!.textContent!);
+    const ball = svg.querySelector<SVGGElement>(".ball")!, spinner = svg.querySelector<SVGGElement>(".spin")!;
+    const shadow = svg.querySelector<SVGEllipseElement>(".shadow")!, trail = svg.querySelector<SVGPathElement>(".rally")!;
+    const label = svg.querySelector<SVGTextElement>(".touch")!;
+    const rand = (a: number, b: number) => a + Math.random() * (b - a);
+    const side = (u: number, s: number) => net + s * half * u;  // u: 0 at the net, 1 at the back
+    // Players: side -1 (left) and 1 (right), facing the net.
+    const players = [...svg.querySelectorAll<SVGGElement>(".player")].map((g, i) => {
+      const s = i < 2 ? -1 : 1, x = Number(g.getAttribute("transform")!.match(/translate\(([-\d.]+)/)![1]);
+      return { g, arms: g.querySelector<SVGPathElement>(".arms")!, s, face: -s, x, tx: x, jumpAt: -1, jump: 0, pose: "ready", poseUntil: 0 };
+    });
+    type Player = (typeof players)[number];
+    const team = (s: number) => players.filter((p) => p.s === s);
+    const partner = (p: Player) => players.find((q) => q.s === p.s && q !== p)!;
+    const contact = (p: Player, kind: Kind, x = p.tx): Point => ({ x: x + CONTACT[kind][0] * p.face * k, y: sand + (CONTACT[kind][1] - (JUMP[kind] ?? 0)) * k });
+    // Send a player to touch the ball at x (feet position) when it arrives at time `at`.
+    const meet = (p: Player, kind: Kind, x: number, at: number) => {
+      p.tx = x;
+      if (JUMP[kind]) [p.jumpAt, p.jump] = [at, JUMP[kind]!];
+      return contact(p, kind, x);
+    };
+
+    // The ball flies along a quadratic curve; `next` runs when it arrives.
+    let flight = { a: { x: 0, y: 0 }, q: { x: 0, y: 0 }, b: { x: 0, y: 0 }, t0: 0, dur: 1, spin: 0, next: () => {} };
+    let angle = 0, count = 0, now = 0, ballAt: Point = { x: 0, y: 0 };
+    const fly = (a: Point, b: Point, dur: number, peak: number | Point, spin: number, next: () => void) => {
+      const q = typeof peak === "number" ? { x: (a.x + b.x) / 2, y: 2 * peak - (a.y + b.y) / 2 } : peak;
+      flight = { a, q, b, t0: now, dur, spin, next };
+      trail.setAttribute("d", `M${a.x.toFixed(1)},${a.y.toFixed(1)} Q${q.x.toFixed(1)},${q.y.toFixed(1)} ${b.x.toFixed(1)},${b.y.toFixed(1)}`);
+    };
+    const high = (a: Point, b: Point, lift: number) => Math.min(a.y, b.y) - (Math.min(a.y, b.y) - 24) * lift;
+    const touch = (p: Player, kind: Kind) => {
+      [p.pose, p.poseUntil] = [kind, now + 0.35];
+      const x = Math.max(60, Math.min(width - 60, p.x));
+      label.innerHTML = `<tspan class="move">${kind}</tspan> ${activities[count++ % activities.length].replace(/&/g, "&amp;").replace(/</g, "&lt;")}`;
+      label.setAttribute("x", x.toFixed(1));
+      label.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 250 });
+    };
+
+    // The rally. A side has three touches: first touch by one player, set by the other, attack by the first.
+    // A serve: players walk to their spots while the ball lies still, then the toss and the serve.
+    const serve = (s: number) => {
+      const [server, mate] = team(s).sort(() => Math.random() - 0.5), receivers = team(-s);
+      server.tx = side(rand(0.92, 1), s);
+      mate.tx = side(rand(0.15, 0.3), s);
+      receivers[0].tx = side(rand(0.55, 0.8), -s);
+      receivers[1].tx = side(rand(0.2, 0.45), -s);
+      fly(ballAt, ballAt, 1.2, ballAt.y, 0, () => {
+        const from = contact(server, "serve");
+        [server.jumpAt, server.jump] = [now + 0.6, JUMP.serve!];
+        fly({ x: from.x, y: sand - 40 * k }, from, 0.6, from.y - 40 * k, 0, () => {
+          touch(server, "serve");
+          // A float serve does not spin; a topspin serve does.
+          receive(-s, rand(0.35, 0.9), from, Math.random() < 0.6 ? 0 : 10 * s, 1.5);
+        });
+      });
+    };
+    // The ball comes over to side s: the nearer player digs or passes it, unless it is a kill.
+    // Attacks are driven just over the tape; serves and rebounds arc. A kill lands for a point.
+    const receive = (s: number, u: number, from: Point, spin: number, dur: number, kill = false) => {
+      const x = side(u, s), [p] = team(s).sort((a, b) => Math.abs(a.x - x) - Math.abs(b.x - x));
+      const kind: Kind = dur < 1 ? "dig" : "pass", to = kill ? { x, y: sand - 8 * k } : contact(p, kind, x);
+      const drive = (from.x - net) * s < 0 && dur < 1;
+      const peak = drive ? { x: net, y: Math.min(from.y, netTop - 22 * k) } : high(from, to, dur < 1 ? 0.15 : 0.55);
+      p.tx = kill ? (p.x + x) / 2 : x;
+      fly(from, to, dur, peak, spin, kill ? () => serve(-s) : () => {
+        touch(p, kind);
+        first(p, to);
+      });
+    };
+    // After a first touch by p (a pass, dig or block), the partner sets and p attacks.
+    const first = (p: Player, from: Point, blocked = false) => {
+      const setter = partner(p), setX = side(rand(0.2, 0.5), p.s);
+      const to = meet(setter, "set", setX, now + 1.1);
+      fly(from, to, blocked ? 0.9 : 1.1, high(from, to, blocked ? 0.35 : 0.75), blocked ? rand(-4, 4) : rand(-3, 3), () => {
+        touch(setter, "set");
+        set(setter, p, to);
+      });
+    };
+    const set = (setter: Player, hitter: Player, from: Point) => {
+      const hitX = side(rand(0.14, 0.3), hitter.s), dur = 0.95;
+      const to = meet(hitter, "attack", hitX, now + dur);
+      setter.tx = side(rand(0.45, 0.7), setter.s);
+      // The other side gets ready: one player blocks at the net, the other defends.
+      const [blocker, defender] = team(-hitter.s).sort((a, b) => Math.abs(a.x - net) - Math.abs(b.x - net));
+      blocker.tx = net + blocker.s * 11 * k;
+      defender.tx = side(rand(0.5, 0.8), defender.s);
+      fly(from, to, dur, high(from, to, 0.45), 0, () => {
+        touch(hitter, "attack");
+        attack(hitter, blocker, to);
+      });
+    };
+    const attack = (hitter: Player, blocker: Player, from: Point) => {
+      const roll = Math.random(), s = blocker.s, topspin = 14 * -hitter.s;
+      [blocker.jumpAt, blocker.jump] = [now + 0.22, JUMP.block!];
+      if (roll < 0.3) {
+        // Blocked: the block is the blockers' first touch, unless it goes straight back over.
+        const at = contact(blocker, "block", blocker.tx);
+        fly(from, at, 0.22, from.y, topspin, () => {
+          touch(blocker, "block");
+          if (Math.random() < 0.5) {
+            // Stuffed back: the attackers dig it (or it drops for a point) and get three new touches.
+            receive(hitter.s, rand(0.15, 0.5), at, rand(-8, 8), 0.75, Math.random() < 0.35);
+          } else {
+            // Soft block: it pops up on the blockers' side; two touches left (set, then attack).
+            blocker.tx = side(0.25, s);
+            first(blocker, at, true);
+          }
+        });
+      } else {
+        receive(s, rand(0.3, 0.9), from, topspin, 0.6, roll > 0.9);
+      }
+    };
+
+    // Animation loop: move players toward their targets, jump on time, fly the ball.
+    let last = 0, running = false;
+    const frame = (time: number) => {
+      const dt = Math.min(0.05, (time - (last || time)) / 1000);
+      [last, now] = [time, now + dt];
+      for (const p of players) {
+        p.x += (p.tx - p.x) * Math.min(1, dt * 7);
+        const j = (now - p.jumpAt + 0.3) / 0.6, lift = j > 0 && j < 1 ? p.jump * Math.sin(Math.PI * j) : 0;
+        if (j >= 1 && p.jumpAt >= 0) p.jumpAt = -1;
+        const pose = now < p.poseUntil ? p.pose : j > 0 && j < 1 ? (p.jump === JUMP.block ? "block" : "attack") : "ready";
+        const [a, b] = POSES[pose];
+        p.g.setAttribute("transform", `translate(${p.x.toFixed(1)},${(sand - lift * k).toFixed(1)}) scale(${k})`);
+        p.arms.setAttribute("d", `M0,-46 L${a[0] * p.face},${a[1]} M0,-46 L${b[0] * p.face},${b[1]}`);
+      }
+      const t = Math.min(1, (now - flight.t0) / flight.dur), { a, q, b } = flight;
+      const [x, y] = [(1 - t) ** 2 * a.x + 2 * (1 - t) * t * q.x + t * t * b.x, (1 - t) ** 2 * a.y + 2 * (1 - t) * t * q.y + t * t * b.y];
+      angle += flight.spin * dt * 57.3;
+      ballAt = { x, y };
+      ball.setAttribute("transform", `translate(${x.toFixed(1)},${y.toFixed(1)})`);
+      spinner.setAttribute("transform", `rotate(${angle.toFixed(1)})`);
+      shadow.setAttribute("cx", x.toFixed(1));
+      if (t >= 1) { const next = flight.next; flight.next = () => {}; next(); }
+      if (running) requestAnimationFrame(frame);
+    };
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) continue;
+    const start = ball.getAttribute("transform")!.match(/([-\d.]+),([-\d.]+)/)!;
+    ballAt = { x: Number(start[1]), y: Number(start[2]) };
+    serve(-1);
+    new IntersectionObserver(([entry]) => {
+      const was = running;
+      running = entry.isIntersecting;
+      if (running && !was) { last = 0; requestAnimationFrame(frame); }
+    }).observe(figure);
   }
 </script>

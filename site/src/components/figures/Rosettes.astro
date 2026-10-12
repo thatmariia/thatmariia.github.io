@@ -1,0 +1,48 @@
+---
+// Awards as rosettes: each award is a spirograph rosette (a hypotrochoid) whose petals come from its
+// month and whose shape comes from its year, all the same size, slowly turning like a prize ribbon.
+// Each links to its award.
+import { month } from "../../lib/career";
+import { data, refs, type Entry } from "../../lib/data";
+interface Props { seed: number; width: number; height: number }
+const { width, height } = Astro.props;
+
+const awards = (data.awards as Entry[]).map((a) => ({ t: month(a.periods[0].start!), title: a.title!, href: a.id && refs[a.id] ? refs[a.id].href : "/awards/" }))
+  .sort((a, b) => a.t - b.t);
+const columns = width > height ? Math.min(awards.length, 5) : 2;
+const rows = Math.ceil(awards.length / columns);
+const [cellW, cellH] = [width / columns, height / rows];
+const size = Math.min(cellW, cellH - 40) * 0.38;
+const f = (v: number) => v.toFixed(1);
+const gcd = (a: number, b: number): number => (b ? gcd(b, a % b) : a);
+const rosette = (t: number, cx: number, cy: number) => {
+  // A looping hypotrochoid: a circle of radius r = turns/petals rolls inside one of radius 1, with
+  // the pen beyond its rim (d > r). Petals (5–9) come from the month, loop size from the year.
+  const petals = 5 + (t % 12) % 5, turns = gcd(2, petals) === 1 ? 2 : 3;
+  const r = turns / petals, d = r * (1.15 + ((Math.floor(t / 12) % 5) / 5) * 0.5);
+  const scale = size / (1 - r + d), steps = 1400;
+  return Array.from({ length: steps + 1 }, (_, k) => {
+    const a = (2 * Math.PI * turns * k) / steps;
+    const x = (1 - r) * Math.cos(a) + d * Math.cos(((1 - r) / r) * a);
+    const y = (1 - r) * Math.sin(a) - d * Math.sin(((1 - r) / r) * a);
+    return `${k ? "L" : "M"}${f(cx + x * scale)},${f(cy + y * scale)}`;
+  }).join("");
+};
+const short = (s: string) => (s.length > 26 ? `${s.slice(0, 24).trim()}…` : s);
+---
+
+<div class="fig rosettes">
+  <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`${awards.length} awards as rosettes`}>
+    {awards.map((a, i) => {
+      const [cx, cy] = [cellW * ((i % columns) + 0.5), cellH * (Math.floor(i / columns) + 0.42)];
+      return (
+        <a href={a.href}>
+          <title>{a.title}</title>
+          <path class="rosette" d={rosette(a.t, cx, cy)} style={`transform-origin: ${f(cx)}px ${f(cy)}px; animation-duration: ${40 + i * 7}s; animation-direction: ${i % 2 ? "reverse" : "normal"}`} />
+          <text x={f(cx)} y={f(cy + size + 18)} text-anchor="middle">{short(a.title)}</text>
+          <text class="year" x={f(cx)} y={f(cy + size + 31)} text-anchor="middle">{Math.floor(a.t / 12)}</text>
+        </a>
+      );
+    })}
+  </svg>
+</div>

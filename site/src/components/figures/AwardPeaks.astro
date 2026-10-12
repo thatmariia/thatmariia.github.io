@@ -1,0 +1,60 @@
+---
+// Awards as an evoked potential: a waveform over the years with one peak per award, all the same
+// height, labelled and linked to the award. An oscilloscope sweep keeps redrawing the trace.
+import { firstYear, month, now } from "../../lib/career";
+import { data, refs, type Entry } from "../../lib/data";
+import { points, random, type Point } from "../../lib/random";
+interface Props { seed: number; width: number; height: number }
+const { seed, width, height } = Astro.props;
+
+const uniform = random(seed);
+const awards = (data.awards as Entry[]).map((a) => ({ t: month(a.periods[0].start!), title: a.title!, href: a.id && refs[a.id] ? refs[a.id].href : "/awards/" }))
+  .sort((a, b) => a.t - b.t);
+const from = Math.min(firstYear * 12, ...awards.map((a) => a.t - 12)), to = now + 2;
+const vertical = height > width;
+const [left, right, top, bottom] = [16, width - 16, vertical ? 40 : 90, height - 34];
+const x = (t: number) => left + ((t - from) / (to - from)) * (right - left);
+const base = bottom - (bottom - top) * 0.25, amplitude = (bottom - top) * 0.62;
+// Waveform: small ongoing noise plus a positive peak (with a small negative dip after) per award.
+let noise = 0;
+const trace: Point[] = [];
+for (let px = left; px <= right; px += 0.8) {
+  noise = 0.92 * noise + (uniform() - 0.5) * 0.6;
+  const t = from + ((px - left) / (right - left)) * (to - from);
+  const v = awards.reduce((s, a) => s + Math.exp(-(((t - a.t) / 2.2) ** 2)) - 0.25 * Math.exp(-(((t - a.t - 4) / 2.5) ** 2)), 0);
+  trace.push([px, base - amplitude * Math.min(1.2, v) + noise]);
+}
+// Labels above the peaks, pushed apart where peaks are close.
+const labels = awards.map((a) => ({ ...a, x: x(a.t), y: base - amplitude - 10 }));
+for (let round = 0; round < 60; round++) {
+  for (const a of labels) for (const b of labels) {
+    if (a === b) continue;
+    const width1 = vertical ? 36 : 140;  // narrow screens label peaks with their year only
+    if (Math.abs(a.x - b.x) < width1 && Math.abs(a.y - b.y) < 13) { const push = (13 - Math.abs(a.y - b.y)) / 2 * Math.sign(a.y - b.y || 1); a.y += push; b.y -= push; }
+  }
+}
+const short = (s: string) => (s.length > 30 ? `${s.slice(0, 28).trim()}…` : s);
+const years = Array.from({ length: Math.floor(to / 12) - Math.floor(from / 12) + 1 }, (_, i) => Math.floor(from / 12) + i).filter((y) => y % 2 === 0);
+const f = (v: number) => v.toFixed(1);
+const id = `ep-${seed}-${width}`;
+---
+
+<div class="fig peaks" style={`--sweep: 10s; --span: ${right - left}`}>
+  <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`${awards.length} awards as peaks of an evoked potential`}>
+    <clipPath id={id}><rect class="sweep-window" x={left} y="0" width={right - left} height={height} /></clipPath>
+    <line class="axis" x1={left} y1={base} x2={right} y2={base} />
+    <polyline class="trace ghost" points={points(trace)} />
+    <g clip-path={`url(#${id})`}><polyline class="trace" points={points(trace)} /></g>
+    <line class="playhead" x1={left} x2={left} y1={top - 20} y2={bottom} />
+    {labels.map((l) => (
+      <a href={l.href}>
+        <title>{l.title}</title>
+        <line class="leader" x1={f(l.x)} y1={f(base - amplitude + 4)} x2={f(l.x)} y2={f(l.y + 3)} />
+        {vertical
+          ? <text x={f(l.x)} y={f(l.y)} text-anchor="middle">{Math.floor(l.t / 12)}</text>
+          : <text x={f(l.x)} y={f(l.y)} text-anchor="middle">{short(l.title)}</text>}
+      </a>
+    ))}
+    {years.map((y) => <text class="year" x={f(x(y * 12))} y={bottom + 20} text-anchor="middle">{y}</text>)}
+  </svg>
+</div>

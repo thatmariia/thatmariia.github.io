@@ -257,8 +257,3 @@ a.pill:hover, .pill.solid, .pill[aria-current="page"] { background: var(--ink); 
   .fig .node { font-size: 0.68rem; }
 }
 
-/* Skills on the beyond-science page */
-.skills { display: grid; grid-template-columns: minmax(10rem, 14rem) 1fr; gap: 12px 24px; padding-top: 14px; font-size: 0.9rem; }
-.skills dt { font-weight: 600; }
-.skills .level { font-size: 0.66rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-right: 6px; }
-@media (max-width: 860px) { .skills { grid-template-columns: 1fr; gap: 2px; } .skills dd { margin-bottom: 10px; } }

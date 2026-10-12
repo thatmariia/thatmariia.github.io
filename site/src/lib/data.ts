@@ -50,13 +50,13 @@ const KIND: Record<string, string> = {
 
 /** The site's pages, and which page each content section lives on. */
 export const PAGES = [
-  ["/", "Home"], ["/outputs/", "Outputs"], ["/path/", "Path"], ["/events/", "Events"], ["/beyond/", "Beyond science"],
+  ["/", "Home"], ["/outputs/", "Outputs"], ["/path/", "Path"], ["/events/", "Events"], ["/awards/", "Awards"], ["/beyond/", "Beyond science"],
 ] as const;
 export const PAGE_OF: Record<string, string> = {
   publications: "/outputs/", preprints: "/outputs/", software: "/outputs/", datasets: "/outputs/", posters: "/outputs/",
   presentations: "/outputs/", reports: "/outputs/", websites: "/outputs/", theses: "/outputs/",
   education: "/path/", research: "/path/", teaching: "/path/", leadership: "/path/", service: "/path/",
-  awards: "/path/", funding: "/path/", other: "/path/", events: "/events/", outreach: "/events/", beyond: "/beyond/",
+  awards: "/awards/", funding: "/path/", other: "/path/", events: "/events/", outreach: "/events/", beyond: "/beyond/",
 };
 
 export const outputSections = ["software", "datasets", "posters", "presentations", "reports", "websites", "theses"]
@@ -103,7 +103,7 @@ export const isUpcoming = (e: Entry) => (e.periods[0].start ?? "") > today;
 
 export const pathSections = (
   [
-    ["awards", "Awards & distinctions", data.awards], ["research", "Research", data.research],
+    ["research", "Research", data.research],
     ["teaching", "Teaching", data.teaching], ["leadership", "Leadership", data.leadership], ["service", "Service", data.service],
     ["funding", "Funding", data.funding], ["other", "Other", data.other],
   ] as [string, string, Entry[]][]

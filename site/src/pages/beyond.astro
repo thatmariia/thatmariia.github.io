@@ -4,30 +4,11 @@ import Base from "../layouts/Base.astro";
 import { data, type Entry } from "../lib/data";
 
 const activities = data.beyond as Entry[];
-const sections = [
-  ...(activities.length ? [{ id: "activities", title: "Activities" }] : []),
-  ...(data.skills.length ? [{ id: "skills", title: "Skills & languages" }] : []),
-];
 ---
 
-<Base title="Beyond science" sections={sections} mark={17}>
-  {activities.length > 0 && (
-    <section class="block" id="activities">
-      <h2>Activities</h2>
-      {activities.map((entry) => <EntryItem entry={entry} />)}
-    </section>
-  )}
-  {data.skills.length > 0 && (
-    <section class="block" id="skills">
-      <h2>Skills & languages</h2>
-      <dl class="skills">
-        {data.skills.map((group) => (
-          <>
-            <dt>{group.title}</dt>
-            <dd>{Object.entries(group.levels).map(([level, items]) => <p><span class="level">{level}</span> {items.join(", ")}</p>)}</dd>
-          </>
-        ))}
-      </dl>
-    </section>
-  )}
+<Base title="Beyond science" mark={17}>
+  <section class="block" id="activities">
+    <h2>Activities</h2>
+    {activities.map((entry) => <EntryItem entry={entry} />)}
+  </section>
 </Base>

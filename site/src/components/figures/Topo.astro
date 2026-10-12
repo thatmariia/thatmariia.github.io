@@ -1,0 +1,121 @@
+---
+// Path as a topographic map. Every role is a hill on its organisation's lane, centred on when it
+// happened: as wide as it lasted and as high as it lasted and produced (linked outputs and events).
+// Contour lines trace the landscape (every fourth one bolder), summits carry the organisations, and
+// my trail winds through time across the hills, with a hiker walking it.
+import { dated, firstYear, now, roleEntries, shortName } from "../../lib/career";
+import { refs } from "../../lib/data";
+import { smooth } from "../../lib/figure";
+import type { Point } from "../../lib/random";
+interface Props { seed: number; width: number; height: number }
+const { width, height } = Astro.props;
+
+const vertical = height > width;
+const [start, end] = [firstYear * 12, now + 3];
+const f = (v: number) => v.toFixed(1);
+// (time in months, lane in 0..1) → screen; time runs left to right, or down on narrow screens.
+const [x0, x1, y0, y1] = vertical ? [44, width - 14, 18, height - 14] : [16, width - 16, 18, height - 34];
+const at = (u: number, v: number): Point => vertical
+  ? [x0 + v * (x1 - x0), y0 + ((u - start) / (end - start)) * (y1 - y0)]
+  : [x0 + ((u - start) / (end - start)) * (x1 - x0), y0 + v * (y1 - y0)];
+
+// Organisations get lanes spread by the golden ratio; each role is a Gaussian hill on its lane.
+const orgs = [...new Set([...roleEntries].sort((a, b) => a.from - b.from).map((r) => r.org))];
+const lane = (org: string) => 0.1 + 0.8 * ((orgs.indexOf(org) * 0.618034 + 0.3) % 1);
+const hills = roleEntries.map((r) => {
+  const months = r.to - r.from, linked = r.related.filter((id) => id in dated).length;
+  return { ...r, u: (r.from + r.to) / 2, v: lane(r.org), su: Math.max(5, months / 2.4), sv: 0.075, h: Math.sqrt(months + 1) * (1 + 0.12 * linked) };
+});
+const z = (u: number, v: number) => hills.reduce((s, h) => s + h.h * Math.exp(-(((u - h.u) / h.su) ** 2 + ((v - h.v) / h.sv) ** 2) / 2), 0);
+
+// Sample the landscape on a grid and trace contour lines with marching squares.
+const [nu, nv] = vertical ? [110, 56] : [180, 64];
+const U = (i: number) => start + (i / nu) * (end - start), V = (j: number) => j / nv;
+const grid = Array.from({ length: nu + 1 }, (_, i) => Array.from({ length: nv + 1 }, (_, j) => z(U(i), V(j))));
+const top = Math.max(...grid.flat());
+const CASES: Record<number, string[][]> = {
+  1: [["l", "b"]], 2: [["b", "r"]], 3: [["l", "r"]], 4: [["t", "r"]], 5: [["l", "t"], ["b", "r"]], 6: [["t", "b"]], 7: [["l", "t"]],
+  8: [["l", "t"]], 9: [["t", "b"]], 10: [["t", "r"], ["l", "b"]], 11: [["t", "r"]], 12: [["l", "r"]], 13: [["b", "r"]], 14: [["l", "b"]],
+};
+const contour = (level: number) => {
+  const points = new Map<string, Point>(), segments: [string, string][] = [];
+  const edge = (i: number, j: number, di: number, dj: number) => {
+    const key = `${i},${j},${di}`;
+    if (!points.has(key)) {
+      const [za, zb] = [grid[i][j], grid[i + di][j + dj]], t = (level - za) / (zb - za);
+      points.set(key, at(U(i + di * t), V(j + dj * t)));
+    }
+    return key;
+  };
+  for (let i = 0; i < nu; i++) for (let j = 0; j < nv; j++) {
+    const c = (grid[i][j] > level ? 8 : 0) | (grid[i + 1][j] > level ? 4 : 0) | (grid[i + 1][j + 1] > level ? 2 : 0) | (grid[i][j + 1] > level ? 1 : 0);
+    const sides: Record<string, () => string> = { t: () => edge(i, j, 1, 0), b: () => edge(i, j + 1, 1, 0), l: () => edge(i, j, 0, 1), r: () => edge(i + 1, j, 0, 1) };
+    for (const [a, b] of CASES[c] ?? []) segments.push([sides[a](), sides[b]()]);
+  }
+  // Join the segments into lines.
+  const ends = new Map<string, number[]>();
+  segments.forEach(([a, b], s) => { for (const key of [a, b]) ends.set(key, [...(ends.get(key) ?? []), s]); });
+  const used = new Set<number>(), lines: { points: Point[]; closed: boolean }[] = [];
+  segments.forEach((segment, s0) => {
+    if (used.has(s0)) return;
+    used.add(s0);
+    const chain = [...segment];
+    for (const forward of [true, false]) for (;;) {
+      const key = forward ? chain[chain.length - 1] : chain[0];
+      const next = (ends.get(key) ?? []).find((s) => !used.has(s));
+      if (next === undefined) break;
+      used.add(next);
+      const other = segments[next][0] === key ? segments[next][1] : segments[next][0];
+      if (forward) chain.push(other); else chain.unshift(other);
+    }
+    const closed = chain.length > 3 && chain[0] === chain[chain.length - 1];
+    if (chain.length > 4) lines.push({ points: (closed ? chain.slice(0, -1) : chain).map((k) => points.get(k)!), closed });
+  });
+  return lines;
+};
+const levels = Array.from({ length: 11 }, (_, l) => ({ index: (l + 1) % 4 === 0, lines: contour(top * ((l + 1) / 12) ** 1.8) }));
+
+// Summits: the highest hill of each organisation, labelled where there is room.
+const summits = orgs.map((org) => hills.filter((h) => h.org === org).sort((a, b) => b.h - a.h)[0]).sort((a, b) => b.h - a.h);
+const placed: number[][] = [];
+const labelled = summits.flatMap((h) => {
+  const [x, y] = at(h.u, h.v), text = shortName(h.org, vertical ? 14 : 20), w = text.length * 6.6 + 6;
+  const box = [x - w / 2, y - 26, x + w / 2, y - 12];
+  if (box[0] < 2 || box[2] > width - 2 || placed.some((p) => box[0] < p[2] && p[0] < box[2] && box[1] < p[3] && p[1] < box[3])) return [{ h, x, y, text: "" }];
+  placed.push(box);
+  return [{ h, x, y, text }];
+});
+// The trail: where I was at each month, the lanes of the roles I held weighted by height, smoothed.
+let lastV = 0.5;
+const raw = Array.from({ length: Math.ceil((now - start) / 2) + 1 }, (_, k) => {
+  const t = start + k * 2, active = hills.filter((h) => h.from <= t && t <= h.to);
+  if (active.length) lastV = active.reduce((s, h) => s + h.v * h.h, 0) / active.reduce((s, h) => s + h.h, 0);
+  return [t, lastV] as Point;
+});
+const trail = raw.map(([t], k) => {
+  const window = raw.slice(Math.max(0, k - 3), k + 4);
+  return at(t, window.reduce((s, p) => s + p[1], 0) / window.length);
+});
+const years = Array.from({ length: Math.floor(now / 12) - firstYear + 1 }, (_, i) => firstYear + i).filter((y) => (y - firstYear) % (vertical ? 2 : 1) === 0);
+const here = trail[trail.length - 1];
+---
+
+<div class="fig topo">
+  <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`Path since ${firstYear} as a topographic map: every role a hill, with my trail across them`}>
+    {levels.map((l) => l.lines.map((line) => <path class:list={["contour", { index: l.index }]} d={smooth(line.points, line.closed)} />))}
+    <path class="trail" d={smooth(trail)} />
+    <path class="hiker" d={smooth(trail)} pathLength="1" />
+    {labelled.map(({ h, x, y, text }) => (
+      <a href={h.id && refs[h.id] ? refs[h.id].href : `/path/#${h.section}`}>
+        <title>{h.org} · {h.role}</title>
+        <path class="summit" d={`M${f(x - 4)},${f(y + 2)} L${f(x)},${f(y - 5)} L${f(x + 4)},${f(y + 2)}Z`} />
+        {text && <text x={f(x)} y={f(y - 12)} text-anchor="middle">{text}</text>}
+      </a>
+    ))}
+    <circle class="here" cx={f(here[0])} cy={f(here[1])} r="4"><title>now</title></circle>
+    {years.map((yr) => {
+      const [x, y] = at(yr * 12, vertical ? 0 : 1);
+      return vertical ? <text class="year" x={f(x - 8)} y={f(y + 3)} text-anchor="end">{yr}</text> : <text class="year" x={f(x)} y={f(y + 22)} text-anchor="middle">{yr}</text>;
+    })}
+  </svg>
+</div>

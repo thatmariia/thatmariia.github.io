@@ -1,0 +1,76 @@
+---
+// Path as a feed-forward neural network: studies (inputs) → organisations → kinds of role →
+// kinds of output (outputs). Layers are dense, but the weights come from the data: links from a
+// study to the roles it led to, roles held at each organisation, and outputs and events linked to
+// roles of each kind. Node shading is the activation; signals keep flowing forward.
+import { dated, roleEntries } from "../../lib/career";
+import { data, pathSections, refs, type Entry } from "../../lib/data";
+interface Props { seed: number; width: number; height: number }
+const { width, height } = Astro.props;
+
+const narrow = width < 600;
+const f = (v: number) => v.toFixed(1);
+const cut = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1).trim()}…` : s);
+const count = <T,>(list: T[], key: (x: T) => string) => list.reduce((m, x) => m.set(key(x), (m.get(key(x)) ?? 0) + 1), new Map<string, number>());
+
+// Layers and the weights between them.
+const studies = (data.education as Entry[]).flatMap((e) => e.periods.map((p) => ({ name: p.title!, related: e.related ?? [] })));
+const orgs = [...new Set([...roleEntries].sort((a, b) => a.from - b.from).map((r) => r.org))];
+const sections = ["research", "teaching", "leadership", "service", "other"].filter((s) => roleEntries.some((r) => r.section === s));
+const links = roleEntries.flatMap((r) => r.related.filter((id) => id in dated).map((id) => ({ section: r.section, kind: refs[id].kind })));
+const kinds = [...count(links, (l) => l.kind).entries()].sort((a, b) => b[1] - a[1]).map(([k]) => k);
+const layers = [
+  studies.map((s) => s.name),
+  orgs,
+  sections.map((s) => pathSections.find((p) => p.id === s)!.title),
+  kinds,
+];
+const weights: number[][][] = [
+  studies.map((s) => orgs.map((o) => roleEntries.filter((r) => r.org === o && r.id && s.related.includes(r.id)).length)),
+  orgs.map((o) => sections.map((s) => roleEntries.filter((r) => r.org === o && r.section === s).length)),
+  sections.map((s) => kinds.map((k) => links.filter((l) => l.section === s && l.kind === k).length)),
+];
+
+// Positions: layers as columns, nodes spread evenly.
+const columns = narrow ? [158, 202, 246, 290] : [250, 430, 600, 770];
+const [top, bottom] = [24, height - 20];
+const nodes = layers.map((layer, l) => layer.map((name, i) => ({ name, x: columns[l], y: top + ((i + 0.5) / layer.length) * (bottom - top) })));
+// Activation: weighted input, normalised per layer (inputs are all on).
+const activation = layers.map((layer, l) => {
+  if (l === 0) return layer.map(() => 1);
+  const raw = layer.map((_, j) => weights[l - 1].reduce((s, row) => s + row[j], 0));
+  const most = Math.max(1, ...raw);
+  return raw.map((v) => 0.15 + 0.85 * (v / most));
+});
+const edges = weights.flatMap((matrix, l) => {
+  const most = Math.max(1, ...matrix.flat());
+  return matrix.flatMap((row, i) => row.map((w, j) => ({ l, a: nodes[l][i], b: nodes[l + 1][j], w: w / most })));
+});
+const curve = (a: { x: number; y: number }, b: { x: number; y: number }) => {
+  const mid = (a.x + b.x) / 2;
+  return `M${f(a.x)},${f(a.y)} C${f(mid)},${f(a.y)} ${f(mid)},${f(b.y)} ${f(b.x)},${f(b.y)}`;
+};
+const outputs = count(links, (l) => l.kind);
+---
+
+<div class="fig neuralnet">
+  <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Path as a neural network: studies, organisations, kinds of role and kinds of output, weighted by the links between them">
+    {edges.filter((e) => e.w === 0).map((e) => <path class="dense" d={curve(e.a, e.b)} />)}
+    {edges.filter((e) => e.w > 0).map((e) => <path class="weight" d={curve(e.a, e.b)} stroke-width={f(0.6 + e.w * 2.6)} />)}
+    {edges.filter((e) => e.w > 0).map((e, k) => (
+      <path class="signal" d={curve(e.a, e.b)} pathLength="1" style={`animation-delay: ${(e.l * 1.1 + (k % 5) * 0.08).toFixed(2)}s`} />
+    ))}
+    {nodes.map((layer, l) => layer.map((n, i) => (
+      <g class="unit">
+        <title>{n.name}{l === 3 ? ` · ${outputs.get(n.name)}` : ""}</title>
+        <circle cx={f(n.x)} cy={f(n.y)} r={narrow ? 5 : 7} style={`--a: ${activation[l][i].toFixed(2)}; animation-delay: ${(l * 1.1).toFixed(2)}s`} />
+        {l === 0 && <text x={f(n.x - 12)} y={f(n.y + 3.5)} text-anchor="end">{cut(n.name, narrow ? 17 : 31)}</text>}
+        {l === 3 && <text x={f(n.x + 12)} y={f(n.y + 3.5)}>{cut(n.name, narrow ? 10 : 22)} · {outputs.get(n.name)}</text>}
+        {l === 2 && !narrow && <text class="hidden-label" x={f(n.x)} y={f(n.y - 12)} text-anchor="middle">{n.name}</text>}
+      </g>
+    )))}
+    {!narrow && ["input: studies", "organisations", "roles", "output: linked work"].map((label, l) => (
+      <text class="layer" x={columns[l]} y={height - 4} text-anchor="middle">{label}</text>
+    ))}
+  </svg>
+</div>

@@ -90,3 +90,15 @@ export function curve(a: Point, b: Point, bend: number) {
   const [dx, dy] = [b[0] - a[0], b[1] - a[1]];
   return `M${f(a[0])},${f(a[1])} C${f(a[0] + dx / 3 - dy * bend)},${f(a[1] + dy / 3 + dx * bend)} ${f(a[0] + (2 * dx) / 3 + dy * bend)},${f(a[1] + (2 * dy) / 3 - dx * bend)} ${f(b[0])},${f(b[1])}`;
 }
+
+/** A smooth path through points (Catmull-Rom as cubic Béziers); closed paths loop back. */
+export function smooth(p: Point[], closed = false) {
+  const at = (i: number) => p[closed ? (i + p.length) % p.length : Math.max(0, Math.min(p.length - 1, i))];
+  const f = (v: number) => v.toFixed(1);
+  let d = `M${f(p[0][0])},${f(p[0][1])}`;
+  for (let i = 0; i < (closed ? p.length : p.length - 1); i++) {
+    const [a, b, c, e] = [at(i - 1), at(i), at(i + 1), at(i + 2)];
+    d += ` C${f(b[0] + (c[0] - a[0]) / 6)},${f(b[1] + (c[1] - a[1]) / 6)} ${f(c[0] - (e[0] - b[0]) / 6)},${f(c[1] - (e[1] - b[1]) / 6)} ${f(c[0])},${f(c[1])}`;
+  }
+  return closed ? `${d}Z` : d;
+}

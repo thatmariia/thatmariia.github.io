@@ -1,0 +1,58 @@
+---
+// The portfolio as a graph: every item linked to another (papers, outputs, events, roles), with the
+// cross-links between them. Shape shows the kind of item, size how connected it is; pulses keep
+// travelling along the links. Hover names an item and lights up its links; click opens it.
+import { curve, forceLayout, hoverCss } from "../../lib/figure";
+import { data, PAGE_OF, refs } from "../../lib/data";
+import { random } from "../../lib/random";
+interface Props { seed: number; width: number; height: number }
+const { seed, width, height } = Astro.props;
+
+const GROUP: Record<string, string> = {
+  Publication: "paper", Preprint: "paper",
+  Software: "output", Dataset: "output", Poster: "output", Presentation: "output", Report: "output", Website: "output", Thesis: "output",
+  Event: "event", Outreach: "event",
+};
+const ids: string[] = [];
+const pairs = new Set<string>();
+for (const section of Object.keys(PAGE_OF)) {
+  for (const item of (data as any)[section] as { id?: string; related?: string[] }[]) {
+    for (const other of item.related ?? []) {
+      if (!item.id) continue;
+      for (const id of [item.id, other]) if (!ids.includes(id)) ids.push(id);
+      pairs.add([ids.indexOf(item.id), ids.indexOf(other)].sort((a, b) => a - b).join(" "));
+    }
+  }
+}
+const edges = [...pairs].map((pair) => ({ pair: pair.split(" ").map(Number), w: 1 }));
+const degree = ids.map((_, i) => edges.filter((e) => e.pair.includes(i)).length);
+const uniform = random(seed);
+const at = forceLayout(ids.length, edges, width, height - 30, 30, uniform);
+const links = edges.map(({ pair: [i, j] }) => ({ d: curve(at[i], at[j], (uniform() - 0.5) * 0.4), touches: `${i} ${j}`, delay: uniform() * 5 }));
+const id = `pm-${seed}-${width}`;
+const f = (v: number) => v.toFixed(1);
+---
+
+<div class:list={["fig portfolio", id]}>
+  <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`Map of ${ids.length} linked items in the portfolio`}>
+    {links.map((link, i) => (
+      <g class="line" data-touches={link.touches} style={`--i: ${i % 9}`}>
+        <path class="link" d={link.d} />
+        <path class="pulse" d={link.d} pathLength="1" style={`animation-delay: ${link.delay.toFixed(2)}s`} />
+      </g>
+    ))}
+    {ids.map((key, i) => {
+      const [x, y] = at[i], r = 4 + Math.sqrt(degree[i]) * 1.8, group = GROUP[refs[key].kind] ?? "role";
+      return (
+        <a href={refs[key].href} data-node={i} class:list={["item", group]}>
+          <title>{refs[key].kind}: {refs[key].title}</title>
+          {group === "paper" || group === "event"
+            ? <circle cx={f(x)} cy={f(y)} r={f(r)} />
+            : <rect x={f(x - r * 0.9)} y={f(y - r * 0.9)} width={f(r * 1.8)} height={f(r * 1.8)} />}
+        </a>
+      );
+    })}
+    <text class="key" x={width / 2} y={height - 8} text-anchor="middle">● paper   ■ software, data, posters   ○ event   □ role</text>
+  </svg>
+  <style is:inline set:html={hoverCss(id, ids.length)} />
+</div>

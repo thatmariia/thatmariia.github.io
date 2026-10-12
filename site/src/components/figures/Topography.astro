@@ -1,6 +1,6 @@
 ---
 // Career phases as EEG scalp maps. Each electrode is a kind of activity; the potential peaks where
-// there was most of it in that phase. Maps are average-referenced like real EEG (solid contours
+// there was most of it in that phase, and electrodes pulse faster the more there was. Maps are average-referenced like real EEG (solid contours
 // above the average, faint below) and share one scale so phases can be compared.
 import { events, firstYear, lastYear, roles, works } from "../../lib/career";
 interface Props { seed: number; width: number; height: number }
@@ -93,7 +93,12 @@ const panels = phases.map((phase, k) => {
         <path class="head" d={`M${f(cx - radius * 0.13)},${f(cy - radius * 0.99)} L${f(cx)},${f(cy - radius * 1.13)} L${f(cx + radius * 0.13)},${f(cy - radius * 0.99)}`} />
         <path class="head" d={`M${f(cx - radius)},${f(cy - radius * 0.14)} q${f(-radius * 0.09)},${f(radius * 0.02)} ${f(-radius * 0.07)},${f(radius * 0.14)} t${f(radius * 0.07)},${f(radius * 0.14)}`} />
         <path class="head" d={`M${f(cx + radius)},${f(cy - radius * 0.14)} q${f(radius * 0.09)},${f(radius * 0.02)} ${f(radius * 0.07)},${f(radius * 0.14)} t${f(-radius * 0.07)},${f(radius * 0.14)}`} />
-        {sites.map((s) => <circle class="electrode" cx={f(cx + s.u * radius)} cy={f(cy + s.v * radius)} r="2.2"><title>{s.label}: {counts[k][sites.indexOf(s)]}</title></circle>)}
+        {sites.map((s, i) => (
+          <circle class="electrode" cx={f(cx + s.u * radius)} cy={f(cy + s.v * radius)} r="2.2"
+            style={counts[k][i] ? `animation-duration: ${(3.2 / Math.sqrt(counts[k][i])).toFixed(2)}s` : "animation: none"}>
+            <title>{s.label}: {counts[k][i]}</title>
+          </circle>
+        ))}
         {sites.map((s) => <text class="code" x={f(cx + s.u * radius * 1.32)} y={f(cy + s.v * radius * 1.32 + 3)} text-anchor="middle">{s.code}</text>)}
         <text class="phase" x={cx} y={cy + radius + 22} text-anchor="middle">{phase.label}</text>
       </g>

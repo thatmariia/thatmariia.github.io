@@ -1,0 +1,47 @@
+---
+// Gaussian quadrature: Legendre polynomials P₁…P₇ on [−1, 1], with the Gauss–Legendre nodes
+// (the roots of P₇) and their weights as a stem plot below. A nod to gaussquad.
+import { points, type Point } from "../../lib/random";
+interface Props { seed: number; width: number; height: number }
+const { width, height } = Astro.props;
+
+const order = 7, pad = 24, f = (v: number) => v.toFixed(1);
+function legendre(n: number, x: number): [number, number] {  // value and derivative
+  let [p0, p1] = [1, x];
+  if (n === 0) return [1, 0];
+  for (let k = 1; k < n; k++) [p0, p1] = [p1, ((2 * k + 1) * x * p1 - k * p0) / (k + 1)];
+  return [p1, (n * (x * p1 - p0)) / (x * x - 1)];
+}
+// Roots of P₇ by Newton's method from the usual cosine guesses, and the matching weights.
+const nodes = Array.from({ length: order }, (_, i) => {
+  let x = Math.cos((Math.PI * (i + 0.75)) / (order + 0.5));
+  for (let k = 0; k < 30; k++) x -= legendre(order, x)[0] / legendre(order, x)[1];
+  return { x, w: 2 / ((1 - x * x) * legendre(order, x)[1] ** 2) };
+});
+
+const top = height * 0.66, plotTop = pad, stemBase = height - pad - 14;
+const X = (x: number) => pad + ((x + 1) / 2) * (width - 2 * pad);
+const Y = (y: number) => plotTop + ((1 - y) / 2) * (top - plotTop);
+const curves = Array.from({ length: order }, (_, n) =>
+  Array.from({ length: 241 }, (_, k) => { const x = -1 + k / 120; return [X(x), Y(legendre(n + 1, x)[0])] as Point; }));
+const maxWeight = Math.max(...nodes.map((node) => node.w));
+const stemHeight = stemBase - top - 18;
+---
+
+<div class="fig quadrature">
+  <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Legendre polynomials and Gauss–Legendre quadrature nodes and weights">
+    <line class="axis" x1={X(-1)} y1={Y(0)} x2={X(1)} y2={Y(0)} />
+    {curves.map((curve, i) => <polyline class:list={["line", { last: i === order - 1 }]} points={points(curve)} style={`--i: ${i}`} pathLength="1" />)}
+    {nodes.map(({ x }) => <line class="guide" x1={f(X(x))} y1={f(Y(0))} x2={f(X(x))} y2={stemBase} />)}
+    <line class="axis" x1={X(-1)} y1={stemBase} x2={X(1)} y2={stemBase} />
+    {nodes.map(({ x, w }) => (
+      <g>
+        <line class="stem" x1={f(X(x))} y1={stemBase} x2={f(X(x))} y2={f(stemBase - (w / maxWeight) * stemHeight)} />
+        <circle class="node-dot" cx={f(X(x))} cy={f(stemBase - (w / maxWeight) * stemHeight)} r="3.5" />
+        <circle class="root" cx={f(X(x))} cy={f(Y(0))} r="3" />
+      </g>
+    ))}
+    <text x={X(0)} y={plotTop + 4} text-anchor="middle">P₁ … P₇</text>
+    <text x={X(1)} y={stemBase + 16} text-anchor="end">Gauss–Legendre nodes and weights</text>
+  </svg>
+</div>

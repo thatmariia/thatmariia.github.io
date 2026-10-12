@@ -1,0 +1,50 @@
+---
+// Stylised neurons: a round soma, a few smooth dendrites, and curved axons to nearby neurons
+// along which small action potentials travel (a CSS animation). Unlabelled.
+import { random, type Point } from "../../lib/random";
+interface Props { seed: number; width: number; height: number }
+const { seed, width, height } = Astro.props;
+
+const uniform = random(seed);
+const f = (v: number) => v.toFixed(1);
+const pad = 40, count = Math.max(6, Math.round((width * height) / 34000));
+const somas: Point[] = [];
+for (let tries = 0; somas.length < count && tries < 5000; tries++) {
+  const p: Point = [pad + uniform() * (width - 2 * pad), pad + uniform() * (height - 2 * pad)];
+  if (somas.every((q) => Math.hypot(p[0] - q[0], p[1] - q[1]) > Math.min(width, height) * 0.24)) somas.push(p);
+}
+
+// Dendrites: a few smooth curves per soma, each with one small fork.
+const dendrites = somas.map(([x, y]) => Array.from({ length: 5 }, (_, k) => {
+  const a = (2 * Math.PI * k) / 5 + uniform() * 0.9, length = 20 + uniform() * 14, bend = (uniform() - 0.5) * 0.9;
+  const [ex, ey] = [x + Math.cos(a + bend * 0.3) * length, y + Math.sin(a + bend * 0.3) * length];
+  const [mx, my] = [x + Math.cos(a) * length * 0.55, y + Math.sin(a) * length * 0.55];
+  const side = a + (uniform() < 0.5 ? -0.6 : 0.6);
+  return `M${f(x)},${f(y)} Q${f(mx)},${f(my)} ${f(ex)},${f(ey)} M${f(mx)},${f(my)} Q${f(mx + Math.cos(side) * 6)},${f(my + Math.sin(side) * 6)} ${f(mx + Math.cos(side) * 13)},${f(my + Math.sin(side) * 13)}`;
+}).join(" "));
+
+// Axons: each neuron to its two nearest neighbours, as smooth S-curves ending in a bouton.
+const pairs = new Set<string>();
+somas.forEach((p, i) => {
+  somas.map((q, j) => ({ j, d: Math.hypot(p[0] - q[0], p[1] - q[1]) })).filter((o) => o.j !== i)
+    .sort((a, b) => a.d - b.d).slice(0, 2).forEach(({ j }) => pairs.add(`${i} ${j}`));
+});
+const axons = [...pairs].map((pair) => {
+  const [a, b] = pair.split(" ").map((i) => somas[Number(i)]);
+  const [dx, dy] = [b[0] - a[0], b[1] - a[1]], d = Math.hypot(dx, dy);
+  const end: Point = [b[0] - (dx / d) * 14, b[1] - (dy / d) * 14];
+  const bend = (uniform() - 0.5) * 0.7;
+  const c1 = [a[0] + dx / 3 - dy * bend, a[1] + dy / 3 + dx * bend], c2 = [a[0] + (2 * dx) / 3 + dy * bend, a[1] + (2 * dy) / 3 - dx * bend];
+  return { d: `M${f(a[0])},${f(a[1])} C${f(c1[0])},${f(c1[1])} ${f(c2[0])},${f(c2[1])} ${f(end[0])},${f(end[1])}`, end, delay: uniform() * 4, speed: 2.2 + uniform() * 1.6 };
+});
+---
+
+<div class="fig signals">
+  <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Neurons connected by axons, with signals travelling along them">
+    {dendrites.map((d) => <path class="dendrite" d={d} />)}
+    {axons.map((axon) => <path class="axon" d={axon.d} />)}
+    {axons.map((axon) => <path class="spike" d={axon.d} pathLength="1" style={`animation-delay: ${axon.delay.toFixed(2)}s; animation-duration: ${axon.speed.toFixed(2)}s`} />)}
+    {axons.map(({ end: [x, y] }) => <circle class="bouton" cx={f(x)} cy={f(y)} r="2.4" />)}
+    {somas.map(([x, y]) => <circle class="soma" cx={f(x)} cy={f(y)} r="6" />)}
+  </svg>
+</div>

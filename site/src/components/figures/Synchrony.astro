@@ -1,0 +1,29 @@
+---
+// Synchronisation: a bundle of oscillations starts with scattered phases and frequencies on the
+// left and gradually locks into one shared rhythm on the right (as in the Kuramoto model).
+import { points, random, type Point } from "../../lib/random";
+interface Props { seed: number; width: number; height: number }
+const { seed, width, height } = Astro.props;
+
+const uniform = random(seed);
+const [count, pad] = [26, 16];
+const cycles = width > height ? 6 : 3.5, amplitude = (height - 2 * pad) * 0.32;
+// Coupling grows smoothly from left to right.
+const coupling = (t: number) => 1 / (1 + Math.exp(-(t - 0.55) * 11));
+const oscillators = Array.from({ length: count }, () => {
+  const phase = uniform() * 2 * Math.PI, detune = (uniform() - 0.5) * 0.5, offset = (uniform() - 0.5) * 0.9;
+  const curve: Point[] = [];
+  for (let k = 0; k <= 400; k++) {
+    const t = k / 400, c = coupling(t);
+    const theta = 2 * Math.PI * cycles * t * (1 + detune * (1 - c)) + phase * (1 - c);
+    curve.push([pad + t * (width - 2 * pad), height / 2 + amplitude * (Math.sin(theta) + offset * (1 - c))]);
+  }
+  return curve;
+});
+---
+
+<div class="fig synchrony">
+  <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Oscillations falling into synchrony">
+    {oscillators.map((curve, i) => <polyline class="line" points={points(curve)} style={`--i: ${i % 9}`} pathLength="1" />)}
+  </svg>
+</div>

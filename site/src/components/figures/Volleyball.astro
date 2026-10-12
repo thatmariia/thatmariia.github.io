@@ -1,0 +1,92 @@
+---
+// Beyond science as a beach-volleyball rally: the activities stand on either side of the net and
+// the ball travels in parabolic arcs from one to the next, spinning, with its shadow on the sand.
+// The rally loops; it stops for visitors who prefer reduced motion.
+import { data } from "../../lib/data";
+import { random } from "../../lib/random";
+interface Props { seed: number; width: number; height: number }
+const { seed, width, height } = Astro.props;
+
+const uniform = random(seed);
+const activities = (data.beyond as { title: string }[]).map((a) => a.title);
+const sand = height - 80, net = width / 2, netTop = sand - Math.min(140, height * 0.3);
+const f = (v: number) => v.toFixed(1);
+// Players (the activities) alternate sides of the net, evenly spaced on each side, hitting at
+// slightly different heights. Their names sit under the sand in staggered rows.
+const sides = [activities.filter((_, i) => i % 2 === 0), activities.filter((_, i) => i % 2 === 1)];
+const contacts = activities.map((title, i) => {
+  const side = i % 2, k = Math.floor(i / 2), count = sides[side].length;
+  const x = side === 0 ? 24 + ((k + 0.5) / count) * (net - 60) : net + 36 + ((k + 0.5) / count) * (net - 60);
+  return { title, x, y: sand - 28 - (k % 2) * 22, row: i % 3 };
+});
+const spacing = Math.min(...[0, 1].map((side) => (net - 60) / Math.max(1, sides[side].length)));
+const fits = Math.max(6, Math.floor((spacing * 3) / 8));
+const short = (s: string) => (s.length > fits ? `${s.slice(0, fits - 1).trim()}…` : s);
+// The rally: a parabolic arc from each contact to the next (and back to the first), clearing the net.
+const loop = [...contacts, contacts[0]];
+let path = `M${f(loop[0].x)},${f(loop[0].y)}`, shadow = `M${f(loop[0].x)},${f(sand + 4)}`;
+const arcLengths: number[] = [], shadowLengths: number[] = [];
+for (let i = 0; i < loop.length - 1; i++) {
+  // Arcs rise well above the net, using the height of the figure.
+  const [a, b] = [loop[i], loop[i + 1]], peak = netTop - (netTop - 30) * (0.45 + uniform() * 0.45);
+  const [qx, qy] = [(a.x + b.x) / 2, 2 * peak - (a.y + b.y) / 2];
+  path += ` Q${f(qx)},${f(qy)} ${f(b.x)},${f(b.y)}`;
+  shadow += ` L${f(b.x)},${f(sand + 4)}`;
+  let length = 0, [px, py] = [a.x, a.y];
+  for (let k = 1; k <= 30; k++) {
+    const u = k / 30, [x, y] = [(1 - u) ** 2 * a.x + 2 * (1 - u) * u * qx + u * u * b.x, (1 - u) ** 2 * a.y + 2 * (1 - u) * u * qy + u * u * b.y];
+    length += Math.hypot(x - px, y - py);
+    [px, py] = [x, y];
+  }
+  arcLengths.push(length);
+  shadowLengths.push(Math.abs(b.x - a.x));
+}
+// Each hop takes the same time for the ball and its shadow: key points at the end of every hop.
+const keyTimes = loop.map((_, i) => (i / (loop.length - 1)).toFixed(4)).join(";");
+const keyPoints = (lengths: number[]) => {
+  const total = lengths.reduce((s, l) => s + l, 0);
+  return loop.map((_, i) => (lengths.slice(0, i).reduce((s, l) => s + l, 0) / total).toFixed(4)).join(";");
+};
+const duration = (loop.length - 1) * 1.6;
+// A volleyball: a circle with three curved seams.
+const ball = 9;
+const seams = [0, 120, 240].map((rot) => `<path d="M0,${-ball} C${ball * 0.9},${-ball * 0.4} ${ball * 0.9},${ball * 0.4} 0,${ball}" transform="rotate(${rot})" />`).join("");
+const grains = Array.from({ length: Math.round(width / 3) }, () => [uniform() * width, sand + 3 + uniform() * 12]);
+---
+
+<div class="fig volleyball">
+  <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`A beach volleyball rally between: ${activities.join(", ")}`}>
+    <line class="sand" x1="0" x2={width} y1={sand} y2={sand} />
+    {grains.map(([x, y]) => <circle class="grain" cx={f(x)} cy={f(y)} r="0.7" />)}
+    <line class="pole" x1={net} x2={net} y1={netTop - 6} y2={sand} />
+    {Array.from({ length: 6 }, (_, k) => <line class="mesh" x1={net - 5} x2={net + 5} y1={f(netTop + k * 10)} y2={f(netTop + k * 10 + 10)} />)}
+    <line class="tape" x1={net - 6} x2={net + 6} y1={netTop} y2={netTop} />
+    <path class="rally" d={path} />
+    {contacts.map((c) => (
+      <g class="contact">
+        <title>{c.title}</title>
+        <circle cx={f(c.x)} cy={f(c.y)} r="2.5" />
+        <line class="leader" x1={f(c.x)} y1={f(c.y + 3)} x2={f(c.x)} y2={f(sand + 22 + c.row * 15)} />
+        <text x={f(c.x)} y={f(sand + 32 + c.row * 15)} text-anchor="middle">{short(c.title)}</text>
+      </g>
+    ))}
+    <ellipse class="shadow" rx="8" ry="2.2">
+      <animateMotion dur={`${duration}s`} repeatCount="indefinite" path={shadow} calcMode="linear" keyTimes={keyTimes} keyPoints={keyPoints(shadowLengths)} />
+    </ellipse>
+    <g class="ball">
+      <animateMotion dur={`${duration}s`} repeatCount="indefinite" path={path} calcMode="linear" keyTimes={keyTimes} keyPoints={keyPoints(arcLengths)} />
+      <g>
+        <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="1.1s" repeatCount="indefinite" />
+        <circle r={ball} />
+        <g set:html={seams} />
+      </g>
+    </g>
+  </svg>
+</div>
+
+<script>
+  // SMIL animations ignore CSS, so pause them by hand for visitors who prefer reduced motion.
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    for (const svg of document.querySelectorAll<SVGSVGElement>(".fig.volleyball svg")) svg.pauseAnimations();
+  }
+</script>

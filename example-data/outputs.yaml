@@ -1,0 +1,20 @@
+- id: eeg-model
+  type: software
+  title: Macro EEG model
+  authors: [A. Example, B. Coauthor]
+  year: 2024
+  venue: Zenodo
+  doi: 10.5281/zenodo.0000001
+- id: oscillation-poster
+  type: poster
+  title: Oscillations everywhere
+  authors: [A. Example]
+  year: 2025
+  venue: Zenodo
+  doi: 10.5281/zenodo.0000002
+- id: thesis-oscillations
+  type: thesis
+  title: Gamma oscillations in PING networks
+  authors: [A. Example]
+  year: 2023
+  url: https://example.org/thesis

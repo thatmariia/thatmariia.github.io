@@ -1,0 +1,11 @@
+- id: example-university
+  title: Example University
+  location: Utrecht, NL
+  related: [thesis-oscillations]
+  periods:
+    - title: Applied Mathematics
+      start: 2019
+      end: 2024
+      notes:
+        - Minor in Optimization
+        - Grade CANARY-GRADE

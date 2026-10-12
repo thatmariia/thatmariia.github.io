@@ -1,0 +1,13 @@
+- id: eeg-paper
+  type: article
+  title: Slow waves explained by simple models
+  authors: [A. Example, B. Coauthor]
+  year: 2025
+  venue: NeuroImage
+  doi: 10.1016/j.example.2025.000001
+  related: [eeg-model]
+- type: article
+  title: A paper in preparation
+  authors: [A. Example]
+  year: 2026
+  status: in-progress

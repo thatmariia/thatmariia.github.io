@@ -1,0 +1,9 @@
+- id: neuro-conf-2025
+  title: Neuro Conference 2025
+  location: Lyon, FR
+  related: [oscillation-poster]
+  periods:
+    - start: 2025-06
+      notes:
+        - Presented a **poster** “Oscillations everywhere”
+        - Won the best poster award

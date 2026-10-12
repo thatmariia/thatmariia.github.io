@@ -1,0 +1,15 @@
+- id: model-lab
+  title: Example Institute
+  location: Leiden, NL
+  periods:
+    - title: Research Software Engineer
+      unit: Modelling Lab
+      start: 2024-08
+      end: present
+      notes:
+        - Develops **FAIR** workflows for neural data
+- title: Hidden Lab
+  web: false
+  periods:
+    - title: Visiting researcher CANARY-HIDDEN-ENTRY
+      start: 2020

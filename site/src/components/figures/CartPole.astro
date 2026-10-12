@@ -1,0 +1,109 @@
+---
+// The cart-pole problem, the classic of control theory: push the cart left or right (hold ← / →,
+// or press the left or right half) to keep the pole upright while gusts get stronger. When it falls
+// or the cart leaves the track, the time balanced is the score, and there is a prize.
+import Arcade from "../Arcade.astro";
+interface Props { seed: number; width: number; height: number }
+const { width } = Astro.props;
+---
+
+<Arcade name="cartpole" width={width} height={Math.round(width * (width > 600 ? 0.36 : 0.8))}
+  label="Cart-pole: hold the left or right arrow, or press a side, to push the cart and keep the pole balanced"
+  hint="Hold ← → or press a side to push the cart" />
+
+<script>
+  import { banner, best, corners, gameOver, loop, setup, type Game } from "../../lib/game";
+
+  // Barto, Sutton & Anderson (1983), with a long pole and slightly slowed time to be playable.
+  const [g, cart, mass, half, force, slow] = [9.8, 1, 0.1, 1, 10, 0.75];
+  for (const figure of document.querySelectorAll<HTMLElement>(".fig.cartpole")) {
+    const game: Game = setup(figure, () => draw());
+    const { W, H } = game, track = H * 0.78, scale = (W * 0.4) / 2.4;
+    let state: "idle" | "running" | "over" = "idle";
+    let x = 0, v = 0, theta = 0, omega = 0, time = 0, push = 0, gustAt = 3, gust = 0, gustShown = 0;
+    const held = new Set<number>();
+
+    function draw() {
+      const { context: c, mono } = game, { ink, bg, muted } = game.colours();
+      c.clearRect(0, 0, W, H);
+      c.strokeStyle = ink; c.lineWidth = 1.2; c.lineCap = "round";
+      c.beginPath(); c.moveTo(W / 2 - 2.4 * scale - 20, track); c.lineTo(W / 2 + 2.4 * scale + 20, track); c.stroke();
+      for (const end of [-1, 1]) { const ex = W / 2 + end * (2.4 * scale + 20); c.beginPath(); c.moveTo(ex, track - 10); c.lineTo(ex, track + 4); c.stroke(); }
+      const [cx, cw, ch] = [W / 2 + x * scale, 54, 20];
+      // The pole, its angle, and the cart as a pill on two wheels.
+      const length = Math.min(H * 0.55, 150), [tx, ty] = [cx + Math.sin(theta) * length, track - ch - 6 - Math.cos(theta) * length];
+      c.setLineDash([2, 4]); c.strokeStyle = muted;
+      c.beginPath(); c.moveTo(cx, track - ch - 6); c.lineTo(cx, track - ch - 6 - length * 0.6); c.stroke();
+      c.setLineDash([]);
+      c.beginPath(); c.arc(cx, track - ch - 6, length * 0.3, -Math.PI / 2, -Math.PI / 2 + theta, theta < 0); c.stroke();
+      c.strokeStyle = ink; c.lineWidth = 3.5;
+      c.beginPath(); c.moveTo(cx, track - ch - 6); c.lineTo(tx, ty); c.stroke();
+      c.fillStyle = ink; c.beginPath(); c.arc(tx, ty, 7, 0, Math.PI * 2); c.fill();
+      c.lineWidth = 1.4; c.fillStyle = bg;
+      c.beginPath(); c.roundRect(cx - cw / 2, track - ch - 6, cw, ch, ch / 2); c.fill(); c.stroke();
+      for (const wx of [-14, 14]) { c.beginPath(); c.arc(cx + wx, track - 3, 3.5, 0, Math.PI * 2); c.fill(); c.stroke(); }
+      // Push and gust arrows.
+      const arrow = (from: number, d: number, y: number, label: string) => {
+        c.strokeStyle = ink; c.lineWidth = 1.6;
+        c.beginPath(); c.moveTo(from, y); c.lineTo(from + d * 26, y); c.moveTo(from + d * 20, y - 5); c.lineTo(from + d * 26, y); c.lineTo(from + d * 20, y + 5); c.stroke();
+        if (label) { c.fillStyle = muted; c.font = `11px ${mono}`; c.textAlign = "center"; c.fillText(label, from + d * 13, y - 9); }
+      };
+      if (push) arrow(cx - push * (cw / 2 + 32), push, track - ch / 2 - 6, "");
+      if (gustShown > 0) arrow(tx - Math.sign(gust) * 44, Math.sign(gust), ty, "gust");
+      corners(game, "cartpole", `${time.toFixed(1)} s · θ ${(theta * 57.3).toFixed(1)}°`);
+      if (state === "idle") banner(game, ["Cart-pole balancing", "hold ← → (or press a side) to push the cart", "keep the pole up and the cart on the track", "gusts get stronger"], H * 0.36);
+      if (state === "over") banner(game, [`Fell after ${time.toFixed(1)} s`, "press a key or a side to balance again"], H * 0.36);
+    }
+
+    const step = (dt: number) => {
+      const sim = dt * slow;
+      time += dt;
+      push = held.size ? [...held].reduce((s, d) => s + d, 0) : 0;
+      gustAt -= dt; gustShown -= dt;
+      if (gustAt <= 0) {
+        gust = (Math.random() < 0.5 ? -1 : 1) * (0.35 + time * 0.025);
+        omega += gust;
+        gustShown = 0.6;
+        gustAt = Math.max(1.2, 4 - time * 0.06) * (0.6 + Math.random() * 0.8);
+      }
+      for (let k = 0; k < 8; k++) {
+        const h = sim / 8, F = push * force, [sin, cos] = [Math.sin(theta), Math.cos(theta)];
+        const temp = (F + mass * half * omega * omega * sin) / (cart + mass);
+        const alpha = (g * sin - cos * temp) / (half * (4 / 3 - (mass * cos * cos) / (cart + mass)));
+        const acc = temp - (mass * half * alpha * cos) / (cart + mass);
+        [x, v, theta, omega] = [x + h * v, v + h * acc, theta + h * omega, omega + h * alpha];
+      }
+      if (Math.abs(theta) > 0.7 || Math.abs(x) > 2.4) {
+        state = "over";
+        const tenths = Math.round(time * 10), record = best("cartpole", tenths / 10);
+        gameOver(game.readout, game.pool, `<strong>The pole fell after ${time.toFixed(1)} s</strong>${Math.abs(x) > 2.4 ? " (off the track)" : ""}${tenths / 10 >= record ? " · new best!" : ""}`);
+      }
+      draw();
+      return state === "running";
+    };
+    const start = () => {
+      [state, x, v, theta, omega, time, gustAt] = ["running", 0, 0, (Math.random() - 0.5) * 0.06, 0, 0, 3];
+      game.readout.innerHTML = '<span class="hint">Keep it up · push towards where the pole leans</span>';
+      loop(step);
+    };
+    const side = (event: PointerEvent) => { const r = game.element.getBoundingClientRect(); return event.clientX - r.left < r.width / 2 ? -1 : 1; };
+    game.element.addEventListener("keydown", (event) => {
+      const d = event.key === "ArrowLeft" || event.key === "a" ? -1 : event.key === "ArrowRight" || event.key === "d" ? 1 : 0;
+      if (state !== "running") { if (d || event.key === " " || event.key === "Enter") { event.preventDefault(); start(); } return; }
+      if (d) { event.preventDefault(); held.add(d); }
+    });
+    game.element.addEventListener("keyup", (event) => {
+      held.delete(event.key === "ArrowLeft" || event.key === "a" ? -1 : event.key === "ArrowRight" || event.key === "d" ? 1 : 0);
+    });
+    game.element.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      game.element.focus();
+      game.element.setPointerCapture(event.pointerId);
+      if (state !== "running") return start();
+      held.add(side(event));
+    });
+    for (const type of ["pointerup", "pointercancel"]) game.element.addEventListener(type, () => held.clear());
+    game.element.addEventListener("blur", () => held.clear());
+    draw();
+  }
+</script>

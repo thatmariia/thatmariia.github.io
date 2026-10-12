@@ -1,24 +1,18 @@
 ---
 // A sieve of Eratosthenes as an arcade game: numbers fall; zap the primes (click them, or type them
 // and press Enter) before they land. Zapping a composite shows its factors and costs a life, and so
-// does a prime that lands. Every ten primes release one of the website's items.
-import { items } from "../../lib/data";
+// does a prime that lands. Losing the last life gives one of the website's items as the prize.
+import Arcade from "../Arcade.astro";
 interface Props { seed: number; width: number; height: number }
 const { width } = Astro.props;
-
-const pool = items.map(({ kind, title, href }) => ({ kind, title, href }));
-const height = Math.round(width * (width > 600 ? 0.36 : 0.8));
 ---
 
-<div class="fig arcade sieve" data-width={width} data-height={height}>
-  <canvas tabindex="0" style={`aspect-ratio: ${width} / ${height}`}
-    aria-label="Sieve: falling numbers; click a prime, or type it and press Enter, before it lands"></canvas>
-  <div class="readout" aria-live="polite"><span class="hint">Zap the primes · click or type them</span></div>
-  <script is:inline type="application/json" set:html={JSON.stringify(pool)} />
-</div>
+<Arcade name="sieve" width={width} height={Math.round(width * (width > 600 ? 0.36 : 0.8))}
+  label="Sieve: falling numbers; click a prime, or type it and press Enter, before it lands"
+  hint="Zap the primes · click or type them" />
 
 <script>
-  import { best, canvas, escape, reward, type Item } from "../../lib/game";
+  import { banner, best, corners, escape, gameOver, loop, setup, type Game } from "../../lib/game";
 
   const factors = (n: number) => {
     const out: number[] = [];
@@ -30,18 +24,17 @@ const height = Math.round(width * (width > 600 ? 0.36 : 0.8));
   const MERSENNE = new Set([3, 7, 31, 127, 8191]), FERMAT = new Set([3, 5, 17, 257]);
 
   for (const figure of document.querySelectorAll<HTMLElement>(".fig.sieve")) {
-    const element = figure.querySelector("canvas")!, readout = figure.querySelector<HTMLElement>(".readout")!;
-    const pool: Item[] = JSON.parse(figure.querySelector("script[type='application/json']")!.textContent!);
-    const [W, H] = [Number(figure.dataset.width), Number(figure.dataset.height)];
+    const game: Game = setup(figure, () => draw());
+    const { W, H, element, readout } = game;
     const floor = H - 30;
 
     type Drop = { n: number; x: number; y: number; w: number; dead?: number; note?: string };
     let state: "idle" | "running" | "over" = "idle";
     let drops: Drop[] = [], sparks: { x: number; y: number; vx: number; vy: number; age: number }[] = [];
-    let lives = 3, score = 0, spawn = 0, last = 0, typed = "", lastPrime = 0;
+    let lives = 3, score = 0, spawn = 0, typed = "", lastPrime = 0;
 
-    const draw = () => {
-      const { context: c, colours, mono } = view, { ink, bg, muted } = colours();
+    function draw() {
+      const { context: c, mono } = game, { ink, bg, muted } = game.colours();
       c.clearRect(0, 0, W, H);
       c.strokeStyle = ink; c.lineWidth = 1.2;
       c.beginPath(); c.moveTo(0, floor); c.lineTo(W, floor); c.stroke();
@@ -58,29 +51,20 @@ const height = Math.round(width * (width > 600 ? 0.36 : 0.8));
       c.fillStyle = ink;
       for (const s of sparks) { c.globalAlpha = Math.max(0, 1 - s.age / 0.5); c.fillRect(s.x - 1.5, s.y - 1.5, 3, 3); }
       c.globalAlpha = 1;
-      c.textBaseline = "alphabetic"; c.font = `600 12px ${mono}`;
-      c.textAlign = "left"; c.fillStyle = muted; c.fillText(`best ${best("sieve")}`, 10, 20);
-      c.textAlign = "right"; c.fillStyle = ink; c.fillText(`${score} primes  ${"●".repeat(lives)}${"○".repeat(3 - lives)}`, W - 10, 20);
-      c.textAlign = "left"; c.fillStyle = typed ? ink : muted;
+      c.textBaseline = "alphabetic";
+      corners(game, "sieve", `${score} primes  ${"●".repeat(lives)}${"○".repeat(3 - lives)}`);
+      c.font = `600 12px ${mono}`; c.textAlign = "left"; c.fillStyle = typed ? ink : muted;
       c.fillText(`> ${typed}${state === "running" ? "_" : ""}`, 10, H - 9);
-      if (state !== "running") {
-        const message = state === "idle" ? "click or press a key to start sieving" : "sieve broken — click to try again";
-        c.font = `600 13px ${mono}`;
-        const w = c.measureText(message).width + 32;
-        c.fillStyle = bg; c.strokeStyle = ink;
-        c.beginPath(); c.roundRect(W / 2 - w / 2, H * 0.4 - 18, w, 30, 15); c.fill(); c.stroke();
-        c.textAlign = "center"; c.fillStyle = ink;
-        c.fillText(message, W / 2, H * 0.4 + 2);
-      }
-    };
-    const view = canvas(element, W, H, draw);
+      if (state === "idle") banner(game, ["Sieve of Eratosthenes", "zap the primes before they land", "composites cost a life · click or type + enter"], H * 0.4);
+      if (state === "over") banner(game, [`Sieve broken at ${score} primes`, "click or press a key to sieve again"], H * 0.4);
+    }
 
     const end = (message: string) => {
       lives -= 1;
       if (lives > 0) { readout.innerHTML = message; return; }
       state = "over";
       const record = best("sieve", score);
-      readout.innerHTML = `${message} · <strong>${score} primes</strong>${score >= record && score > 0 ? " · new best!" : ""}`;
+      gameOver(readout, game.pool, `${message} · <strong>${score} primes</strong>${score >= record && score > 0 ? " · new best!" : ""}`);
     };
     const zap = (d: Drop) => {
       if (prime(d.n)) {
@@ -90,18 +74,14 @@ const height = Math.round(width * (width > 600 ? 0.36 : 0.8));
         const twin = Math.abs(d.n - lastPrime) === 2 ? ` · twin primes (${Math.min(d.n, lastPrime)}, ${Math.max(d.n, lastPrime)})` : "";
         const special = MERSENNE.has(d.n) ? ` · ${d.n} = 2^${Math.log2(d.n + 1)} − 1, a Mersenne prime` : FERMAT.has(d.n) ? ` · ${d.n} is a Fermat prime` : "";
         lastPrime = d.n;
-        readout.innerHTML = score % 10 === 0
-          ? `<strong>${score} primes sieved!</strong> Released ${reward(pool)}`
-          : `<strong>${d.n}</strong> is prime${twin}${special}`;
+        readout.innerHTML = `<strong>${d.n}</strong> is prime${twin}${special}`;
       } else {
         d.dead = 0;
         d.note = `${d.n} = ${factors(d.n).join(" × ")}`;
         end(`Not prime: <strong>${escape(d.note)}</strong>`);
       }
     };
-    const step = (time: number) => {
-      const dt = Math.min(0.04, (time - (last || time)) / 1000);
-      last = time;
+    const step = (dt: number) => {
       const level = 1 + score / 8, fall = H * (0.1 + 0.025 * level);
       spawn -= dt;
       if (spawn <= 0) {
@@ -126,12 +106,12 @@ const height = Math.round(width * (width > 600 ? 0.36 : 0.8));
       for (const s of sparks) { s.x += s.vx * dt; s.y += s.vy * dt; s.age += dt; }
       sparks = sparks.filter((s) => s.age < 0.5);
       draw();
-      if (state === "running") requestAnimationFrame(step);
+      return state === "running";
     };
     const start = () => {
-      [state, drops, sparks, lives, score, spawn, last, typed, lastPrime] = ["running", [], [], 3, 0, 0.3, 0, "", 0];
+      [state, drops, sparks, lives, score, spawn, typed, lastPrime] = ["running", [], [], 3, 0, 0.3, "", 0];
       readout.innerHTML = '<span class="hint">Zap the primes · composites cost a life, and so do landed primes</span>';
-      requestAnimationFrame(step);
+      loop(step);
     };
     element.addEventListener("pointerdown", (event) => {
       element.focus();

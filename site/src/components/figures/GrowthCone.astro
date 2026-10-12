@@ -1,0 +1,129 @@
+---
+// Snake as axon guidance: steer a growth cone to neurotrophins (BDNF) to grow the axon. Repellent
+// semaphorins appear over time; touching one, the axon or the edge collapses the growth cone,
+// with one of the website's items as the prize.
+import Arcade from "../Arcade.astro";
+interface Props { seed: number; width: number; height: number }
+const { width } = Astro.props;
+---
+
+<Arcade name="growthcone" width={width} height={Math.round(width * (width > 600 ? 0.4 : 0.95))}
+  label="Growth cone: steer a growing axon to neurotrophins with the arrow keys or by tapping, avoiding repellents, the edges and the axon itself"
+  hint="Arrow keys, or tap where to turn" />
+
+<script>
+  import { banner, best, corners, gameOver, loop, setup, type Game } from "../../lib/game";
+
+  for (const figure of document.querySelectorAll<HTMLElement>(".fig.growthcone")) {
+    const game: Game = setup(figure, () => draw());
+    const { W, H } = game, cell = W > 600 ? 18 : 16, top = 30;
+    const [cols, rows] = [Math.floor(W / cell), Math.floor((H - top) / cell)];
+    const [ox, oy] = [(W - cols * cell) / 2, top + (H - top - rows * cell) / 2];
+    const centre = ([i, j]: number[]) => [ox + (i + 0.5) * cell, oy + (j + 0.5) * cell];
+    type Cell = [number, number];
+    let state: "idle" | "running" | "over" = "idle";
+    let axon: Cell[] = [], dir: Cell = [1, 0], queued: Cell[] = [], food: Cell = [0, 0], repellents: Cell[] = [], clock = 0, eaten = 0, pulse = 0;
+    const free = (): Cell => {
+      for (;;) {
+        const c: Cell = [Math.floor(Math.random() * cols), Math.floor(Math.random() * rows)];
+        if (![...axon, ...repellents, food].some(([i, j]) => i === c[0] && j === c[1])) return c;
+      }
+    };
+    const microns = () => axon.length * 10;
+
+    function draw() {
+      const { context: c } = game, { ink, bg } = game.colours();
+      c.clearRect(0, 0, W, H);
+      c.strokeStyle = ink; c.lineWidth = 0.8; c.globalAlpha = 0.25;
+      c.strokeRect(ox, oy, cols * cell, rows * cell);
+      c.globalAlpha = 1;
+      // Repellents: semaphorin as a small cross in a ring.
+      c.lineWidth = 1.2;
+      for (const r of repellents) {
+        const [x, y] = centre(r), s = cell * 0.28;
+        c.beginPath(); c.arc(x, y, cell * 0.38, 0, Math.PI * 2); c.stroke();
+        c.beginPath(); c.moveTo(x - s, y - s); c.lineTo(x + s, y + s); c.moveTo(x + s, y - s); c.lineTo(x - s, y + s); c.stroke();
+      }
+      // Neurotrophin: a pulsing dot with rays.
+      const [fx, fy] = centre(food), glow = 1 + 0.25 * Math.sin(pulse * 6);
+      c.fillStyle = ink;
+      if (state !== "idle") c.beginPath(), c.arc(fx, fy, 3.2 * glow, 0, Math.PI * 2), c.fill();
+      for (let k = 0; k < 6 && state !== "idle"; k++) { const a = (k * Math.PI) / 3 + pulse; c.beginPath(); c.moveTo(fx + Math.cos(a) * 5.5, fy + Math.sin(a) * 5.5); c.lineTo(fx + Math.cos(a) * 8 * glow, fy + Math.sin(a) * 8 * glow); c.stroke(); }
+      // The axon: a smooth line through the cells, thicker towards the soma.
+      if (axon.length) {
+        const points = axon.map(centre);
+        c.lineCap = c.lineJoin = "round";
+        for (let k = 1; k < points.length; k++) {
+          c.lineWidth = 1.6 + 2.4 * (1 - k / points.length);
+          c.beginPath(); c.moveTo(points[k - 1][0], points[k - 1][1]); c.lineTo(points[k][0], points[k][1]); c.stroke();
+        }
+        const [sx, sy] = points[points.length - 1];
+        c.fillStyle = ink; c.beginPath(); c.arc(sx, sy, cell * 0.42, 0, Math.PI * 2); c.fill();  // the soma
+        // The growth cone: a fan of filopodia in the direction of growth.
+        const [hx, hy] = points[0], angle = Math.atan2(dir[1], dir[0]);
+        c.fillStyle = bg; c.lineWidth = 1.4;
+        c.beginPath(); c.arc(hx, hy, cell * 0.36, angle - 1.3, angle + 1.3); c.closePath(); c.fill(); c.stroke();
+        for (let k = -2; k <= 2; k++) {
+          const a = angle + k * 0.5, wiggle = 0.12 * Math.sin(pulse * 9 + k);
+          c.beginPath(); c.moveTo(hx + Math.cos(a) * cell * 0.36, hy + Math.sin(a) * cell * 0.36);
+          c.lineTo(hx + Math.cos(a + wiggle) * cell * 0.75, hy + Math.sin(a + wiggle) * cell * 0.75); c.stroke();
+        }
+      }
+      corners(game, "growthcone", `${microns()} µm · ${eaten} BDNF`);
+      if (state === "idle") banner(game, ["Axon guidance", "steer the growth cone to neurotrophins ✦", "avoid repellents ⊗, the edge and your own axon", "arrow keys, or tap where to turn"]);
+      if (state === "over") banner(game, [`Growth cone collapsed at ${microns()} µm`, "press a key or tap to grow again"]);
+    }
+
+    const step = (dt: number) => {
+      pulse += dt;
+      clock += dt;
+      const interval = Math.max(0.055, 0.13 - eaten * 0.003);
+      while (clock >= interval && state === "running") {
+        clock -= interval;
+        const next = queued.shift();
+        if (next && !(next[0] === -dir[0] && next[1] === -dir[1])) dir = next;
+        const head: Cell = [axon[0][0] + dir[0], axon[0][1] + dir[1]];
+        const hit = head[0] < 0 || head[1] < 0 || head[0] >= cols || head[1] >= rows ? "the edge"
+          : axon.slice(0, -1).some(([i, j]) => i === head[0] && j === head[1]) ? "its own axon"
+          : repellents.some(([i, j]) => i === head[0] && j === head[1]) ? "a semaphorin" : "";
+        if (hit) {
+          state = "over";
+          const record = best("growthcone", microns());
+          gameOver(game.readout, game.pool, `<strong>Growth cone collapse</strong> on ${hit} at ${microns()} µm${microns() >= record ? " · new best!" : ""}`);
+          break;
+        }
+        axon.unshift(head);
+        if (head[0] === food[0] && head[1] === food[1]) {
+          eaten += 1;
+          food = free();
+          if (eaten % 3 === 0) repellents.push(free());
+        } else axon.pop();
+      }
+      draw();
+      return state === "running";
+    };
+    const start = () => {
+      const j = Math.floor(rows / 2);
+      [state, axon, dir, queued, repellents, clock, eaten] = ["running", [[4, j], [3, j], [2, j]], [1, 0], [], [], 0, 0];
+      food = free();
+      game.readout.innerHTML = '<span class="hint">Grow towards the neurotrophins ✦ · avoid repellents ⊗</span>';
+      loop(step);
+    };
+    const turn = (d: Cell) => { if (queued.length < 3) queued.push(d); };
+    const KEYS: Record<string, Cell> = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0], w: [0, -1], s: [0, 1], a: [-1, 0], d: [1, 0] };
+    game.element.addEventListener("keydown", (event) => {
+      if (state !== "running") { if (event.key.length === 1 || event.key in KEYS || event.key === "Enter") { event.preventDefault(); start(); } return; }
+      if (event.key in KEYS) { event.preventDefault(); turn(KEYS[event.key]); }
+    });
+    // Touch: tap to the side of the growth cone to turn that way.
+    game.element.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      game.element.focus();
+      if (state !== "running") return start();
+      const rect = game.element.getBoundingClientRect(), [x, y] = [((event.clientX - rect.left) / rect.width) * W, ((event.clientY - rect.top) / rect.height) * H];
+      const [hx, hy] = centre(axon[0]), [dx, dy] = [x - hx, y - hy];
+      turn(dir[0] !== 0 ? [0, Math.sign(dy) || 1] : [Math.sign(dx) || 1, 0]);
+    });
+    draw();
+  }
+</script>

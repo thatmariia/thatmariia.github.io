@@ -1,0 +1,128 @@
+---
+// Pong against a perceptron. The right paddle is a linear model that predicts where the ball will
+// arrive from where it was hit and how it moves, and learns from every ball (least mean squares),
+// so it gets better the longer you play. Miss three and it wins, with a prize.
+import Arcade from "../Arcade.astro";
+interface Props { seed: number; width: number; height: number }
+const { width } = Astro.props;
+---
+
+<Arcade name="pong" width={width} height={Math.round(width * (width > 600 ? 0.4 : 0.9))}
+  label="Perceptron Pong: move your paddle with the pointer or the arrow keys; the opponent is a perceptron that learns"
+  hint="Move the pointer, drag, or use ↑ ↓" />
+
+<script>
+  import { banner, best, corners, gameOver, loop, setup, type Game } from "../../lib/game";
+
+  for (const figure of document.querySelectorAll<HTMLElement>(".fig.pong")) {
+    const game: Game = setup(figure, () => draw());
+    const { W, H } = game, [top, bottom] = [30, H - 8], paddle = Math.max(46, (bottom - top) * 0.2);
+    const [mine, theirs] = [16, W - 16];
+    let state: "idle" | "running" | "over" = "idle";
+    let me = H / 2, ai = H / 2, aim = H / 2, bx = W / 2, by = H / 2, vx = 0, vy = 0, points = 0, lives = 3, epochs = 0, loss = 0.25, keys = 0;
+    // The perceptron: weights on [where the ball was hit, where it would arrive without bounces, 1].
+    let w = [Math.random() * 0.4, Math.random() * 0.4, 0.3 + Math.random() * 0.2], features = [0.5, 0.5, 1], trail: number[][] = [];
+    const norm = (y: number) => (y - top) / (bottom - top);
+
+    function draw() {
+      const { context: c, mono } = game, { ink, muted } = game.colours();
+      c.clearRect(0, 0, W, H);
+      c.strokeStyle = ink; c.lineWidth = 1;
+      c.setLineDash([4, 6]); c.globalAlpha = 0.35;
+      c.beginPath(); c.moveTo(W / 2, top); c.lineTo(W / 2, bottom); c.stroke();
+      c.setLineDash([]); c.globalAlpha = 1;
+      c.beginPath(); c.moveTo(0, top); c.lineTo(W, top); c.moveTo(0, bottom); c.lineTo(W, bottom); c.stroke();
+      // The perceptron's prediction, as a dashed tick on its side.
+      if (vx > 0 && state === "running") { c.setLineDash([2, 3]); c.beginPath(); c.moveTo(theirs - 26, aim); c.lineTo(theirs - 8, aim); c.stroke(); c.setLineDash([]); }
+      c.lineCap = "round"; c.lineWidth = 6;
+      c.beginPath(); c.moveTo(mine, me - paddle / 2); c.lineTo(mine, me + paddle / 2); c.stroke();
+      c.beginPath(); c.moveTo(theirs, ai - paddle / 2); c.lineTo(theirs, ai + paddle / 2); c.stroke();
+      c.fillStyle = ink;
+      trail.forEach(([x, y], i) => { c.globalAlpha = (i / trail.length) * 0.3; c.beginPath(); c.arc(x, y, 4, 0, Math.PI * 2); c.fill(); });
+      c.globalAlpha = 1;
+      c.beginPath(); c.arc(bx, by, 5.5, 0, Math.PI * 2); c.fill();
+      c.fillStyle = muted; c.font = `11px ${mono}`; c.textAlign = "right";
+      c.fillText(`perceptron · epoch ${epochs} · loss ${loss.toFixed(3)}`, W - 10, H - 14);
+      corners(game, "pong", `${points} points  ${"●".repeat(lives)}${"○".repeat(3 - lives)}`);
+      if (state === "idle") banner(game, ["Perceptron Pong", "your opponent is a linear model that learns", "from every ball · beat it while it is young", "move the pointer, drag, or ↑ ↓"]);
+      if (state === "over") banner(game, [`The perceptron won after ${epochs} epochs`, "click or press a key for a rematch"]);
+    }
+
+    // Serve towards the player, a bit faster every time.
+    const serve = (towards: number) => {
+      const speed = W * (0.42 + points * 0.02 + epochs * 0.004), angle = (Math.random() - 0.5) * 1.1;
+      [bx, by, vx, vy] = [W / 2, top + (bottom - top) * (0.3 + Math.random() * 0.4), towards * speed * Math.cos(angle), speed * Math.sin(angle)];
+      trail = [];
+    };
+    // When the ball leaves my paddle: the perceptron predicts where it will arrive.
+    const predict = () => {
+      const t = (theirs - bx) / vx;
+      features = [norm(by), norm(by + vy * t), 1];
+      aim = top + Math.max(0, Math.min(1, features.reduce((s, f, i) => s + f * w[i], 0))) * (bottom - top);
+    };
+    const learn = (arrived: number) => {
+      const error = norm(arrived) - features.reduce((s, f, i) => s + f * w[i], 0);
+      w = w.map((wi, i) => wi + 0.35 * error * features[i]);
+      epochs += 1;
+      loss = loss * 0.8 + 0.2 * error * error;
+    };
+    const step = (dt: number) => {
+      if (keys) me += keys * dt * H * 1.4;
+      me = Math.max(top + paddle / 2, Math.min(bottom - paddle / 2, me));
+      // The paddle moves to the prediction at a limited speed.
+      const reach = dt * H * 1.1;
+      ai += Math.max(-reach, Math.min(reach, (vx > 0 ? aim : H / 2) - ai));
+      bx += vx * dt; by += vy * dt;
+      trail = [...trail.slice(-10), [bx, by]];
+      if (by < top + 5) { by = 2 * (top + 5) - by; vy = -vy; }
+      if (by > bottom - 5) { by = 2 * (bottom - 5) - by; vy = -vy; }
+      if (vx < 0 && bx <= mine + 6) {
+        if (Math.abs(by - me) <= paddle / 2 + 5) {
+          bx = mine + 6; vx = -vx * 1.04;
+          vy += ((by - me) / (paddle / 2)) * Math.abs(vx) * 0.45;  // spin from where it hits the paddle
+          predict();
+        } else {
+          lives -= 1;
+          if (lives <= 0) {
+            state = "over";
+            const record = best("pong", points);
+            gameOver(game.readout, game.pool, `<strong>The perceptron won</strong> after ${epochs} epochs · you scored ${points}${points >= record && points > 0 ? " · new best!" : ""} · its weights: ${w.map((v) => v.toFixed(2)).join(", ")}`);
+          } else serve(-1);
+        }
+      }
+      if (vx > 0 && bx >= theirs - 6) {
+        learn(by);
+        if (Math.abs(by - ai) <= paddle / 2 + 5) { bx = theirs - 6; vx = -vx; vy += (Math.random() - 0.5) * Math.abs(vx) * 0.3; }
+        else { points += 1; serve(-1); }
+      }
+      draw();
+      return state === "running";
+    };
+    const start = () => {
+      [state, points, lives, epochs, loss] = ["running", 0, 3, 0, 0.25];
+      w = [Math.random() * 0.4, Math.random() * 0.4, 0.3 + Math.random() * 0.2];
+      game.readout.innerHTML = '<span class="hint">Score while the perceptron is still learning</span>';
+      serve(-1);
+      loop(step);
+    };
+    const follow = (event: PointerEvent) => {
+      const rect = game.element.getBoundingClientRect();
+      me = ((event.clientY - rect.top) / rect.height) * H;
+    };
+    game.element.addEventListener("pointermove", follow);
+    game.element.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      game.element.focus();
+      game.element.setPointerCapture(event.pointerId);
+      if (state !== "running") return start();
+      follow(event);
+    });
+    game.element.addEventListener("keydown", (event) => {
+      if (state !== "running") { if (event.key.length === 1 || event.key === "Enter" || event.key.startsWith("Arrow")) { event.preventDefault(); start(); } return; }
+      if (event.key === "ArrowUp") { event.preventDefault(); keys = -1; }
+      if (event.key === "ArrowDown") { event.preventDefault(); keys = 1; }
+    });
+    game.element.addEventListener("keyup", (event) => { if (event.key === "ArrowUp" || event.key === "ArrowDown") keys = 0; });
+    draw();
+  }
+</script>

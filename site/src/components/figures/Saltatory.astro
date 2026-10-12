@@ -1,76 +1,64 @@
 ---
-// A one-button runner: an action potential leaping from node to node along a myelinated axon
-// (saltatory conduction). Jump over tetrodotoxin pufferfish; every 30 nodes the spike reaches a
-// synapse and releases one of the website's items. Nothing moves until someone plays.
-import { items } from "../../lib/data";
+// Saltatory conduction as a one-button runner: you are an action potential leaping from node to
+// node along a myelinated axon. Jump over pufferfish (tetrodotoxin blocks the sodium channels on
+// the axon) but not into cone snails (conotoxin, in the water above). It speeds up; a block ends
+// the run, with one of the website's items as the prize.
+import Arcade from "../Arcade.astro";
 interface Props { seed: number; width: number; height: number }
 const { width } = Astro.props;
-
-const pool = items.map(({ kind, title, href }) => ({ kind, title, href }));
-const height = Math.round(width * (width > 600 ? 0.3 : 0.55));
 ---
 
-<div class="fig arcade saltatory" data-width={width} data-height={height}>
-  <canvas tabindex="0" style={`aspect-ratio: ${width} / ${height}`}
-    aria-label="Saltatory: an action potential runs along an axon; press Space or tap to jump over the tetrodotoxin"></canvas>
-  <div class="readout" aria-live="polite"><span class="hint">Press Space or tap to fire</span></div>
-  <script is:inline type="application/json" set:html={JSON.stringify(pool)} />
-</div>
+<Arcade name="saltatory" width={width} height={Math.round(width * (width > 600 ? 0.32 : 0.6))}
+  label="Saltatory: an action potential runs along an axon; press Space or tap to jump over pufferfish, but not into cone snails"
+  hint="Space or tap to jump" />
 
 <script>
-  import { best, canvas, reward, type Item } from "../../lib/game";
+  import { banner, best, corners, gameOver, loop, setup, type Game } from "../../lib/game";
 
   for (const figure of document.querySelectorAll<HTMLElement>(".fig.saltatory")) {
-    const element = figure.querySelector("canvas")!, readout = figure.querySelector<HTMLElement>(".readout")!;
-    const pool: Item[] = JSON.parse(figure.querySelector("script[type='application/json']")!.textContent!);
-    const [W, H] = [Number(figure.dataset.width), Number(figure.dataset.height)];
-    const axon = H * 0.68, runnerX = W * 0.14, internode = Math.max(90, W * 0.12), sheath = H * 0.075;
-    const hop = H * 0.34, air = 0.62, gravity = (8 * hop) / air ** 2;
-    const [slow, fast] = [W * 0.33, W * 0.8];
+    const game: Game = setup(figure, () => draw());
+    const { W, H } = game;
+    const axon = H * 0.72, runnerX = W * 0.14, internode = Math.max(90, W * 0.12), sheath = H * 0.07;
+    const hop = H * 0.36, air = 0.6, gravity = (8 * hop) / air ** 2;
+    const [slow, fast] = [W * 0.42, W * 1.05];
 
     let state: "idle" | "running" | "over" = "idle";
-    let speed = slow, offset = 0, y = 0, vy = 0, nodes = 0, nextFish = W, last = 0, flash = 0;
-    let fish: { x: number; r: number }[] = [], leaps: { x: number; age: number }[] = [];
-
+    let speed = slow, offset = 0, y = 0, vy = 0, nodes = 0, next = W, flash = 0;
+    let hazards: { x: number; r: number; kind: "fish" | "snail"; y: number }[] = [], leaps: { x: number; age: number }[] = [];
     const metres = () => Math.round(30 + ((speed - slow) / (fast - slow)) * 90);
-    const draw = () => {
-      const { context: c, colours, mono } = view, { ink, bg, muted } = colours();
+
+    function draw() {
+      const { context: c } = game, { ink, bg, muted } = game.colours();
       c.clearRect(0, 0, W, H);
       c.lineCap = c.lineJoin = "round";
-      // The axon and its myelin sheaths, scrolling; nodes of Ranvier in between.
-      c.strokeStyle = ink;
-      c.lineWidth = 1.2;
+      c.strokeStyle = ink; c.lineWidth = 1.2;
       c.beginPath(); c.moveTo(0, axon); c.lineTo(W, axon); c.stroke();
+      // Myelin sheaths scroll by; the gaps are nodes of Ranvier, with sodium channels that flash.
       const shift = offset % internode;
       for (let x = -shift - internode; x < W + internode; x += internode) {
         const [a, b] = [x + internode * 0.07, x + internode * 0.93];
         c.fillStyle = bg;
         c.beginPath(); c.roundRect(a, axon - sheath, b - a, 2 * sheath, sheath); c.fill(); c.stroke();
-        // Sodium channels at the node: ticks that flash when the spike lands.
         c.strokeStyle = Math.abs(x - runnerX) < internode / 2 && flash > 0 ? ink : muted;
         for (const dx of [-3, 0, 3]) { c.beginPath(); c.moveTo(x + dx, axon - 6); c.lineTo(x + dx, axon + 6); c.stroke(); }
         c.strokeStyle = ink;
       }
-      // Echoes of recent leaps.
-      for (const leap of leaps) spike(c, leap.x, axon, Math.max(0, 0.35 - leap.age), 1.2);
-      // Pufferfish (tetrodotoxin blocks the sodium channels).
-      for (const f of fish) puffer(c, f.x, axon - f.r - sheath * 0.2, f.r, ink, bg);
-      if (fish[0] && nodes < 12) { c.fillStyle = muted; c.font = `10px ${mono}`; c.textAlign = "center"; c.fillText("TTX", fish[0].x, axon - 2 * fish[0].r - sheath - 6); }
-      // The action potential.
-      spike(c, runnerX, axon - y, 1, 2.2);
-      // Score.
-      c.fillStyle = ink; c.font = `600 12px ${mono}`; c.textAlign = "right";
-      c.fillText(`node ${nodes} · ${state === "idle" ? "—" : metres()} m/s`, W - 10, 20);
-      c.textAlign = "left"; c.fillStyle = muted;
-      c.fillText(`best ${best("saltatory")}`, 10, 20);
-      if (state !== "running") {
-        c.textAlign = "center"; c.fillStyle = ink; c.font = `600 13px ${mono}`;
-        c.fillText(state === "idle" ? "press space / tap to fire" : "conduction block — press to fire again", W / 2, H * 0.24);
+      if (state === "idle") {
+        c.fillStyle = muted; c.font = `10px ${game.mono}`; c.textAlign = "center";
+        const node = internode * Math.ceil(runnerX / internode) + internode;
+        c.fillText("myelin", node + internode / 2, axon + sheath + 14);
+        c.fillText("node of Ranvier", node, axon - sheath - 8);
       }
-    };
-    const spike = (c: CanvasRenderingContext2D, x: number, base: number, alpha: number, lineWidth: number) => {
+      for (const leap of leaps) spike(c, leap.x, axon, Math.max(0, 0.35 - leap.age), 1.2);
+      for (const h of hazards) (h.kind === "fish" ? puffer : snail)(c, h.x, h.y, h.r, ink, bg);
+      spike(c, runnerX, axon - y, 1, 2.2);
+      corners(game, "saltatory", `node ${nodes} · ${state === "idle" ? "—" : metres()} m/s`);
+      if (state === "idle") banner(game, ["You are an action potential", "leap node to node along the myelinated axon", "jump the pufferfish (TTX), not into cone snails", "space or tap to fire"], H * 0.34);
+      if (state === "over") banner(game, [`Conduction block at node ${nodes}`, "space or tap to fire again"], H * 0.3);
+    }
+    const spike = (c: CanvasRenderingContext2D, x: number, base: number, alpha: number, width: number) => {
       if (alpha <= 0) return;
-      c.globalAlpha = alpha; c.lineWidth = lineWidth;
+      c.globalAlpha = alpha; c.lineWidth = width;
       c.beginPath();
       [[-16, 0], [-7, 0], [-4, -3], [-1, -26], [2, -4], [6, 5], [11, 2], [16, 0]].forEach(([dx, dy], i) => (i ? c.lineTo : c.moveTo).call(c, x + dx, base + dy));
       c.stroke();
@@ -86,58 +74,63 @@ const height = Math.round(width * (width > 600 ? 0.3 : 0.55));
       c.beginPath(); c.arc(x, cy, r, 0, Math.PI * 2); c.fill(); c.stroke();
       c.fillStyle = ink; c.beginPath(); c.arc(x - r * 0.45, cy - r * 0.2, 1.6, 0, Math.PI * 2); c.fill();
     };
-    const view = canvas(element, W, H, draw);
+    // A cone snail: a striped cone-shaped shell with its siphon in front.
+    const snail = (c: CanvasRenderingContext2D, x: number, cy: number, r: number, ink: string, bg: string) => {
+      c.fillStyle = bg;
+      c.beginPath(); c.moveTo(x - r * 1.3, cy); c.quadraticCurveTo(x + r * 0.2, cy - r * 1.1, x + r * 1.1, cy - r * 0.5);
+      c.lineTo(x + r * 1.1, cy + r * 0.5); c.quadraticCurveTo(x + r * 0.2, cy + r * 1.1, x - r * 1.3, cy); c.fill(); c.stroke();
+      for (const u of [0.25, 0.5, 0.75]) { const sx = x - r * 1.3 + u * r * 2.4; c.beginPath(); c.moveTo(sx, cy - r * 0.8 * u - 1); c.lineTo(sx - 3, cy + r * 0.8 * u + 1); c.stroke(); }
+      c.beginPath(); c.moveTo(x - r * 1.3, cy); c.lineTo(x - r * 1.9, cy - r * 0.3); c.stroke();
+    };
 
-    const step = (time: number) => {
-      const dt = Math.min(0.04, (time - (last || time)) / 1000);
-      last = time;
-      speed = Math.min(fast, speed + W * 0.008 * dt);
+    const step = (dt: number) => {
+      speed = Math.min(fast, speed + W * 0.022 * dt);
       const before = Math.floor(offset / internode);
       offset += speed * dt;
-      if (Math.floor(offset / internode) > before) {
-        nodes += 1;
-        if (y === 0) flash = 0.12;
-        if (nodes % 30 === 0) readout.innerHTML = `<strong>Synapse at node ${nodes}!</strong> Released ${reward(pool)}`;
-      }
+      if (Math.floor(offset / internode) > before) { nodes += 1; if (y === 0) flash = 0.12; }
       flash -= dt;
-      // Jumping: the spike leaps; landing leaves an echo.
       if (y > 0 || vy > 0) {
         y += vy * dt; vy -= gravity * dt;
         if (y <= 0) { y = 0; vy = 0; leaps.push({ x: runnerX, age: 0 }); flash = 0.12; }
       }
-      for (const leap of leaps) { leap.x -= speed * dt; leap.age += dt; }
+      for (const l of leaps) { l.x -= speed * dt; l.age += dt; }
       leaps = leaps.filter((l) => l.age < 0.35);
-      // Fish come at random gaps that are always jumpable.
-      for (const f of fish) f.x -= speed * dt;
-      fish = fish.filter((f) => f.x > -40);
-      nextFish -= speed * dt;
-      if (nextFish <= 0) {
+      for (const h of hazards) h.x -= speed * (h.kind === "snail" ? 1.15 : 1) * dt;
+      hazards = hazards.filter((h) => h.x > -40);
+      // Hazards come at random gaps that always leave room to land and take off again.
+      next -= speed * dt;
+      if (next <= 0) {
         const r = H * (0.045 + Math.random() * 0.035);
-        fish.push({ x: W + 30, r });
-        if (nodes > 20 && Math.random() < 0.25) fish.push({ x: W + 30 + r * 3, r: r * 0.8 });
-        nextFish = speed * (air + 0.25 + Math.random() * 1.1);
+        if (nodes > 8 && Math.random() < 0.3) {
+          hazards.push({ x: W + 30, r: H * 0.05, kind: "snail", y: axon - hop * (0.55 + Math.random() * 0.35) });
+        } else {
+          hazards.push({ x: W + 30, r, kind: "fish", y: axon - r - sheath * 0.2 });
+          const extra = nodes > 15 ? Math.floor(Math.random() * (nodes > 40 ? 3 : 2)) : 0;
+          for (let i = 1; i <= extra; i++) hazards.push({ x: W + 30 + r * 2.6 * i, r: r * 0.85, kind: "fish", y: axon - r * 0.85 - sheath * 0.2 });
+        }
+        next = speed * (air + 0.15 + Math.random() * 0.9);
       }
-      // Collision: the spike's peak against a fish.
-      for (const f of fish) {
-        const [fy, dx] = [axon - f.r - sheath * 0.2, Math.abs(f.x - runnerX)];
-        if (dx < f.r + 8 && axon - y > fy - f.r * 1.2) {
+      // Collision with the spike (its base and its peak).
+      for (const h of hazards) {
+        const dx = Math.abs(h.x - runnerX), [top, bottom] = [axon - y - 26, axon - y];
+        if (dx < h.r + 9 && bottom > h.y - h.r * 1.2 && top < h.y + h.r * 1.2) {
           state = "over";
           const record = best("saltatory", nodes);
-          readout.innerHTML = `<strong>Blocked by tetrodotoxin at node ${nodes}</strong> · ${metres()} m/s${nodes >= record && nodes > 0 ? " · new best!" : ""}`;
+          gameOver(game.readout, game.pool, `<strong>Conduction block at node ${nodes}</strong> by ${h.kind === "fish" ? "tetrodotoxin" : "conotoxin"} · ${metres()} m/s${nodes >= record && nodes > 0 ? " · new best!" : ""}`);
         }
       }
       draw();
-      if (state === "running") requestAnimationFrame(step);
+      return state === "running";
     };
     const press = () => {
       if (state !== "running") {
-        [state, speed, offset, y, vy, nodes, nextFish, last, fish, leaps] = ["running", slow, 0, 0, 0, 0, W * 0.6, 0, [], []];
-        readout.innerHTML = '<span class="hint">Jump the pufferfish · a synapse every 30 nodes</span>';
-        requestAnimationFrame(step);
+        [state, speed, offset, y, vy, nodes, next, hazards, leaps] = ["running", slow, 0, 0, 0, 0, W * 0.5, [], []];
+        game.readout.innerHTML = '<span class="hint">Jump the pufferfish · stay under the cone snails</span>';
+        loop(step);
       } else if (y === 0) vy = Math.sqrt(2 * gravity * hop);
     };
-    element.addEventListener("pointerdown", (event) => { event.preventDefault(); element.focus(); press(); });
-    element.addEventListener("keydown", (event) => { if (event.key === " " || event.key === "ArrowUp" || event.key === "Enter") { event.preventDefault(); press(); } });
+    game.element.addEventListener("pointerdown", (event) => { event.preventDefault(); game.element.focus(); press(); });
+    game.element.addEventListener("keydown", (event) => { if (event.key === " " || event.key === "ArrowUp" || event.key === "Enter") { event.preventDefault(); press(); } });
     draw();
   }
 </script>

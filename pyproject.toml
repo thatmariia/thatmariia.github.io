@@ -1,0 +1,22 @@
+[project]
+name = "folio"
+version = "0.1.0"
+description = "Validates portfolio content and builds the public site data and the CV."
+requires-python = ">=3.12"
+dependencies = [
+    "pydantic>=2.12",
+    "pyyaml>=6.0",
+]
+
+[project.scripts]
+folio = "folio.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[build-system]
+requires = ["uv_build>=0.9,<0.10"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-root = ""

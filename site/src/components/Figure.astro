@@ -1,25 +1,11 @@
 ---
-// The fields figure. While choosing, every variant is rendered and the options panel shows one.
-import Channels from "./viz/Channels.astro";
-import Embedding from "./viz/Embedding.astro";
-import FieldLines from "./viz/FieldLines.astro";
-import Threads from "./viz/Threads.astro";
+// The fields figure on the home page: wide and narrow layouts of the same charges.
+import FieldLines from "./FieldLines.astro";
 import { data } from "../lib/data";
-
 const fields = data.profile.walk;
-const variants = [
-  { key: "threads", Viz: Threads, seed: 11 },
-  { key: "eeg", Viz: Channels, seed: 4 },
-  { key: "embedding", Viz: Embedding, seed: 8 },
-  { key: "fieldlines", Viz: FieldLines, seed: 21 },
-];
 ---
 
 <figure class="figure">
-  {variants.map(({ key, Viz, seed }) => (
-    <div class="viz" data-viz={key}>
-      <div class="wide"><Viz fields={fields} seed={seed} width={960} height={400} /></div>
-      <div class="narrow"><Viz fields={fields} seed={seed} width={400} height={480} /></div>
-    </div>
-  ))}
+  <div class="wide"><FieldLines fields={fields} seed={21} width={960} height={460} /></div>
+  <div class="narrow"><FieldLines fields={fields} seed={21} width={400} height={560} /></div>
 </figure>

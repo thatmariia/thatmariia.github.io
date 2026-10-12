@@ -1,29 +1,33 @@
 ---
 // The figure at the top of a page. A page names the figures that suit its data; while choosing,
 // pill buttons (plain radio inputs, no JavaScript) switch between them when there is more than one.
-import AwardPeaks from "./figures/AwardPeaks.astro";
+import Braid from "./figures/Braid.astro";
 import Collaborators from "./figures/Collaborators.astro";
-import Dendrite from "./figures/Dendrite.astro";
-import Metro from "./figures/Metro.astro";
+import Fireworks from "./figures/Fireworks.astro";
 import NeuronGame from "./figures/NeuronGame.astro";
-import Places from "./figures/Places.astro";
-import Rosettes from "./figures/Rosettes.astro";
+import PianoRoll from "./figures/PianoRoll.astro";
 import Spiral from "./figures/Spiral.astro";
+import StarChart from "./figures/StarChart.astro";
+import SynapseGame from "./figures/SynapseGame.astro";
 import Travels from "./figures/Travels.astro";
-import TreeRings from "./figures/TreeRings.astro";
+import Trophies from "./figures/Trophies.astro";
 import Volleyball from "./figures/Volleyball.astro";
+import WhenGame from "./figures/WhenGame.astro";
+import Worldline from "./figures/Worldline.astro";
 
 const FIGURES = {
-  spiral: { label: "Spiral explorer", Figure: Spiral, seed: 2 },
   game: { label: "Neuron game", Figure: NeuronGame, seed: 1 },
+  synapses: { label: "Synapse memory", Figure: SynapseGame, seed: 1 },
+  when: { label: "When was it?", Figure: WhenGame, seed: 1 },
+  spiral: { label: "Spiral explorer", Figure: Spiral, seed: 2 },
   collaborators: { label: "Collaborators", Figure: Collaborators, seed: 7 },
-  metro: { label: "Metro", Figure: Metro, seed: 1 },
-  rings: { label: "Tree rings", Figure: TreeRings, seed: 3 },
-  dendrite: { label: "Dendrite", Figure: Dendrite, seed: 4 },
-  places: { label: "Places", Figure: Places, seed: 4 },
+  worldline: { label: "Worldline", Figure: Worldline, seed: 1 },
+  braid: { label: "Braid", Figure: Braid, seed: 3 },
+  piano: { label: "Piano roll", Figure: PianoRoll, seed: 1 },
   travels: { label: "Travels", Figure: Travels, seed: 2 },
-  peaks: { label: "Evoked potential", Figure: AwardPeaks, seed: 6 },
-  rosettes: { label: "Rosettes", Figure: Rosettes, seed: 1 },
+  fireworks: { label: "Fireworks", Figure: Fireworks, seed: 6 },
+  starchart: { label: "Star chart", Figure: StarChart, seed: 4 },
+  trophies: { label: "Trophies", Figure: Trophies, seed: 1 },
   volleyball: { label: "Volleyball", Figure: Volleyball, seed: 3 },
 };
 interface Props { show: (keyof typeof FIGURES)[] }

@@ -146,8 +146,6 @@ a.pill:hover, .pill.solid, .pill[aria-current="page"] { background: var(--ink); 
 }
 .fig .node:hover { background: var(--ink); color: var(--bg); }
 
-.places .line { stroke-width: 0.8; opacity: 0.6; animation-duration: 0.12s; animation-timing-function: linear; animation-delay: calc(var(--i) * 0.06s); }
-.places .place circle { fill: var(--ink); }
 .fig text { font: 10.5px var(--mono); fill: var(--muted); stroke: var(--bg); stroke-width: 4px; paint-order: stroke; }
 
 /* Pulses travelling along paths: a short dash looping from start to end. */
@@ -157,14 +155,6 @@ a.pill:hover, .pill.solid, .pill[aria-current="page"] { background: var(--ink); 
 }
 @keyframes travel { to { stroke-dashoffset: 0; } }
 
-/* An oscilloscope sweep: the trace is revealed left to right behind a moving playhead. */
-.trace { fill: none; stroke: var(--ink); stroke-width: 1; stroke-linejoin: round; }
-.ghost { opacity: 0.18; }
-.sweep-window { transform-box: fill-box; transform-origin: left; animation: reveal var(--sweep) linear infinite; }
-.playhead { stroke: var(--ink); stroke-width: 1; opacity: 0.5; animation: sweep var(--sweep) linear infinite; }
-@keyframes reveal { from { transform: scaleX(0); } }
-@keyframes sweep { to { transform: translateX(calc(var(--span) * 1px)); } }
-
 .spiral .band { fill: var(--ink); opacity: 0.12; }
 .spiral .guide { fill: none; stroke: var(--ink); stroke-width: 0.6; opacity: 0.5; }
 .spiral .ticks { stroke: var(--ink); stroke-width: 0.8; opacity: 0.75; }
@@ -173,13 +163,6 @@ a.pill:hover, .pill.solid, .pill[aria-current="page"] { background: var(--ink); 
 .spiral .event { fill: var(--bg); stroke: var(--ink); stroke-width: 1.1; }
 .spiral .now { fill: var(--ink); animation: pulse 2s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
 @keyframes pulse { 50% { transform: scale(1.8); } }
-
-.dendrite .trunk { fill: none; stroke: var(--ink); stroke-width: 3; stroke-linecap: round; }
-.dendrite .branch path { fill: none; stroke: var(--ink); stroke-linecap: round; }
-.dendrite .sap { fill: none; stroke: var(--bg); stroke-width: 2; stroke-linecap: round; stroke-dasharray: 0.02 0.98; stroke-dashoffset: 1; animation: travel 6s linear infinite; }
-.dendrite .spine line { stroke: var(--ink); stroke-width: 0.9; }
-.dendrite .spine.output circle { fill: var(--ink); }
-.dendrite .spine.event circle { fill: var(--bg); stroke: var(--ink); stroke-width: 1.1; }
 
 .travels .ring circle { fill: none; stroke: var(--ink); stroke-width: 0.8; stroke-dasharray: 2 4; opacity: 0.35; }
 .travels .north { fill: var(--ink); }
@@ -200,7 +183,7 @@ a.pill:hover, .pill.solid, .pill[aria-current="page"] { background: var(--ink); 
 .collaborators .neuron { animation: appear 1.2s ease; }
 
 
-.spiral a circle, .rings a circle { cursor: pointer; }
+.spiral a circle { cursor: pointer; }
 .spiral .cursor { fill: none; stroke: var(--ink); stroke-width: 2; pointer-events: none; }
 .fig .readout { min-height: 2.6em; margin-top: 6px; font-size: 0.82rem; color: var(--muted); }
 .fig .readout strong { color: var(--ink); }
@@ -211,44 +194,99 @@ a.pill:hover, .pill.solid, .pill[aria-current="page"] { background: var(--ink); 
 .game .membrane { fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linejoin: round; }
 .game .threshold { stroke: var(--ink); stroke-width: 0.8; stroke-dasharray: 3 5; opacity: 0.5; }
 .game .count, .game .prompt { fill: var(--ink); }
-
-.metro .track { fill: none; stroke: var(--ink); stroke-width: 1.5; opacity: 0.35; }
-.metro .active { fill: none; stroke: var(--ink); stroke-width: 6; stroke-linecap: round; }
-.metro .train { fill: none; stroke: var(--bg); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 0.012 0.988; stroke-dashoffset: 1; animation: travel 14s linear infinite; }
-.metro .interchange { fill: none; stroke: var(--ink); stroke-width: 1; stroke-dasharray: 2 3; opacity: 0.5; }
-.metro .station { fill: var(--bg); stroke: var(--ink); stroke-width: 2; }
-.metro a:hover .station { fill: var(--ink); }
-.metro .line-label { fill: var(--ink); }
-
-.rings .ring { fill: none; stroke: var(--ink); stroke-width: 0.9; }
-.rings .newest { stroke-width: 1.6; stroke-dasharray: 3 3; animation: grow 6s linear infinite; }
-.rings .crack { stroke: var(--ink); stroke-width: 0.6; opacity: 0.2; }
-.rings .output { fill: var(--ink); }
-.rings .event { fill: var(--bg); stroke: var(--ink); stroke-width: 1.1; }
-@keyframes grow { to { stroke-dashoffset: -60; } }
-
-.peaks .axis { stroke: var(--ink); stroke-width: 0.8; opacity: 0.4; }
-.peaks .leader { stroke: var(--ink); stroke-width: 0.8; stroke-dasharray: 2 3; }
-.peaks a text { fill: var(--ink); }
-
-.rosettes .rosette { fill: none; stroke: var(--ink); stroke-width: 0.9; animation: spin 40s linear infinite; }
-.rosettes a:hover .rosette { stroke-width: 1.6; }
-.rosettes a text { fill: var(--ink); }
-.rosettes .year { fill: var(--muted); }
-@keyframes spin { to { transform: rotate(360deg); } }
+.synapses .readout .pill { margin-left: 6px; cursor: pointer; }
 
 .volleyball .sand { stroke: var(--ink); stroke-width: 1.4; }
 .volleyball .grain { fill: var(--ink); opacity: 0.35; }
 .volleyball .pole { stroke: var(--ink); stroke-width: 2.4; }
 .volleyball .mesh { stroke: var(--ink); stroke-width: 0.8; opacity: 0.6; }
 .volleyball .tape { stroke: var(--ink); stroke-width: 3; }
-.volleyball .rally { fill: none; stroke: var(--ink); stroke-width: 0.8; stroke-dasharray: 2 5; opacity: 0.45; }
-.volleyball .contact circle { fill: var(--ink); }
-.volleyball .contact text { fill: var(--ink); }
-.volleyball .leader { stroke: var(--ink); stroke-width: 0.6; stroke-dasharray: 1 3; opacity: 0.5; }
-.volleyball .ball circle { fill: var(--bg); stroke: var(--ink); stroke-width: 1.4; }
-.volleyball .ball path { fill: none; stroke: var(--ink); stroke-width: 1.1; }
+.volleyball .rally { fill: none; stroke: var(--ink); stroke-width: 0.8; stroke-dasharray: 2 5; opacity: 0.4; }
+.volleyball .player circle { fill: var(--ink); }
+.volleyball .player path { fill: none; stroke: var(--ink); stroke-width: 2; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.volleyball .touch { font-size: 13px; fill: var(--ink); font-weight: 600; }
+.volleyball .touch .move { fill: var(--muted); font-weight: 400; }
+.volleyball .ball .dark { fill: var(--ink); }
+.volleyball .ball .light { fill: var(--bg); }
+.volleyball .ball path { stroke: var(--ink); stroke-width: 0.6; }
+.volleyball .ball .rim { fill: none; stroke: var(--ink); stroke-width: 1.4; }
 .volleyball .shadow { fill: var(--ink); opacity: 0.18; }
+
+.worldline .axis { stroke: var(--ink); stroke-width: 0.6; stroke-dasharray: 2 4; opacity: 0.3; }
+.worldline .stay { stroke: var(--ink); stroke-width: 7; stroke-linecap: round; opacity: 0.14; }
+.worldline .cone { fill: none; stroke: var(--ink); stroke-width: 0.8; stroke-dasharray: 3 3; opacity: 0.6; }
+.worldline .me { fill: none; stroke: var(--ink); stroke-width: 1.8; stroke-linejoin: round; }
+.worldline .pulse { stroke: var(--bg); stroke-width: 3.5; stroke-dasharray: 0.02 0.98; animation-duration: 8s; }
+
+.braid .strand { fill: none; stroke: var(--ink); stroke-width: 1.3; stroke-linejoin: round; }
+.braid .pulse { stroke-width: 3; stroke-dasharray: 0.03 0.97; animation-duration: 6s; }
+
+.piano .play { margin-bottom: 8px; cursor: pointer; background: var(--bg); color: var(--ink); }
+.piano .play:hover { background: var(--ink); color: var(--bg); }
+.piano .row { stroke: var(--ink); stroke-width: 0.6; opacity: 0.2; }
+.piano .note { fill: var(--ink); opacity: 0.8; stroke: var(--bg); stroke-width: 1; }
+.piano .note:hover { opacity: 1; }
+.piano .click { stroke: var(--ink); stroke-width: 1.4; }
+.piano .cursor { stroke: var(--ink); stroke-width: 1.5; opacity: 0.7; }
+
+.fireworks .ground { stroke: var(--ink); stroke-width: 1.2; }
+.fireworks .post { stroke: var(--ink); stroke-width: 0.6; stroke-dasharray: 1 3; }
+.fireworks a text { fill: var(--ink); }
+.fireworks a .year { fill: var(--muted); }
+.fireworks .trail {
+  fill: none; stroke: var(--ink); stroke-width: 1.4; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1;
+  animation: launch var(--cycle) ease-out infinite backwards;
+}
+.fireworks .sparks { fill: none; stroke: var(--ink); stroke-width: 1.3; stroke-linecap: round; opacity: 0; animation: burst var(--cycle) ease-out infinite backwards; }
+.fireworks a:hover .sparks { stroke-width: 2; }
+@keyframes launch { 0% { stroke-dashoffset: 1; opacity: 1; } 10% { stroke-dashoffset: 0; opacity: 1; } 24%, 100% { stroke-dashoffset: 0; opacity: 0; } }
+@keyframes burst { 0%, 10% { transform: scale(0.1); opacity: 0; } 11% { opacity: 1; } 30% { transform: scale(1); opacity: 0.9; } 44%, 100% { transform: scale(1.1) translateY(6px); opacity: 0; } }
+
+.starchart .grid { fill: none; stroke: var(--ink); stroke-width: 0.6; opacity: 0.15; }
+.starchart .dust { fill: var(--ink); opacity: 0.35; }
+.starchart .figure-line { stroke: var(--ink); stroke-width: 0.8; opacity: 0.5; }
+.starchart .dim circle { fill: var(--bg); stroke: var(--ink); stroke-width: 1.2; }
+.starchart .bright circle { fill: var(--ink); }
+.starchart .bright path { stroke: var(--ink); stroke-width: 1; stroke-linecap: round; }
+.starchart .dim, .starchart .bright { animation: twinkle 3s ease-in-out infinite; }
+.starchart a:hover circle { fill: var(--ink); }
+.starchart text { fill: var(--ink); }
+@keyframes twinkle { 50% { opacity: 0.45; } }
+
+.trophies .parallel { fill: none; stroke: var(--ink); stroke-width: 0.7; opacity: 0.35; }
+.trophies .meridians path { fill: none; stroke: var(--ink); stroke-width: 1; }
+.trophies .meridians .back { opacity: 0.2; }
+.trophies a text { fill: var(--ink); }
+.trophies a .year { fill: var(--muted); }
+.trophies a:hover .parallel { opacity: 0.8; }
+
+.synapses .board { display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 1fr; gap: 10px; }
+.synapses[data-pairs="4"] .board { grid-template-columns: repeat(2, 1fr); }
+.synapses .card {
+  position: relative; border: 1px solid var(--ink); border-radius: 18px; background: var(--bg); color: var(--ink);
+  font: inherit; font-size: 0.8rem; line-height: 1.3; padding: 10px 12px; cursor: pointer; text-align: left; overflow: hidden;
+  transition: transform 0.35s, background-color 0.3s, color 0.3s;
+}
+.synapses .card .back { position: absolute; inset: 6px; border-radius: 13px; background-image: radial-gradient(var(--ink) 1.1px, transparent 1.6px); background-size: 12px 12px; opacity: 0.35; }
+.synapses .card .front { display: none; }
+.synapses .card .front .xref-kind { display: inline-block; margin-bottom: 6px; }
+.synapses .card.up .back { display: none; }
+.synapses .card.up .front { display: block; animation: appear 0.4s; }
+.synapses .card.matched { background: var(--ink); color: var(--bg); cursor: default; }
+.synapses .card.matched .xref-kind { border-color: var(--bg); }
+.synapses .card:not(.up):hover { transform: translateY(-2px); }
+.synapses .card:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+.when .question { min-height: 3.4em; font-size: 0.95rem; font-weight: 600; }
+.when .question .xref-kind { margin-right: 6px; }
+.when svg { cursor: crosshair; }
+.when .hit { fill: transparent; }
+.when .axis { stroke: var(--ink); stroke-width: 1.4; }
+.when .tick { stroke: var(--ink); stroke-width: 1; }
+.when .guess { stroke: var(--ink); stroke-width: 2; stroke-dasharray: 3 3; }
+.when .truth { stroke: var(--ink); stroke-width: 2.6; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw 0.6s ease-out forwards; }
+.when .truth-label { fill: var(--ink); font-weight: 700; animation: appear 0.6s; }
+.when .readout .pill { margin-left: 6px; cursor: pointer; }
 
 .mark .line { opacity: 0.75; animation-duration: 1.2s; }
 .mark .dot { fill: var(--bg); stroke: var(--ink); stroke-width: 1.2; }

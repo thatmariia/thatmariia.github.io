@@ -2,16 +2,11 @@
 // A tiny game: a leaky integrate-and-fire neuron. Pressing and holding injects current; the
 // membrane potential climbs towards threshold, and every spike fires one of the outputs or events,
 // shown as a link. Nothing moves until someone plays.
-import { data, PAGE_OF, refs, type Entry, type Work } from "../../lib/data";
+import { items } from "../../lib/data";
 interface Props { seed: number; width: number; height: number }
 const { width, height } = Astro.props;
 
-const href = (section: string, id?: string) => (id && refs[id] ? refs[id].href : PAGE_OF[section]);
-const WORK_SECTIONS = ["publications", "preprints", "software", "datasets", "posters", "presentations", "reports", "websites", "theses"];
-const pool = [
-  ...WORK_SECTIONS.flatMap((s) => ((data as any)[s] as Work[]).map((w) => ({ title: w.title, href: href(s, w.id) }))),
-  ...(["events", "outreach"] as const).flatMap((s) => (data[s] as Entry[]).map((e) => ({ title: e.title!, href: href(s, e.id) }))),
-];
+const pool = items.map(({ kind, title, href }) => ({ kind, title, href }));
 const [left, right, top, bottom] = [40, width - 16, 30, height - 60];
 const threshold = top + (bottom - top) * 0.3, rest = top + (bottom - top) * 0.78;
 ---
@@ -36,7 +31,7 @@ const threshold = top + (bottom - top) * 0.3, rest = top + (bottom - top) * 0.78
     const membrane = svg.querySelector<SVGPolylineElement>(".membrane")!;
     const counter = svg.querySelector<SVGTextElement>(".count")!;
     const readout = figure.querySelector<HTMLElement>(".readout")!;
-    const pool: { title: string; href: string }[] = JSON.parse(figure.querySelector("script[type='application/json']")!.textContent!);
+    const pool: { kind: string; title: string; href: string }[] = JSON.parse(figure.querySelector("script[type='application/json']")!.textContent!);
     const [left, right, top, bottom, threshold, rest] = ["left", "right", "top", "bottom", "threshold", "rest"].map((k) => Number(figure.dataset[k]));
     const samples = 240, trace = Array(samples).fill(0);  // 0 = rest, 1 = threshold, above = spike
     let v = 0, input = 0, holding = false, spikes = 0, running = false, recent: number[] = [];
@@ -54,7 +49,7 @@ const threshold = top + (bottom - top) * 0.3, rest = top + (bottom - top) * 0.78
         recent = [...recent.filter((t) => time - t < 2000), time];
         const item = pool[Math.floor(Math.random() * pool.length)];
         counter.textContent = `${spikes} ${spikes === 1 ? "spike" : "spikes"}`;
-        readout.innerHTML = `${recent.length >= 3 ? "<strong>Burst!</strong> " : ""}Fired: <a href="${item.href}">${escape(item.title)}</a>`;
+        readout.innerHTML = `${recent.length >= 3 ? "<strong>Burst!</strong> " : ""}Fired <span class="xref-kind">${escape(item.kind)}</span> <a href="${item.href}">${escape(item.title)}</a>`;
       }
       trace.shift();
       trace.push(value);

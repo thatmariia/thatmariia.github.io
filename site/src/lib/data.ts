@@ -40,7 +40,7 @@ export const workUrl = (w: Work) => (w.doi ? `https://doi.org/${w.doi}` : w.url)
 export const STATUS = { "in-progress": "In progress", submitted: "Submitted", published: "" } as const;
 
 /** What one item of each section is called, e.g. in cross-links. */
-const KIND: Record<string, string> = {
+export const KIND: Record<string, string> = {
   publications: "Publication", preprints: "Preprint", software: "Software", datasets: "Dataset",
   posters: "Poster", presentations: "Presentation", reports: "Report", websites: "Website", theses: "Thesis",
   education: "Education", research: "Position", teaching: "Teaching", leadership: "Leadership",
@@ -111,3 +111,15 @@ export const pathSections = (
 
 export const studies = (data.education as Entry[]).flatMap((e) => e.periods.map((p) => p.title!));
 export const thesisLinks = (data.education as Entry[]).flatMap((e) => e.related ?? []);
+
+const WORK_SECTIONS = ["publications", "preprints", "software", "datasets", "posters", "presentations", "reports", "websites", "theses"];
+/** Every output and event as a linkable item with its kind; works only have a year, events a month too. */
+export const items = [
+  ...WORK_SECTIONS.flatMap((section) => ((data as any)[section] as Work[]).map((w) => ({
+    kind: KIND[section], title: w.title, href: w.id && refs[w.id] ? refs[w.id].href : PAGE_OF[section], year: w.year, month: undefined as number | undefined,
+  }))),
+  ...(["events", "outreach"] as const).flatMap((section) => (data[section] as Entry[]).map((e) => ({
+    kind: KIND[section], title: e.title!, href: e.id && refs[e.id] ? refs[e.id].href : PAGE_OF[section],
+    year: Number(e.periods[0].start!.slice(0, 4)), month: Number(e.periods[0].start!.slice(5, 7)) || undefined,
+  }))),
+];

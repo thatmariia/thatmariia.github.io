@@ -1,0 +1,46 @@
+---
+// Awards as fireworks over a timeline: each award launches from its date and bursts into sparks,
+// one after another, on a loop. Names and years sit below the line and link to the awards.
+import { firstYear, month, now } from "../../lib/career";
+import { data, refs, type Entry } from "../../lib/data";
+import { random } from "../../lib/random";
+interface Props { seed: number; width: number; height: number }
+const { seed, width, height } = Astro.props;
+
+const uniform = random(seed);
+const awards = (data.awards as Entry[]).map((a) => ({ t: month(a.periods[0].start!), title: a.title!, href: a.id && refs[a.id] ? refs[a.id].href : "/awards/" }))
+  .sort((a, b) => a.t - b.t);
+const vertical = height > width;
+const [from, to] = [Math.min(...awards.map((a) => a.t)) - 18, now + 6];
+const [left, right, base] = [24, width - 24, height - (vertical ? 110 : 80)];
+const f = (v: number) => v.toFixed(1);
+// Spread launch points along the line by date, keeping close ones apart.
+const xs = awards.map((a) => left + ((a.t - from) / (to - from)) * (right - left));
+for (let round = 0; round < 50; round++) for (let i = 1; i < xs.length; i++) if (xs[i] - xs[i - 1] < 46) { xs[i] += 2; xs[i - 1] -= 2; }
+const cycle = Math.max(6, awards.length * 1.6);
+const shows = awards.map((a, i) => {
+  const [x0, x1] = [xs[i], xs[i] + (uniform() - 0.5) * 40], peak = 40 + uniform() * (base - 200);
+  const sparks = Array.from({ length: 14 }, (_, k) => {
+    const angle = (2 * Math.PI * k) / 14 + uniform() * 0.2, length = 24 + uniform() * 26;
+    return `M${f(x1 + Math.cos(angle) * 6)},${f(peak + Math.sin(angle) * 6)} Q${f(x1 + Math.cos(angle) * length * 0.7)},${f(peak + Math.sin(angle) * length * 0.7 - 4)} ${f(x1 + Math.cos(angle) * length)},${f(peak + Math.sin(angle) * length + 6)}`;
+  }).join(" ");
+  return { ...a, x0, x1, peak, sparks, delay: ((i * cycle) / awards.length).toFixed(2) };
+});
+const short = (s: string) => (s.length > 22 ? `${s.slice(0, 20).trim()}…` : s);
+---
+
+<div class="fig fireworks" style={`--cycle: ${cycle}s`}>
+  <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`${awards.length} awards as fireworks over time`}>
+    <line class="ground" x1={left} x2={right} y1={base} y2={base} />
+    {shows.map((s, i) => (
+      <a href={s.href}>
+        <title>{s.title}</title>
+        <path class="trail" d={`M${f(s.x0)},${f(base)} Q${f(s.x0)},${f((base + s.peak) / 2)} ${f(s.x1)},${f(s.peak)}`} pathLength="1" style={`animation-delay: ${s.delay}s`} />
+        <path class="sparks" d={s.sparks} style={`animation-delay: ${s.delay}s; transform-origin: ${f(s.x1)}px ${f(s.peak)}px`} />
+        <line class="post" x1={f(s.x0)} x2={f(s.x0)} y1={base} y2={base + 8 + (i % 2) * (vertical ? 30 : 22)} />
+        <text x={f(s.x0)} y={f(base + 20 + (i % 2) * (vertical ? 30 : 22))} text-anchor="middle">{vertical ? Math.floor(s.t / 12) : short(s.title)}</text>
+        {!vertical && <text class="year" x={f(s.x0)} y={f(base + 32 + (i % 2) * 22)} text-anchor="middle">{Math.floor(s.t / 12)}</text>}
+      </a>
+    ))}
+  </svg>
+</div>

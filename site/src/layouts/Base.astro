@@ -1,19 +1,19 @@
 ---
-import "@fontsource-variable/ibm-plex-sans/index.css";
-import "@fontsource/ibm-plex-mono/400.css";
-import "@fontsource-variable/geist/index.css";
-import "@fontsource-variable/geist-mono/index.css";
-import "@fontsource-variable/instrument-sans/index.css";
-import "@fontsource-variable/jetbrains-mono/index.css";
-import "@fontsource-variable/hanken-grotesk/index.css";
+import "@fontsource-variable/sora/index.css";
+import "@fontsource-variable/lexend/index.css";
+import "@fontsource-variable/lexend-exa/index.css";
+import "@fontsource-variable/unbounded/index.css";
+import "@fontsource-variable/manrope/index.css";
+import "@fontsource-variable/martian-mono/index.css";
 import "../styles/base.css";
 import "../styles/site.css";
+import FieldLines from "../components/FieldLines.astro";
 import Head from "../components/Head.astro";
 import Options from "../components/Options.astro";
 import { affiliations, data, PAGES } from "../lib/data";
 
-interface Props { title?: string; sections?: { id: string; title: string }[] }
-const { title, sections = [] } = Astro.props;
+interface Props { title?: string; sections?: { id: string; title: string }[]; mark?: number }
+const { title, sections = [], mark = 1 } = Astro.props;
 const { profile } = data;
 const here = Astro.url.pathname;
 ---
@@ -24,10 +24,10 @@ const here = Astro.url.pathname;
     <Head title={title} />
     <script is:inline>
       try {
-        for (const key of ["viz", "type", "tone"]) {
-          const value = localStorage.getItem(`option-${key}`);
-          if (value) document.documentElement.dataset[key] = value;
-        }
+        const type = localStorage.getItem("option-type");
+        if (type) document.documentElement.dataset.type = type;
+        const theme = localStorage.getItem("theme");
+        if (theme) document.documentElement.dataset.theme = theme;
       } catch {}
     </script>
   </head>
@@ -35,24 +35,37 @@ const here = Astro.url.pathname;
     <aside class="side">
       <a class="name" href="/">{profile.name}</a>
       <p class="headline">{profile.headline}</p>
-      <ul class="links">{profile.links.map((l) => <li><a href={l.url}>{l.label}</a></li>)}</ul>
+      <ul class="links">{profile.links.map((l) => <li><a class="pill" href={l.url}>{l.label} <span aria-hidden="true">↗</span></a></li>)}</ul>
       <nav class="pages" aria-label="Pages">
         {PAGES.map(([href, label]) => (
           <div class="page">
-            <a href={href} aria-current={href === here ? "page" : undefined}>{label}</a>
+            <a class="pill" href={href} aria-current={href === here ? "page" : undefined}>{label}</a>
             {href === here && sections.length > 0 && (
               <ul class="subs">{sections.map((s) => <li><a href={`#${s.id}`}>{s.title}</a></li>)}</ul>
             )}
           </div>
         ))}
       </nav>
-      <dl class="facts">
-        <dt>Based in</dt><dd>{profile.location}</dd>
-        <dt>Affiliations</dt><dd>{affiliations.map((a) => <span>{a}</span>)}</dd>
-      </dl>
+      <div class="side-foot">
+        <dl class="facts">
+          <dt>Based in</dt><dd>{profile.location}</dd>
+          <dt>Affiliations</dt><dd>{affiliations.map((a) => <span>{a}</span>)}</dd>
+        </dl>
+        <button class="switch" type="button" aria-label="Switch between light and dark" onclick="
+          const root = document.documentElement;
+          const dark = root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+          root.dataset.theme = dark ? 'light' : 'dark';
+          try { localStorage.setItem('theme', root.dataset.theme); } catch {}
+        "><span>Light</span><span>Dark</span></button>
+      </div>
     </aside>
     <main class="main">
-      {title && <h1 class="page-title">{title}</h1>}
+      {title && (
+        <header class="page-head">
+          <h1>{title}</h1>
+          <FieldLines fields={["", "", ""]} seed={mark} width={180} height={84} labels={false} />
+        </header>
+      )}
       <slot />
     </main>
     <Options />

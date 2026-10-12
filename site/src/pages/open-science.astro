@@ -4,7 +4,7 @@ import Base from "../layouts/Base.astro";
 import { outputSections } from "../lib/data";
 ---
 
-<Base title="Open science" sections={outputSections}>
+<Base title="Open science" sections={outputSections} mark={6}>
   {outputSections.map((s) => (
     <section class="block" id={s.id}>
       <h2>{s.title}</h2>

@@ -1,29 +1,20 @@
 ---
-// TEMPORARY design options panel, removed once a combination is chosen.
-const options = {
-  viz: [["threads", "Threads"], ["eeg", "EEG channels"], ["embedding", "Embedding"], ["fieldlines", "Field lines"]],
-  type: [["plex", "IBM Plex"], ["geist", "Geist"], ["instrument", "Instrument Sans"], ["hanken", "Hanken Grotesk"]],
-  tone: [["paper", "Paper"], ["sage", "Sage"], ["white", "White"]],
-};
+// TEMPORARY typeface picker, removed once one is chosen.
+const typefaces = [["sora", "Sora"], ["lexend", "Lexend Exa + Lexend"], ["unbounded", "Unbounded + Manrope"], ["manrope", "Manrope"]];
 ---
 
-<details class="options">
-  <summary>Design options</summary>
-  {Object.entries(options).map(([key, values]) => (
-    <label>
-      <span>{key === "viz" ? "Figure" : key === "type" ? "Typeface" : "Tone"}</span>
-      <select data-option={key}>{values.map(([value, label]) => <option value={value}>{label}</option>)}</select>
-    </label>
-  ))}
-</details>
+<label class="options">
+  <span>Typeface</span>
+  <select>{typefaces.map(([value, label]) => <option value={value}>{label}</option>)}</select>
+</label>
 
 <script is:inline>
-  for (const select of document.querySelectorAll(".options select")) {
-    const key = select.dataset.option;
-    select.value = document.documentElement.dataset[key] || select.options[0].value;
+  {
+    const select = document.querySelector(".options select");
+    select.value = document.documentElement.dataset.type || "sora";
     select.addEventListener("change", () => {
-      document.documentElement.dataset[key] = select.value;
-      try { localStorage.setItem(`option-${key}`, select.value); } catch {}
+      document.documentElement.dataset.type = select.value;
+      try { localStorage.setItem("option-type", select.value); } catch {}
     });
   }
 </script>

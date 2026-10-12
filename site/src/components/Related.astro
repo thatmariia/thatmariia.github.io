@@ -21,6 +21,6 @@ const { related = [], links = [] } = Astro.props;
         </span>
       </li>
     ))}
-    {links.map((link) => <li><a class="xref" href={link.url}><span class="xref-kind">Link</span> {link.label} ↗</a></li>)}
+    {links.map((link) => <li><a class="pill tiny" href={link.url}>{link.label} ↗</a></li>)}
   </ul>
 )}

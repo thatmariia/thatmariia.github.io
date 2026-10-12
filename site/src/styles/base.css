@@ -30,7 +30,7 @@ svg { display: block; max-width: 100%; height: auto; overflow: visible; }
 .preview-summary { font-size: 0.85rem; }
 
 .row:target { animation: flash 2s ease; }
-@keyframes flash { from { background: color-mix(in srgb, #e9a228 35%, transparent); } }
+@keyframes flash { from { background: color-mix(in srgb, currentColor 12%, transparent); } }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before { animation: none !important; transition: none !important; }

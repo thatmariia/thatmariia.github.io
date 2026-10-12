@@ -1,18 +1,16 @@
 ---
 // The home-page figure. TEMPORARY: all options are rendered and pill buttons (plain radio
 // inputs, no JavaScript) switch between them until one is chosen.
-import Itinerancy from "./figures/Itinerancy.astro";
-import Quadrature from "./figures/Quadrature.astro";
-import Signals from "./figures/Signals.astro";
-import Synchrony from "./figures/Synchrony.astro";
+import Activity from "./figures/Activity.astro";
+import Collaborators from "./figures/Collaborators.astro";
+import Places from "./figures/Places.astro";
 import Topography from "./figures/Topography.astro";
 
 const options = [
-  { key: "itinerancy", label: "Attractors", Figure: Itinerancy, seed: 4 },
-  { key: "signals", label: "Neurons", Figure: Signals, seed: 7 },
-  { key: "synchrony", label: "Synchrony", Figure: Synchrony, seed: 2 },
-  { key: "topography", label: "Topography", Figure: Topography, seed: 1 },
-  { key: "quadrature", label: "Quadrature", Figure: Quadrature, seed: 1 },
+  { key: "places", label: "Places", Figure: Places, seed: 4 },
+  { key: "collaborators", label: "Collaborators", Figure: Collaborators, seed: 7 },
+  { key: "activity", label: "Activity", Figure: Activity, seed: 2 },
+  { key: "topography", label: "Career phases", Figure: Topography, seed: 1 },
 ];
 const show = options.map(({ key }) => `.figure:has(input[value="${key}"]:checked) .option[data-option="${key}"] { display: block; }`).join("\n");
 ---

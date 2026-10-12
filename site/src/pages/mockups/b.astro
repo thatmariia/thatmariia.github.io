@@ -1,0 +1,34 @@
+---
+import "@fontsource-variable/jost/index.css";
+import "../../styles/base.css";
+import "../../styles/mockup-b.css";
+import Content from "../../components/Content.astro";
+import Head from "../../components/Head.astro";
+import Orbits from "../../components/Orbits.astro";
+import { affiliations, data, NAV } from "../../lib/data";
+const { profile } = data;
+const abbreviation = (label: string) => label.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+---
+
+<!doctype html>
+<html lang="en">
+  <head><Head /></head>
+  <body>
+    <section class="hero">
+      <Orbits fields={profile.walk} seed={3} />
+      <div class="plate">
+        <h1>{profile.name}</h1>
+        <p class="headline">{profile.headline}</p>
+        <table class="legend">
+          <tbody>
+            <tr><th>Based in</th><td>{profile.location}</td></tr>
+            {affiliations.map((a, i) => <tr><th>{i === 0 ? "Affiliated" : ""}</th><td>{a}</td></tr>)}
+            {profile.links.map((l) => <tr><th>{abbreviation(l.label)}</th><td><a href={l.url}>{l.label}</a></td></tr>)}
+          </tbody>
+        </table>
+      </div>
+    </section>
+    <nav class="tabs">{NAV.map(([id, label]) => <a href={`#${id}`}>{label}</a>)}</nav>
+    <main class="main"><Content /></main>
+  </body>
+</html>

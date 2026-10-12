@@ -1,0 +1,32 @@
+---
+import "@fontsource-variable/hanken-grotesk/index.css";
+import "@fontsource/space-mono/400.css";
+import "../../styles/base.css";
+import "../../styles/mockup-a.css";
+import Content from "../../components/Content.astro";
+import FieldMap from "../../components/FieldMap.astro";
+import Head from "../../components/Head.astro";
+import { affiliations, data, NAV } from "../../lib/data";
+const { profile } = data;
+---
+
+<!doctype html>
+<html lang="en">
+  <head><Head /></head>
+  <body>
+    <aside class="side">
+      <a class="name" href="#about">{profile.name}</a>
+      <p class="headline">{profile.headline}</p>
+      <dl class="facts">
+        <dt>Based in</dt><dd>{profile.location}</dd>
+        <dt>Affiliated</dt><dd>{affiliations.map((a) => <span>{a}</span>)}</dd>
+      </dl>
+      <ul class="links">{profile.links.map((l) => <li><a href={l.url}>{l.label}</a></li>)}</ul>
+      <FieldMap fields={profile.walk} seed={5} />
+      <nav class="index">
+        {NAV.map(([id, label], i) => <a href={`#${id}`}><span>{String(i + 1).padStart(2, "0")}</span>{label}</a>)}
+      </nav>
+    </aside>
+    <main class="main"><Content /></main>
+  </body>
+</html>

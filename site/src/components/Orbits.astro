@@ -1,0 +1,34 @@
+---
+// Fields as planets on dotted orbits, names set along the orbit; later fields orbit further out.
+import { random } from "../lib/walk";
+interface Props { fields: string[]; seed: number; size?: number }
+const { fields, seed, size = 460 } = Astro.props;
+
+const COLORS = ["#2a9d8f", "#a3784f", "#e0482f", "#e9a228", "#d45fa0", "#3456d1", "#5aa55a"];
+const { uniform } = random(seed);
+const c = size / 2, inner = size * 0.1, step = (size / 2 - inner - 14) / fields.length;
+const orbits = fields.map((field, i) => {
+  const r = inner + step * (i + 1);
+  const angle = uniform() * Math.PI * 2;
+  const at = (a: number, rr = r) => [c + rr * Math.cos(a), c + rr * Math.sin(a)].map((v) => v.toFixed(1));
+  const arcLength = Math.min(Math.PI * 1.2, (field.length * 10) / r + 0.35);
+  return {
+    field, r, color: COLORS[i % COLORS.length],
+    planet: at(angle),
+    // Text arc starts just past the planet and runs clockwise.
+    arc: `M${at(angle + 0.14).join(",")} A${r},${r} 0 ${arcLength > Math.PI ? 1 : 0} 1 ${at(angle + 0.14 + arcLength).join(",")}`,
+  };
+});
+---
+
+<svg class="orbits" viewBox={`0 0 ${size} ${size}`} role="img" aria-label={`Fields: ${fields.join(", ")}`}>
+  <circle class="sun" cx={c} cy={c} r={inner * 0.55} />
+  {orbits.map((o, i) => (
+    <g style={`--c: ${o.color}`}>
+      <circle class="orbit" cx={c} cy={c} r={o.r} />
+      <path id={`orbit-${seed}-${i}`} d={o.arc} fill="none" />
+      <text class="orbit-label" dy="-6"><textPath href={`#orbit-${seed}-${i}`}>{o.field}</textPath></text>
+      <circle class="planet" cx={o.planet[0]} cy={o.planet[1]} r={4 + (i % 3) * 1.5} />
+    </g>
+  ))}
+</svg>

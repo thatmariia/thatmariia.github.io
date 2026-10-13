@@ -1,0 +1,68 @@
+---
+// A tiny game: a leaky integrate-and-fire neuron. Pressing and holding injects current; the
+// membrane potential climbs towards threshold, and every spike fires one of the outputs or events,
+// shown as a link. Nothing moves until someone plays.
+import { items } from "../../lib/data";
+interface Props { seed: number; width: number; height: number }
+const { width, height } = Astro.props;
+
+const pool = items.map(({ kind, title, href }) => ({ kind, title, href }));
+const [left, right, top, bottom] = [40, width - 16, 30, height - 60];
+const threshold = top + (bottom - top) * 0.3, rest = top + (bottom - top) * 0.78;
+---
+
+<div class="fig game" data-left={left} data-right={right} data-top={top} data-bottom={bottom} data-threshold={threshold} data-rest={rest}>
+  <svg viewBox={`0 0 ${width} ${height}`} role="img" tabindex="0" aria-label="A neuron you can make fire: press and hold (or hold Space) to inject current">
+    <line class="threshold" x1={left} x2={right} y1={threshold} y2={threshold} />
+    <text x={left - 6} y={threshold + 3} text-anchor="end">θ</text>
+    <text x={left - 6} y={rest + 3} text-anchor="end">rest</text>
+    <polyline class="membrane" points="" />
+    <text class="count" x={right} y={top - 10} text-anchor="end">0 spikes</text>
+    <text class="prompt" x={(left + right) / 2} y={bottom + 34} text-anchor="middle">press and hold to inject current</text>
+  </svg>
+  <div class="readout" aria-live="polite"><span class="hint">Make the neuron fire</span></div>
+  <script is:inline type="application/json" set:html={JSON.stringify(pool)} />
+</div>
+
+<script>
+  // Leaky integrate-and-fire: dv/dt = (-(v - rest) + input) / tau, spike and reset at threshold.
+  for (const figure of document.querySelectorAll<HTMLElement>(".fig.game")) {
+    const svg = figure.querySelector("svg")!;
+    const membrane = svg.querySelector<SVGPolylineElement>(".membrane")!;
+    const counter = svg.querySelector<SVGTextElement>(".count")!;
+    const readout = figure.querySelector<HTMLElement>(".readout")!;
+    const pool: { kind: string; title: string; href: string }[] = JSON.parse(figure.querySelector("script[type='application/json']")!.textContent!);
+    const [left, right, top, bottom, threshold, rest] = ["left", "right", "top", "bottom", "threshold", "rest"].map((k) => Number(figure.dataset[k]));
+    const samples = 240, trace = Array(samples).fill(0);  // 0 = rest, 1 = threshold, above = spike
+    let v = 0, input = 0, holding = false, spikes = 0, running = false, recent: number[] = [];
+    const escape = (s: string) => s.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
+    const y = (value: number) => rest - value * (rest - threshold);
+    const draw = () => membrane.setAttribute("points", trace.map((value, i) => `${(left + (i / (samples - 1)) * (right - left)).toFixed(1)},${Math.max(top, y(value)).toFixed(1)}`).join(" "));
+    const step = (time: number) => {
+      input = holding ? Math.min(2.2, input + 0.06) : input * 0.9;
+      v += (-v + input) * 0.06;
+      let value = v;
+      if (v >= 1) {
+        value = 2.4;  // the spike
+        v = -0.25;  // reset below rest (after-hyperpolarisation)
+        spikes += 1;
+        recent = [...recent.filter((t) => time - t < 2000), time];
+        const item = pool[Math.floor(Math.random() * pool.length)];
+        counter.textContent = `${spikes} ${spikes === 1 ? "spike" : "spikes"}`;
+        readout.innerHTML = `${recent.length >= 3 ? "<strong>Burst!</strong> " : ""}Fired <span class="xref-kind">${escape(item.kind)}</span> <a href="${item.href}">${escape(item.title)}</a>`;
+      }
+      trace.shift();
+      trace.push(value);
+      draw();
+      running = holding || Math.abs(v) > 0.005 || input > 0.005 || trace.some((t) => Math.abs(t) > 0.005);
+      if (running) requestAnimationFrame(step);
+    };
+    const start = () => { if (!running) { running = true; requestAnimationFrame(step); } };
+    svg.addEventListener("pointerdown", (event) => { holding = true; svg.setPointerCapture(event.pointerId); start(); });
+    svg.addEventListener("pointerup", () => (holding = false));
+    svg.addEventListener("pointercancel", () => (holding = false));
+    svg.addEventListener("keydown", (event) => { if (event.key === " " || event.key === "Enter") { event.preventDefault(); holding = true; start(); } });
+    svg.addEventListener("keyup", () => (holding = false));
+    draw();
+  }
+</script>

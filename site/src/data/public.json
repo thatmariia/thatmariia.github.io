@@ -61,14 +61,31 @@
         }
       ],
       "related": [
+        "tue-teaching-assistant",
+        "hsa-confluente-edu",
+        "tue-student-assistant",
+        "hsa-confluente-advisory-board",
+        "tue-student-council",
+        "hsa-confluente-acquisition",
+        "honors-academy-symposium-2020",
+        "dutch-honours-conference-2019",
+        "tue-outreach",
+        "tue-university-club",
+        "honors-academies-nl",
+        "hsa-confluente-financial",
+        "tue-engineering-student-assistant",
         "thesis-figure-ground"
       ]
     },
     {
+      "id": "um-msp",
       "periods": [
         {
           "title": "Natural Sciences / Physics"
         }
+      ],
+      "related": [
+        "um-project-fair-2018"
       ]
     },
     {
@@ -109,8 +126,31 @@
         }
       ],
       "related": [
-        "research-software-guidelines",
-        "surf-luminary-award"
+        "lumc-course-software-management",
+        "biohackathon-2026",
+        "dbc-2026",
+        "eccb-2026",
+        "elixir-all-hands-2026",
+        "surf-research-day-2026",
+        "elixir-nl-symposium-2025",
+        "biohackathon-2025",
+        "bioinformatics-open-days-2025",
+        "fairfest-2025",
+        "interoperable-research-software",
+        "elixir-rse-ecosystem",
+        "biotools-nar",
+        "bidirectional-bridge",
+        "software-quality-indicators-preprint",
+        "rs-files-templates",
+        "diff-fuse",
+        "rsm-schema-export-template",
+        "rsm-schema",
+        "nwo-export-template",
+        "questionnaire-report-template",
+        "research-smp-knowledge-model",
+        "rs-metadata",
+        "software-quality-indicators-data",
+        "software-curation-loop-poster"
       ]
     },
     {
@@ -132,7 +172,12 @@
         }
       ],
       "related": [
+        "mathpsych-2024",
+        "virtual-mathpsych-2024",
+        "llm-neurocognition",
         "slow-wave-eeg",
+        "ddm-brain-behavior",
+        "gaussquad",
         "macro-eeg-model"
       ]
     },
@@ -158,6 +203,7 @@
       ]
     },
     {
+      "id": "hart",
       "title": "Human Augmentation Research & Technology (HART)",
       "location": "Eindhoven, NL",
       "periods": [
@@ -171,6 +217,19 @@
             "Designed and conducted experiments on tactile pattern recognition"
           ]
         }
+      ],
+      "related": [
+        "technasium",
+        "hart-marketing",
+        "hbp",
+        "hart-advisory-board",
+        "hart-cofounder",
+        "eaisi-summit-2021",
+        "hbp-summit-2021",
+        "transhuman-race-2021",
+        "news-interviews",
+        "tue-outreach",
+        "famelab-2021"
       ]
     },
     {
@@ -230,6 +289,8 @@
         }
       ],
       "related": [
+        "lasers-photonics-2016",
+        "spb-open-2016",
         "gaas-self-equilibration",
         "gaas-initial-stage"
       ]
@@ -249,9 +310,13 @@
             "Focus on Software Management Plans (research software lifecycle planning, documentation, versioning, licensing, testing, and long-term maintenance) and software metadata curation"
           ]
         }
+      ],
+      "related": [
+        "lumc"
       ]
     },
     {
+      "id": "technasium",
       "title": "Technasium, Newmann College",
       "location": "Breda, NL",
       "periods": [
@@ -263,9 +328,13 @@
             "Developed projects to enhance human abilities and supervised two groups of high school students"
           ]
         }
+      ],
+      "related": [
+        "hart"
       ]
     },
     {
+      "id": "tue-teaching-assistant",
       "title": "Eindhoven University of Technology",
       "location": "Eindhoven, NL",
       "periods": [
@@ -278,9 +347,13 @@
             "Assisted with Git and software development in Python, graded three homework projects of >20 groups"
           ]
         }
+      ],
+      "related": [
+        "tue"
       ]
     },
     {
+      "id": "hsa-confluente-edu",
       "title": "H.S.A. Confluente",
       "location": "Eindhoven, NL",
       "periods": [
@@ -292,9 +365,13 @@
             "Organized >10 educational activities and events (e.g., workshops, lunch lectures, personal development courses, presentations) for honors students"
           ]
         }
+      ],
+      "related": [
+        "tue"
       ]
     },
     {
+      "id": "tue-student-assistant",
       "title": "Eindhoven University of Technology",
       "location": "Eindhoven, NL",
       "periods": [
@@ -313,6 +390,9 @@
             "Worked on the development and production of an online teamwork course"
           ]
         }
+      ],
+      "related": [
+        "tue"
       ]
     },
     {
@@ -331,6 +411,7 @@
   ],
   "leadership": [
     {
+      "id": "hart-advisory-board",
       "title": "Human Augmentation Research & Technology (HART)",
       "location": "Eindhoven, NL",
       "periods": [
@@ -339,9 +420,13 @@
           "start": "2022-09",
           "end": "2023-06"
         }
+      ],
+      "related": [
+        "hart"
       ]
     },
     {
+      "id": "hsa-confluente-advisory-board",
       "title": "H.S.A. Confluente",
       "location": "Eindhoven, NL",
       "periods": [
@@ -350,9 +435,13 @@
           "start": "2021-10",
           "end": "2022-10"
         }
+      ],
+      "related": [
+        "tue"
       ]
     },
     {
+      "id": "hbp",
       "title": "Human Brain Project (HBP)",
       "location": "Virtual",
       "periods": [
@@ -364,9 +453,13 @@
             "Authorized representative of the HART project at HBP (EU-Flagship project), submitted and secured approval for the project reviewed by the HBP Science and Infrastructure Board"
           ]
         }
+      ],
+      "related": [
+        "hart"
       ]
     },
     {
+      "id": "hart-cofounder",
       "title": "Human Augmentation Research & Technology (HART)",
       "location": "Eindhoven, NL",
       "periods": [
@@ -378,9 +471,13 @@
             "Founded and led a multidisciplinary team focused on sensory substitution/addition technologies and human augmentation ethics, accredited by Eindhoven University of Technology in record time"
           ]
         }
+      ],
+      "related": [
+        "hart"
       ]
     },
     {
+      "id": "tue-student-council",
       "title": "Eindhoven University of Technology",
       "location": "Eindhoven, NL",
       "periods": [
@@ -393,9 +490,13 @@
             "Represented the AI track of the Honors Academy in the student council for two years, contributing to a 30% increase in student satisfaction with the track"
           ]
         }
+      ],
+      "related": [
+        "tue"
       ]
     },
     {
+      "id": "hsa-confluente-acquisition",
       "title": "H.S.A. Confluente",
       "location": "Eindhoven, NL",
       "periods": [
@@ -407,6 +508,9 @@
             "Managed and instructed nine honors students, established industry partnerships, and organized professional development workshops"
           ]
         }
+      ],
+      "related": [
+        "tue"
       ]
     }
   ],
@@ -423,8 +527,7 @@
         }
       ],
       "related": [
-        "surf-research-day-2026",
-        "lumc"
+        "surf-research-day-2026"
       ]
     },
     {
@@ -488,12 +591,16 @@
   "funding": [],
   "events": [
     {
+      "id": "biohackathon-2026",
       "title": "BioHackathon 2026",
       "location": "Barcelona, ES",
       "periods": [
         {
           "start": "2026-11"
         }
+      ],
+      "related": [
+        "lumc"
       ]
     },
     {
@@ -511,10 +618,11 @@
         }
       ],
       "related": [
-        "bidirectional-bridge"
+        "lumc"
       ]
     },
     {
+      "id": "eccb-2026",
       "title": "European Conference on Computational Biology 2026",
       "location": "Geneva, CH",
       "periods": [
@@ -524,6 +632,9 @@
             "Gave a **workshop** “FAIR metadata for bioinformatics software”"
           ]
         }
+      ],
+      "related": [
+        "lumc"
       ]
     },
     {
@@ -541,7 +652,7 @@
       ],
       "related": [
         "elixir-poster-award",
-        "bidirectional-bridge",
+        "lumc",
         "software-curation-loop-poster"
       ]
     },
@@ -555,10 +666,12 @@
         }
       ],
       "related": [
-        "surf-luminary-award"
+        "surf-luminary-award",
+        "lumc"
       ]
     },
     {
+      "id": "elixir-nl-symposium-2025",
       "title": "ELIXIR-NL Symposium 2025",
       "location": "Amsterdam, NL",
       "periods": [
@@ -568,6 +681,9 @@
             "Gave a **talk** “Software Stewardship and ELIXIR's Research Software Ecosystem”"
           ]
         }
+      ],
+      "related": [
+        "lumc"
       ]
     },
     {
@@ -583,10 +699,13 @@
         }
       ],
       "related": [
+        "lumc",
+        "software-curation-loop",
         "bidirectional-bridge"
       ]
     },
     {
+      "id": "bioinformatics-open-days-2025",
       "title": "Bioinformatics Open Days XIV Edition",
       "location": "Braga, PT",
       "periods": [
@@ -596,9 +715,13 @@
             "Gave a **workshop** “Software curation in *bio.tools*”"
           ]
         }
+      ],
+      "related": [
+        "lumc"
       ]
     },
     {
+      "id": "fairfest-2025",
       "title": "FAIRfest (FAIR-IMPACT & FAIRCORE4EOSC)",
       "location": "The Hague, NL",
       "periods": [
@@ -608,6 +731,9 @@
             "Presented a **poster** “FAIR Implementation at LUMC DCC: Enabling FAIR Practices at a University Medical Center”"
           ]
         }
+      ],
+      "related": [
+        "lumc"
       ]
     },
     {
@@ -623,6 +749,7 @@
         }
       ],
       "related": [
+        "uva-nunez-lab",
         "slow-wave-eeg"
       ]
     },
@@ -640,6 +767,7 @@
       ],
       "related": [
         "mathpsych-talk-award",
+        "uva-nunez-lab",
         "slow-wave-eeg"
       ]
     },
@@ -656,10 +784,12 @@
         }
       ],
       "related": [
-        "eaisi-pitch-award"
+        "eaisi-pitch-award",
+        "hart"
       ]
     },
     {
+      "id": "hbp-summit-2021",
       "title": "Human Brain Project Summit 2021",
       "location": "Virtual",
       "periods": [
@@ -670,9 +800,13 @@
             "Chaired a **discussion session** on challenges in the field of sensory augmentation"
           ]
         }
+      ],
+      "related": [
+        "hart"
       ]
     },
     {
+      "id": "transhuman-race-2021",
       "title": "Transhuman Race: The Symposium",
       "location": "Virtual",
       "periods": [
@@ -683,9 +817,13 @@
             "Gave a **talk** about Human Augmentation Research & Technology (HART)"
           ]
         }
+      ],
+      "related": [
+        "hart"
       ]
     },
     {
+      "id": "honors-academy-symposium-2020",
       "title": "Honors Academy Symposium",
       "location": "Eindhoven, NL",
       "periods": [
@@ -695,9 +833,13 @@
             "Presented a **poster** “State-of-the-art Reinforcement Learning and the Role of Human Involvement”"
           ]
         }
+      ],
+      "related": [
+        "tue"
       ]
     },
     {
+      "id": "dutch-honours-conference-2019",
       "title": "Dutch Honours Conference: Homo Deus",
       "location": "Eindhoven, NL",
       "periods": [
@@ -707,9 +849,13 @@
             "One of 100 honors students in the Netherlands selected to attend"
           ]
         }
+      ],
+      "related": [
+        "tue"
       ]
     },
     {
+      "id": "its-european-congress-2019",
       "title": "Intelligent Transport Systems European Congress",
       "location": "Helmond, NL",
       "periods": [
@@ -719,9 +865,13 @@
             "Presented a **demo** of 5G autonomous connected driving"
           ]
         }
+      ],
+      "related": [
+        "tue-engineering-student-assistant"
       ]
     },
     {
+      "id": "um-project-fair-2018",
       "title": "Maastricht University Undergraduate Project Fair",
       "location": "Maastricht, NL",
       "periods": [
@@ -731,6 +881,9 @@
             "Presented a **poster** “The impact of noise in autonomous search strategies by artificially intelligent agents”"
           ]
         }
+      ],
+      "related": [
+        "um-msp"
       ]
     },
     {
@@ -746,7 +899,9 @@
         }
       ],
       "related": [
-        "gaas-self-equilibration"
+        "spb-academic-university",
+        "gaas-self-equilibration",
+        "gaas-initial-stage"
       ]
     },
     {
@@ -762,12 +917,15 @@
         }
       ],
       "related": [
-        "gaas-self-equilibration"
+        "spb-academic-university",
+        "gaas-self-equilibration",
+        "gaas-initial-stage"
       ]
     }
   ],
   "outreach": [
     {
+      "id": "news-interviews",
       "title": "News: Interviews & Contributions",
       "location": "NL, Virtual",
       "periods": [
@@ -778,9 +936,13 @@
             "Contributed to articles and gave interviews about human augmentation to dozens of local (Eindhovens Dagblad), regional (Brainport), national (NU.nl), and international (Associated Press) news agencies"
           ]
         }
+      ],
+      "related": [
+        "hart"
       ]
     },
     {
+      "id": "tue-outreach",
       "title": "Eindhoven University of Technology",
       "location": "Eindhoven, NL",
       "periods": [
@@ -790,9 +952,14 @@
             "Hosted and presented an open showcase demonstrating the progress of team HART since its formation"
           ]
         }
+      ],
+      "related": [
+        "hart",
+        "tue"
       ]
     },
     {
+      "id": "tue-university-club",
       "title": "University Club, Eindhoven University of Technology",
       "location": "Eindhoven, NL",
       "periods": [
@@ -802,9 +969,13 @@
             "Was selected as one of the 30 young scientists from the university to participate in the College Tour with Dr. Robbert Dijkgraaf"
           ]
         }
+      ],
+      "related": [
+        "tue"
       ]
     },
     {
+      "id": "honors-academies-nl",
       "title": "Honors Academies Netherlands",
       "location": "Eindhoven, NL",
       "periods": [
@@ -814,6 +985,9 @@
             "Gave a presentation about the AI Honors track to deans of Leiden University, University of Twente, University of Amsterdam, Wageningen University, and TU Delft Honors Academies"
           ]
         }
+      ],
+      "related": [
+        "tue"
       ]
     },
     {
@@ -841,7 +1015,8 @@
         }
       ],
       "related": [
-        "famelab-top-3"
+        "famelab-top-3",
+        "hart"
       ]
     },
     {
@@ -859,6 +1034,7 @@
   ],
   "other": [
     {
+      "id": "hart-marketing",
       "title": "Human Augmentation Research & Technology (HART)",
       "location": "Eindhoven, NL",
       "periods": [
@@ -871,9 +1047,13 @@
             "Designed the brand style guide, managed and created visual and textual content for social media profiles and newsletters"
           ]
         }
+      ],
+      "related": [
+        "hart"
       ]
     },
     {
+      "id": "hsa-confluente-financial",
       "title": "H.S.A. Confluente",
       "location": "Eindhoven, NL",
       "periods": [
@@ -896,9 +1076,13 @@
             "Organized Lustrum activities for honors students"
           ]
         }
+      ],
+      "related": [
+        "tue"
       ]
     },
     {
+      "id": "tue-engineering-student-assistant",
       "title": "Eindhoven University of Technology",
       "location": "Eindhoven, NL",
       "periods": [
@@ -909,6 +1093,10 @@
             "Developed and demonstrated an autonomous connected driving system; collaborated intensively with another student under a tight deadline and presented the project at the ITS Congress on the university's behalf"
           ]
         }
+      ],
+      "related": [
+        "its-european-congress-2019",
+        "tue"
       ]
     },
     {
@@ -983,6 +1171,7 @@
       "year": 2026,
       "status": "in-progress",
       "related": [
+        "biohackathon-2025",
         "bidirectional-bridge"
       ]
     },
@@ -1002,7 +1191,10 @@
         "T. Mathes"
       ],
       "year": 2026,
-      "status": "in-progress"
+      "status": "in-progress",
+      "related": [
+        "lumc"
+      ]
     },
     {
       "id": "elixir-rse-ecosystem",
@@ -1051,7 +1243,10 @@
         "J.Ll. Gelpi"
       ],
       "year": 2026,
-      "status": "in-progress"
+      "status": "in-progress",
+      "related": [
+        "lumc"
+      ]
     },
     {
       "id": "biotools-nar",
@@ -1083,7 +1278,10 @@
       "year": 2026,
       "venue": "Nucleic Acids Research",
       "status": "published",
-      "doi": "10.1093/nar/gkag420"
+      "doi": "10.1093/nar/gkag420",
+      "related": [
+        "lumc"
+      ]
     },
     {
       "id": "llm-neurocognition",
@@ -1099,7 +1297,10 @@
       "year": 2026,
       "venue": "ICLR 2026 Workshop",
       "status": "published",
-      "url": "https://openreview.net/forum?id=gyoSN8k9vR"
+      "url": "https://openreview.net/forum?id=gyoSN8k9vR",
+      "related": [
+        "uva-nunez-lab"
+      ]
     },
     {
       "id": "slow-wave-eeg",
@@ -1135,8 +1336,8 @@
       "doi": "10.1088/1742-6596/741/1/012033",
       "related": [
         "spb-academic-university",
-        "lasers-photonics-2016",
-        "spb-open-2016"
+        "spb-open-2016",
+        "lasers-photonics-2016"
       ]
     },
     {
@@ -1152,7 +1353,9 @@
       "status": "published",
       "doi": "10.1134/S1063785016080113",
       "related": [
-        "spb-academic-university"
+        "spb-academic-university",
+        "spb-open-2016",
+        "lasers-photonics-2016"
       ]
     }
   ],
@@ -1168,7 +1371,10 @@
       "year": 2026,
       "venue": "PsyArXiv",
       "status": "published",
-      "doi": "10.31234/osf.io/7d46a_v1"
+      "doi": "10.31234/osf.io/7d46a_v1",
+      "related": [
+        "uva-nunez-lab"
+      ]
     },
     {
       "id": "bidirectional-bridge",
@@ -1191,10 +1397,9 @@
       "status": "published",
       "doi": "10.37044/osf.io/8ktd6_v1",
       "related": [
-        "dbc-2026",
-        "elixir-all-hands-2026",
-        "biohackathon-2025",
         "software-curation-loop",
+        "lumc",
+        "biohackathon-2025",
         "software-curation-loop-poster"
       ]
     },
@@ -1224,6 +1429,7 @@
       "status": "published",
       "url": "https://osf.io/preprints/biohackrxiv/etp3g",
       "related": [
+        "lumc",
         "software-quality-indicators-data"
       ]
     }
@@ -1244,6 +1450,9 @@
           "label": "Code",
           "url": "https://github.com/LUMC-DCC/rs-files-templates"
         }
+      ],
+      "related": [
+        "lumc"
       ]
     },
     {
@@ -1261,6 +1470,9 @@
           "label": "Code",
           "url": "https://github.com/bio-tools/diff-fuse"
         }
+      ],
+      "related": [
+        "lumc"
       ]
     },
     {
@@ -1274,8 +1486,7 @@
       "status": "published",
       "doi": "10.5281/zenodo.23307684",
       "related": [
-        "rsm-schema",
-        "research-smp-knowledge-model"
+        "lumc"
       ]
     },
     {
@@ -1299,7 +1510,7 @@
         }
       ],
       "related": [
-        "rsm-schema-export-template"
+        "lumc"
       ]
     },
     {
@@ -1313,7 +1524,7 @@
       "status": "published",
       "doi": "10.5281/zenodo.23306970",
       "related": [
-        "research-smp-knowledge-model"
+        "lumc"
       ]
     },
     {
@@ -1325,7 +1536,10 @@
       "year": 2026,
       "venue": "Zenodo",
       "status": "published",
-      "doi": "10.5281/zenodo.23306817"
+      "doi": "10.5281/zenodo.23306817",
+      "related": [
+        "lumc"
+      ]
     },
     {
       "id": "research-smp-knowledge-model",
@@ -1339,8 +1553,7 @@
       "status": "published",
       "doi": "10.5281/zenodo.23306613",
       "related": [
-        "rsm-schema-export-template",
-        "nwo-export-template"
+        "lumc"
       ]
     },
     {
@@ -1358,6 +1571,9 @@
           "label": "Code",
           "url": "https://github.com/LUMC-DCC/rs-metadata"
         }
+      ],
+      "related": [
+        "lumc"
       ]
     },
     {
@@ -1369,7 +1585,10 @@
       "year": 2025,
       "venue": "Zenodo",
       "status": "published",
-      "doi": "10.5281/zenodo.15468025"
+      "doi": "10.5281/zenodo.15468025",
+      "related": [
+        "uva-nunez-lab"
+      ]
     },
     {
       "id": "macro-eeg-model",
@@ -1417,6 +1636,7 @@
       "status": "published",
       "doi": "10.5281/zenodo.14834245",
       "related": [
+        "lumc",
         "software-quality-indicators-preprint"
       ]
     }
@@ -1445,6 +1665,7 @@
       "related": [
         "elixir-poster-award",
         "elixir-all-hands-2026",
+        "lumc",
         "bidirectional-bridge"
       ]
     }
@@ -1472,9 +1693,6 @@
           "label": "Code",
           "url": "https://github.com/LUMC-DCC/rs-guidelines"
         }
-      ],
-      "related": [
-        "lumc"
       ]
     }
   ],

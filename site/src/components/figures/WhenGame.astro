@@ -1,0 +1,66 @@
+---
+// A quiz: one of the outputs or events appears (with its kind); tap the timeline where you think it
+// happened. The real date is revealed as a spike, and five rounds are scored.
+import { firstYear, now } from "../../lib/career";
+import { items } from "../../lib/data";
+interface Props { seed: number; width: number; height: number }
+const { width, height } = Astro.props;
+
+const lastYear = Math.floor(now / 12);
+const [left, right] = [24, width - 24], axis = height * 0.62;
+const x = (year: number) => left + ((year - firstYear) / (lastYear + 1 - firstYear)) * (right - left);
+const years = Array.from({ length: lastYear - firstYear + 1 }, (_, i) => firstYear + i);
+const every = width > height ? 1 : 2;
+---
+
+<div class="fig when" data-first={firstYear} data-last={lastYear + 1} data-left={left} data-right={right} data-axis={axis}>
+  <div class="question" aria-live="polite"></div>
+  <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="A timeline to guess on: tap where you think it happened">
+    <rect class="hit" x={left - 10} y={axis - 90} width={right - left + 20} height="120" />
+    <line class="axis" x1={left} x2={right} y1={axis} y2={axis} />
+    {years.map((y, i) => (
+      <g>
+        <line class="tick" x1={x(y)} x2={x(y)} y1={axis} y2={axis + 6} />
+        {i % every === 0 && <text x={x(y) + 2} y={axis + 20}>{y}</text>}
+      </g>
+    ))}
+    <g class="marks"></g>
+  </svg>
+  <div class="readout" aria-live="polite"><span class="hint">Tap the timeline</span></div>
+  <script is:inline type="application/json" set:html={JSON.stringify(items)} />
+</div>
+
+<script>
+  for (const figure of document.querySelectorAll<HTMLElement>(".fig.when")) {
+    const svg = figure.querySelector("svg")!, marks = svg.querySelector(".marks")!;
+    const question = figure.querySelector<HTMLElement>(".question")!, readout = figure.querySelector<HTMLElement>(".readout")!;
+    const pool: { kind: string; title: string; href: string; year: number; month?: number }[] = JSON.parse(figure.querySelector("script[type='application/json']")!.textContent!);
+    const [first, last, left, right, axis] = ["first", "last", "left", "right", "axis"].map((k) => Number(figure.dataset[k]));
+    const escape = (s: string) => s.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
+    const xOf = (year: number) => left + ((year - first) / (last - first)) * (right - left);
+    let round = 0, score = 0, item = pool[0], waiting = true;
+    const ask = () => {
+      item = pool[Math.floor(Math.random() * pool.length)];
+      question.innerHTML = `<span class="hint">Round ${round + 1} of 5 · when was this?</span><br><span class="xref-kind">${escape(item.kind)}</span> ${escape(item.title)}`;
+      marks.innerHTML = "";
+      waiting = true;
+    };
+    svg.addEventListener("click", (event) => {
+      if (!waiting) return;
+      const p = new DOMPoint(event.clientX, event.clientY).matrixTransform(svg.getScreenCTM()!.inverse());
+      const guess = first + ((Math.min(right, Math.max(left, p.x)) - left) / (right - left)) * (last - first);
+      const truth = item.year + ((item.month ?? 6.5) - 0.5) / 12, off = Math.abs(guess - truth);
+      const points = Math.max(0, Math.round(100 - off * 30));
+      score += points;
+      round += 1;
+      waiting = false;
+      marks.innerHTML = `<line class="guess" x1="${xOf(guess)}" x2="${xOf(guess)}" y1="${axis - 40}" y2="${axis}" />`
+        + `<path class="truth" pathLength="1" d="M${xOf(truth)},${axis} L${xOf(truth)},${axis - 70}" />`
+        + `<text class="truth-label" x="${xOf(truth)}" y="${axis - 76}" text-anchor="middle">${item.month ? `${item.month}/` : ""}${item.year}</text>`;
+      const next = round < 5 ? `<button class="pill next">Next</button>` : `<strong>Total: ${score} / 500</strong> <button class="pill next">Play again</button>`;
+      readout.innerHTML = `${points} points (${off < 0.5 ? "spot on" : `${off.toFixed(1)} years off`}) · <a href="${item.href}">open it</a> ${next}`;
+      readout.querySelector(".next")!.addEventListener("click", () => { if (round >= 5) { round = 0; score = 0; } readout.innerHTML = '<span class="hint">Tap the timeline</span>'; ask(); });
+    });
+    ask();
+  }
+</script>

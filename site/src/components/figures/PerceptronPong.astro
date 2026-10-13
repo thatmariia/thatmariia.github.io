@@ -55,7 +55,7 @@ const { width } = Astro.props;
 
     // Serve towards the player, a bit faster every time.
     const serve = (towards: number) => {
-      const speed = W * (0.42 + points * 0.02 + epochs * 0.004), angle = (Math.random() - 0.5) * 1.1;
+      const speed = W * (0.36 + points * 0.01 + epochs * 0.0015), angle = (Math.random() - 0.5) * 1.1;
       [bx, by, vx, vy] = [W / 2, top + (bottom - top) * (0.3 + Math.random() * 0.4), towards * speed * Math.cos(angle), speed * Math.sin(angle)];
       trail = [];
     };
@@ -95,7 +95,7 @@ const { width } = Astro.props;
       if (by > bottom - 5) { by = 2 * (bottom - 5) - by; vy = -vy; }
       if (vx < 0 && bx <= myX + 6) {
         if (Math.abs(by - me) <= paddle / 2 + 5) {
-          bx = myX + 6; vx = -vx * 1.04;
+          bx = myX + 6; vx = Math.min(W * 0.85, -vx * 1.015);
           vy += ((by - me) / (paddle / 2)) * Math.abs(vx) * 0.45;  // spin from where it hits the paddle
           predict();
         } else {

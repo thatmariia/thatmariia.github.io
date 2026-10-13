@@ -27,7 +27,7 @@ const { width } = Astro.props;
     const rowY = (r: number) => top + r * rowH + rowH / 2;
 
     const setupLanes = () => {
-      speeds = Array.from({ length: LANES }, (_, k) => (k % 2 ? -1 : 1) * W * (0.06 + Math.random() * 0.06 + level * 0.025));
+      speeds = Array.from({ length: LANES }, (_, k) => (k % 2 ? -1 : 1) * W * (0.08 + Math.random() * 0.07 + level * 0.03));
       enzymes = [];
       for (let lane = 0; lane < LANES; lane++) {
         const n = 2 + Math.floor(Math.random() * 2) + (level > 2 ? 1 : 0), w = colW * (1.2 + Math.random() * 0.9);
@@ -70,7 +70,7 @@ const { width } = Astro.props;
         c.fillStyle = bg; c.font = `600 10px ${mono}`; c.textAlign = "center"; c.fillText("DA", x, y + 3.5);
         // Diffusion timer.
         c.strokeStyle = muted; c.lineWidth = 2;
-        const left = Math.max(0, 1 - timer / 14);
+        const left = Math.max(0, 1 - timer / 12);
         c.beginPath(); c.moveTo(W / 2 - W * 0.25 * left, H - 4); c.lineTo(W / 2 + W * 0.25 * left, H - 4); c.stroke();
       }
       if (noteLeft > 0) { c.fillStyle = ink; c.font = `600 12px ${mono}`; c.textAlign = "left"; c.fillText(note, 8, rowY(rows - 1) + 4); }
@@ -109,7 +109,7 @@ const { width } = Astro.props;
       }
       const lane = pos[1] - 1, x = (pos[0] + 0.5) * colW;
       if (state === "running" && lane >= 0 && lane < LANES && enzymes.some((e) => e.lane === lane && x > e.x - 10 && x < e.x + e.w + 10)) lose("Degraded by an enzyme");
-      if (state === "running" && timer > 14) lose("Diffused away");
+      if (state === "running" && timer > 12) lose("Diffused away");
       draw();
       return state === "running";
     };

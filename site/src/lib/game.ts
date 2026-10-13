@@ -10,10 +10,30 @@ export const reward = (pool: Item[]) => {
   return `<span class="xref-kind">${escape(item.kind)}</span> <a href="${item.href}">${escape(item.title)}</a>`;
 };
 
-/** The game-over line: what happened, then a prize from the website. */
-export const gameOver = (readout: HTMLElement, pool: Item[], message: string) => {
-  readout.innerHTML = `${message}<span class="prize">Your prize: ${reward(pool)}</span>`;
-};
+/** Show a card over the middle of the game (rules, results); hide it when play starts. */
+export function show(game: Game, html: string, mode = "card") {
+  game.overlay.innerHTML = `<div class="card">${html}</div>`;
+  game.overlay.dataset.mode = mode;
+  game.overlay.hidden = false;
+}
+export function hide(game: Game) {
+  game.overlay.hidden = true;
+  game.overlay.dataset.mode = "";
+}
+const rulesCard = (game: Game, hint = "tap the game or press a key to start") =>
+  `<strong>${escape(game.rules[0])}</strong>${game.rules.slice(1).map((line) => `<span>${escape(line)}</span>`).join("")}<span class="hint">${hint}</span>`;
+
+/** Play starts: the card goes away and the line under the game gives a hint. */
+export function begin(game: Game, hint: string) {
+  hide(game);
+  game.readout.innerHTML = `<span class="hint">${escape(hint)}</span>`;
+}
+
+/** Game over: what happened and a prize from the website, in the middle of the game. */
+export function gameOver(game: Game, message: string) {
+  show(game, `<strong>${message}</strong><span class="prize">Your prize: ${reward(game.pool)}</span><span class="hint">tap the game or press a key to play again</span>`, "over");
+  game.readout.innerHTML = "";
+}
 
 export type Game = ReturnType<typeof setup>;
 
@@ -30,13 +50,30 @@ export function setup(figure: HTMLElement, redraw: () => void) {
   fit();
   new ResizeObserver(() => { fit(); redraw(); }).observe(element);
   const style = getComputedStyle(element);
-  return {
+  const game = {
     element, context, W, H,
     readout: figure.querySelector<HTMLElement>(".readout")!,
+    overlay: figure.querySelector<HTMLElement>(".overlay")!,
+    rules: JSON.parse(figure.dataset.rules!) as string[],
     pool: JSON.parse(figure.querySelector("script[type='application/json']")!.textContent!) as Item[],
     mono: style.getPropertyValue("--mono").trim() || "monospace",
     colours: () => ({ ink: style.getPropertyValue("--ink").trim(), bg: style.getPropertyValue("--bg").trim(), muted: style.getPropertyValue("--muted").trim() }),
   };
+  // The rules show first, and the rules pill brings them back (and away again) at any time.
+  show(game, rulesCard(game), "rules");
+  let previous: [string, string] | null = null;
+  figure.querySelector<HTMLButtonElement>(".rules")!.addEventListener("click", () => {
+    if (game.overlay.dataset.mode === "rules" && previous) {
+      [game.overlay.innerHTML, game.overlay.dataset.mode] = previous;
+      game.overlay.hidden = !previous[1];
+      previous = null;
+    } else {
+      previous = [game.overlay.innerHTML, game.overlay.hidden ? "" : game.overlay.dataset.mode ?? ""];
+      show(game, rulesCard(game, "tap the game or press a key to play"), "rules");
+    }
+    element.focus();
+  });
+  return game;
 }
 
 /** Run step(dt) every frame for as long as it returns true. */

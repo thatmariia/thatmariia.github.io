@@ -1,0 +1,119 @@
+---
+// Flappy Bird as a potassium ion: flap (Space or tap) through the channels in lipid bilayers while
+// the gradient pulls you down. Later, membranes also have sodium channels, whose selectivity
+// filter does not let K⁺ through: take the K⁺ one. Hitting a membrane (or the wrong channel) costs
+// a life (of 3), with a prize at the end.
+import Arcade from "../Arcade.astro";
+interface Props { seed: number; width: number; height: number }
+const { width } = Astro.props;
+---
+
+<Arcade name="flappy" width={width} height={Math.round(width * (width > 600 ? 0.42 : 1))}
+  label="Flappy ion: press Space or tap to flap a potassium ion through the potassium channels in each membrane"
+  rules={["Flappy K⁺", "You are a potassium ion. Space or tap to flap through the channels in each lipid bilayer.", "Later membranes have a Na⁺ channel too: its selectivity filter won't let K⁺ through. Take the K⁺ one.", "Hitting a membrane or the wrong channel costs a life. You have 3."]} />
+
+<script>
+  import { begin, best, corners, gameOver, loop, setup, type Game } from "../../lib/game";
+
+  for (const figure of document.querySelectorAll<HTMLElement>(".fig.flappy")) {
+    const game: Game = setup(figure, () => draw());
+    const { W, H } = game, x = W * 0.22, r = 10, thick = 30;
+    type Wall = { x: number; gaps: { y: number; size: number; ion: "K" | "Na" }[]; passed: boolean };
+    let state: "idle" | "running" | "over" = "idle";
+    let y = H / 2, vy = 0, walls: Wall[] = [], next = 0, score = 0, lives = 3, hurt = 0, speed = W * 0.28, time = 0;
+
+    const membrane = (c: CanvasRenderingContext2D, w: Wall, ink: string, bg: string, muted: string) => {
+      // A bilayer: two rows of phospholipid heads with tails meeting in the middle.
+      const segments: [number, number][] = [];
+      let top = 0;
+      for (const g of [...w.gaps].sort((a, b) => a.y - b.y)) { segments.push([top, g.y - g.size / 2]); top = g.y + g.size / 2; }
+      segments.push([top, H]);
+      c.strokeStyle = ink; c.lineWidth = 0.8;
+      for (const [a, b] of segments) for (let yy = a + 4; yy < b - 3; yy += 7) {
+        for (const side of [-1, 1]) {
+          c.beginPath(); c.moveTo(w.x + side * 10, yy); c.lineTo(w.x + side * 2, yy + 1.5); c.stroke();
+          c.fillStyle = bg; c.beginPath(); c.arc(w.x + side * 12, yy, 3, 0, Math.PI * 2); c.fill(); c.stroke();
+        }
+      }
+      // Channels: proteins lining each gap, labelled with what they let through.
+      for (const g of w.gaps) {
+        for (const edge of [-1, 1]) {
+          c.fillStyle = bg; c.lineWidth = 1.3;
+          c.beginPath(); c.roundRect(w.x - thick / 2, g.y + edge * g.size / 2 - (edge < 0 ? 10 : 0), thick, 10, 5); c.fill(); c.stroke();
+        }
+        c.fillStyle = g.ion === "K" ? muted : ink; c.font = `600 10px ${game.mono}`; c.textAlign = "center";
+        c.fillText(g.ion === "K" ? "K⁺" : "Na⁺", w.x, g.y + 4);
+        if (g.ion === "Na") { c.strokeStyle = ink; c.beginPath(); c.moveTo(w.x - 9, g.y - 9); c.lineTo(w.x + 9, g.y + 9); c.stroke(); }
+      }
+    };
+
+    function draw() {
+      const { context: c, mono } = game, { ink, bg, muted } = game.colours();
+      c.clearRect(0, 0, W, H);
+      for (const w of walls) membrane(c, w, ink, bg, muted);
+      // The ion, blinking while it recovers from a hit.
+      if (state !== "idle" && !(hurt > 0 && Math.floor(hurt * 10) % 2)) {
+        c.fillStyle = ink; c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.fill();
+        c.fillStyle = bg; c.font = `600 10px ${mono}`; c.textAlign = "center"; c.fillText("K⁺", x, y + 3.5);
+      }
+      corners(game, "flappy", `${score} membranes · lives ${"●".repeat(lives)}${"○".repeat(3 - lives)}`);
+    }
+
+    const spawn = () => {
+      const size = Math.max(H * 0.2, H * 0.34 - score * 2.5), margin = size / 2 + 14;
+      const two = score >= 8 && Math.random() < Math.min(0.75, 0.3 + score * 0.02);
+      const y1 = margin + Math.random() * (H - 2 * margin);
+      const gaps: Wall["gaps"] = [{ y: y1, size, ion: "K" }];
+      if (two) {
+        // A sodium channel elsewhere on the membrane, far enough away.
+        let y2 = margin + Math.random() * (H - 2 * margin), tries = 0;
+        while (Math.abs(y2 - y1) < size * 1.6 && tries++ < 20) y2 = margin + Math.random() * (H - 2 * margin);
+        if (Math.abs(y2 - y1) >= size * 1.6) gaps.push({ y: y2, size, ion: "Na" });
+      }
+      walls.push({ x: W + thick, gaps, passed: false });
+    };
+    const hit = (why: string) => {
+      if (hurt > 0) return;
+      lives -= 1; hurt = 1.2;
+      game.readout.innerHTML = `<strong>${why}</strong> · ${lives} ${lives === 1 ? "life" : "lives"} left`;
+      if (lives <= 0) {
+        state = "over";
+        const record = best("flappy", score);
+        gameOver(game, `${why} after ${score} membranes${score >= record && score > 0 ? " · new best!" : ""}`);
+      }
+    };
+    const step = (dt: number) => {
+      time += dt; hurt = Math.max(0, hurt - dt);
+      speed = W * Math.min(0.5, 0.28 + time * 0.004);
+      vy += H * 1.9 * dt; y += vy * dt;
+      if (y > H - r) { y = H - r; vy = 0; hit("Swept down the gradient"); }
+      if (y < r) { y = r; vy = 0; }
+      next -= dt * speed;
+      if (next <= 0) { spawn(); next = W * 0.48; }
+      for (const w of walls) {
+        w.x -= speed * dt;
+        if (Math.abs(w.x - x) < thick / 2 + r) {
+          const through = w.gaps.find((g) => Math.abs(y - g.y) < g.size / 2 - r * 0.6);
+          if (!through) hit("Stuck in the membrane");
+          else if (through.ion === "Na") hit("Na⁺ channel: wrong selectivity filter");
+        }
+        if (!w.passed && w.x < x - thick) { w.passed = true; score += 1; }
+      }
+      walls = walls.filter((w) => w.x > -thick);
+      draw();
+      return state === "running";
+    };
+    const flap = () => {
+      if (state !== "running") {
+        [state, y, vy, walls, next, score, lives, hurt, time] = ["running", H / 2, 0, [], W * 0.3, 0, 3, 0, 0];
+        begin(game, "Space or tap to flap · take the K⁺ channels");
+        loop(step);
+        return;
+      }
+      vy = -H * 0.62;
+    };
+    game.element.addEventListener("keydown", (event) => { if (event.repeat) return; if (event.key === " " || event.key === "ArrowUp" || event.key === "Enter") { event.preventDefault(); flap(); } });
+    game.element.addEventListener("pointerdown", (event) => { event.preventDefault(); game.element.focus(); flap(); });
+    draw();
+  }
+</script>

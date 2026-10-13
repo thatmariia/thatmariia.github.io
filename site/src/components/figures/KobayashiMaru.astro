@@ -9,10 +9,10 @@ const { width } = Astro.props;
 
 <Arcade name="kobayashi" width={width} height={Math.round(width * (width > 600 ? 0.45 : 1.05))}
   label="Kobayashi Maru: move the ship with the arrow keys or by dragging, and fire with Space or by holding; the scenario cannot be won"
-  hint="← → or drag to move · Space or hold to fire" />
+  rules={["Kobayashi Maru", "Rescue the Kobayashi Maru. The Klingons will come, wave after wave.", "← → or drag to move; Space or hold to fire phasers.", "This scenario cannot be won. Or can it?"]} />
 
 <script>
-  import { banner, best, corners, gameOver, loop, pointer, setup, type Game } from "../../lib/game";
+  import { begin, best, corners, gameOver, loop, pointer, setup, type Game } from "../../lib/game";
 
   for (const figure of document.querySelectorAll<HTMLElement>(".fig.kobayashi")) {
     const game: Game = setup(figure, () => draw());
@@ -54,8 +54,6 @@ const { width } = Astro.props;
       if (shields > 0 && state === "running") { c.globalAlpha = shields / 250; c.beginPath(); c.ellipse(x, shipY + 6, 24, 24, 0, 0, Math.PI * 2); c.stroke(); c.globalAlpha = 1; }
       if (messageLeft > 0) { c.fillStyle = ink; c.font = `600 12px ${mono}`; c.textAlign = "center"; c.fillText(message, W / 2, 46); }
       corners(game, "kobayashi", `wave ${wave} · ${destroyed} destroyed · shields ${Math.max(0, Math.round(shields))}%`);
-      if (state === "idle") banner(game, ["Kobayashi Maru", "rescue the Kobayashi Maru; the Klingons will come", "← → or drag · space or hold to fire", "this scenario cannot be won. Or can it?"]);
-      if (state === "over") banner(game, [kirk ? `You cheated, like Kirk: ${destroyed} destroyed` : `Shields failed in wave ${wave}`, kirk ? "no-win scenarios do not exist" : "a test of character, not of winning", "press a key or tap to try again"]);
     }
 
     const spawn = () => {
@@ -95,7 +93,7 @@ const { width } = Astro.props;
       if (shields <= 0) {
         state = "over";
         const record = best("kobayashi", destroyed);
-        gameOver(game.readout, game.pool, `<strong>${kirk ? "Simulation reprogrammed" : "Shields failed"}</strong> in wave ${wave} · ${destroyed} birds-of-prey destroyed${destroyed >= record && destroyed > 0 ? " · new best!" : ""}`);
+        gameOver(game, `<strong>${kirk ? "Simulation reprogrammed" : "Shields failed"}</strong> in wave ${wave} · ${destroyed} birds-of-prey destroyed${destroyed >= record && destroyed > 0 ? " · new best!" : ""}`);
       }
       draw();
       return state === "running";
@@ -103,7 +101,7 @@ const { width } = Astro.props;
     const start = () => {
       [state, x, shields, wave, destroyed, time, kirk, typed, bolts, torpedoes, blasts] = ["running", W / 2, 100, 0, 0, 0, false, "", [], [], []];
       spawn();
-      game.readout.innerHTML = '<span class="hint">The scenario cannot be won. Probably.</span>';
+      begin(game, "The scenario cannot be won. Probably.");
       loop(step);
     };
     game.element.addEventListener("keydown", (event) => {

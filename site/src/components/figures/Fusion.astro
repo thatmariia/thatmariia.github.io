@@ -1,0 +1,123 @@
+---
+// 2048 as stellar nucleosynthesis: slide the nuclei (arrow keys, WASD or swipe); two equal nuclei
+// fuse into the next stage of burning: H → He → C → O → Ne → Mg → Si → Fe. An iron core ends the
+// star in a supernova; a jammed core ends it as a white dwarf. Either way, a prize.
+import Arcade from "../Arcade.astro";
+interface Props { seed: number; width: number; height: number }
+const { width } = Astro.props;
+---
+
+<Arcade name="fusion" width={width} height={Math.round(width * (width > 600 ? 0.5 : 1.08))}
+  label="Fusion: slide the nuclei with the arrow keys or by swiping; two equal nuclei fuse into the next element, up to iron"
+  rules={["Stellar nucleosynthesis", "Slide every nucleus with the arrow keys, WASD or a swipe. Two equal nuclei fuse into the next element.", "H → He → C → O → Ne → Mg → Si → Fe. Reach an iron core and the star goes supernova.", "If nothing can move, the star ends as a white dwarf."]} />
+
+<script>
+  import { begin, best, corners, gameOver, loop, setup, type Game } from "../../lib/game";
+
+  const LADDER = [["H", 1], ["He", 4], ["C", 12], ["O", 16], ["Ne", 20], ["Mg", 24], ["Si", 28], ["Fe", 56]] as const;
+  const SUPER = "⁰¹²³⁴⁵⁶⁷⁸⁹";
+  const mass = (n: number) => String(n).split("").map((d) => SUPER[Number(d)]).join("");
+  // Energy per fusion, roughly the binding energy gained, in MeV.
+  const ENERGY = [0, 26.7, 7.3, 7.2, 4.7, 9.3, 10, 18];
+
+  for (const figure of document.querySelectorAll<HTMLElement>(".fig.fusion")) {
+    const game: Game = setup(figure, () => draw());
+    const { W, H } = game, N = 4, size = Math.min(W - 40, H - 70) / N, [ox, oy] = [W / 2 - (size * N) / 2, 40];
+    let state: "idle" | "running" | "over" = "idle";
+    let grid: number[][] = [], energy = 0, pops: { i: number; j: number; age: number }[] = [], flash = 0;
+
+    function draw() {
+      const { context: c, mono } = game, { ink, bg, muted } = game.colours();
+      c.clearRect(0, 0, W, H);
+      corners(game, "fusion", `${Math.round(energy)} MeV released`);
+      if (flash > 0) { c.globalAlpha = flash; c.fillStyle = ink; c.fillRect(0, 0, W, H); c.globalAlpha = 1; }
+      for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
+        const [x, y] = [ox + j * size, oy + i * size], v = grid[i]?.[j] ?? -1;
+        c.strokeStyle = muted; c.lineWidth = 0.8; c.globalAlpha = 0.4;
+        c.beginPath(); c.roundRect(x + 4, y + 4, size - 8, size - 8, 14); c.stroke();
+        c.globalAlpha = 1;
+        if (v < 0) continue;
+        const pop = pops.find((p) => p.i === i && p.j === j), grow = pop ? 1 + 0.12 * Math.sin((pop.age / 0.18) * Math.PI) : 1;
+        const s = (size - 8) * grow, [cx, cy] = [x + size / 2, y + size / 2];
+        // Heavier nuclei are darker.
+        const shade = v / (LADDER.length - 1);
+        c.fillStyle = `color-mix(in srgb, ${ink} ${Math.round(shade * 100)}%, ${bg})`;
+        c.strokeStyle = ink; c.lineWidth = 1.3;
+        c.beginPath(); c.roundRect(cx - s / 2, cy - s / 2, s, s, 14); c.fill(); c.stroke();
+        c.fillStyle = shade > 0.45 ? bg : ink; c.textAlign = "center"; c.textBaseline = "middle";
+        c.font = `600 ${Math.round(size * 0.3)}px ${mono}`;
+        c.fillText(`${mass(LADDER[v][1])}${LADDER[v][0]}`, cx, cy + 1);
+        c.textBaseline = "alphabetic";
+      }
+    }
+
+    const empty = () => { const cells: number[][] = []; for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) if (grid[i][j] < 0) cells.push([i, j]); return cells; };
+    const spawn = () => { const cells = empty(); if (!cells.length) return; const [i, j] = cells[Math.floor(Math.random() * cells.length)]; grid[i][j] = Math.random() < 0.9 ? 0 : 1; pops.push({ i, j, age: 0 }); };
+    // Slide one line towards its start, fusing equal neighbours once.
+    const slide = (line: number[]) => {
+      const tiles = line.filter((v) => v >= 0), out: number[] = [], fused: number[] = [];
+      for (let k = 0; k < tiles.length; k++) {
+        if (k + 1 < tiles.length && tiles[k] === tiles[k + 1] && tiles[k] < LADDER.length - 1) { out.push(tiles[k] + 1); fused.push(out.length - 1); energy += ENERGY[tiles[k] + 1]; k++; }
+        else out.push(tiles[k]);
+      }
+      while (out.length < N) out.push(-1);
+      return { out, fused };
+    };
+    const move = (di: number, dj: number) => {
+      if (state !== "running") return;
+      const before = JSON.stringify(grid);
+      for (let a = 0; a < N; a++) {
+        // Read each line from the side it slides towards.
+        const cells = Array.from({ length: N }, (_, b) => (dj ? [a, dj < 0 ? b : N - 1 - b] : [di < 0 ? b : N - 1 - b, a]));
+        const { out, fused } = slide(cells.map(([i, j]) => grid[i][j]));
+        cells.forEach(([i, j], b) => { grid[i][j] = out[b]; if (fused.includes(b)) pops.push({ i, j, age: 0 }); });
+      }
+      if (JSON.stringify(grid) === before) return;
+      spawn();
+      const top = Math.max(...grid.flat());
+      if (top === LADDER.length - 1) return end(true);
+      const stuck = !empty().length && grid.every((row, i) => row.every((v, j) => v !== row[j + 1] && v !== grid[i + 1]?.[j]));
+      if (stuck) end(false);
+    };
+    const end = (supernova: boolean) => {
+      state = "over";
+      const top = Math.max(...grid.flat()), record = best("fusion", Math.round(energy));
+      if (supernova) flash = 1;
+      gameOver(game, `${supernova ? "Iron core: supernova!" : `The core jammed at ${LADDER[top][0]}: a white dwarf`} · ${Math.round(energy)} MeV released${Math.round(energy) >= record ? " · new best!" : ""}`);
+    };
+    const step = (dt: number) => {
+      for (const p of pops) p.age += dt;
+      pops = pops.filter((p) => p.age < 0.18);
+      flash = Math.max(0, flash - dt * 1.5);
+      draw();
+      return state === "running" || flash > 0 || pops.length > 0;
+    };
+    const start = () => {
+      [state, grid, energy, pops] = ["running", Array.from({ length: N }, () => Array(N).fill(-1)), 0, []];
+      spawn(); spawn();
+      begin(game, "Slide to fuse · reach iron");
+      loop(step);
+    };
+    const KEYS: Record<string, [number, number]> = { ArrowUp: [-1, 0], ArrowDown: [1, 0], ArrowLeft: [0, -1], ArrowRight: [0, 1], w: [-1, 0], s: [1, 0], a: [0, -1], d: [0, 1] };
+    game.element.addEventListener("keydown", (event) => {
+      if (event.repeat) return;
+      if (state !== "running") { if (event.key.length === 1 || event.key in KEYS || event.key === "Enter") { event.preventDefault(); start(); } return; }
+      if (event.key in KEYS) { event.preventDefault(); move(...KEYS[event.key]); }
+    });
+    let from: [number, number] | null = null;
+    game.element.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      game.element.focus();
+      if (state !== "running") return start();
+      from = [event.clientX, event.clientY];
+    });
+    game.element.addEventListener("pointerup", (event) => {
+      if (!from) return;
+      const [dx, dy] = [event.clientX - from[0], event.clientY - from[1]];
+      from = null;
+      if (Math.max(Math.abs(dx), Math.abs(dy)) < 20) return;
+      if (Math.abs(dx) > Math.abs(dy)) move(0, Math.sign(dx)); else move(Math.sign(dy), 0);
+    });
+    draw();
+  }
+</script>

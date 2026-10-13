@@ -1,7 +1,7 @@
 ---
 // The Eriksen flanker task as a game: respond to the middle arrow (← / →, or tap the left or
-// right half), ignoring its flankers, before the deadline, which keeps shrinking. It goes on until
-// the first error or miss; the result shows your streak, reaction times and flanker effect, and a prize.
+// right half), ignoring its flankers, before the deadline, which keeps shrinking. Errors and misses
+// cost a life (of 3); the result shows your score, reaction times and flanker effect, and a prize.
 import Arcade from "../Arcade.astro";
 interface Props { seed: number; width: number; height: number }
 const { width } = Astro.props;
@@ -9,17 +9,17 @@ const { width } = Astro.props;
 
 <Arcade name="flanker" width={width} height={Math.round(width * (width > 600 ? 0.32 : 0.7))}
   label="Flanker task: press the arrow key, or tap the side, that the middle arrow points to, ignoring the arrows around it"
-  hint="← → or tap a side: where does the middle arrow point?" />
+  rules={["Eriksen flanker task", "Where does the MIDDLE arrow point? ← or →, or tap the left or right half.", "Ignore the arrows around it. The deadline keeps shrinking.", "A wrong answer or a timeout costs a life. You have 3."]} />
 
 <script>
-  import { banner, best, corners, gameOver, loop, setup, type Game } from "../../lib/game";
+  import { begin, best, corners, gameOver, loop, setup, type Game } from "../../lib/game";
 
   type Trial = { middle: number; flank: number | 0; shown: number; rt?: number; correct?: boolean };
   for (const figure of document.querySelectorAll<HTMLElement>(".fig.flanker")) {
     const game: Game = setup(figure, () => draw());
     const { W, H } = game;
     let state: "idle" | "fixation" | "stimulus" | "feedback" | "over" = "idle";
-    let trials: Trial[] = [], trial: Trial | null = null, clock = 0, lives = 1, deadline = 1.2, note = "";
+    let trials: Trial[] = [], trial: Trial | null = null, clock = 0, lives = 3, deadline = 1.2, note = "";
 
     const mean = (list: number[]) => (list.length ? list.reduce((s, v) => s + v, 0) / list.length : 0);
     const stats = () => {
@@ -40,7 +40,7 @@ const { width } = Astro.props;
       const { context: c, mono } = game, { ink, muted } = game.colours();
       c.clearRect(0, 0, W, H);
       const s = stats();
-      corners(game, "flanker", `streak ${s.n}`);
+      corners(game, "flanker", `${s.n} correct · lives ${"●".repeat(lives)}${"○".repeat(3 - lives)}`);
       const [cx, cy, size] = [W / 2, H * 0.5, Math.min(W / 9, 46)];
       c.strokeStyle = ink; c.lineWidth = 4; c.lineCap = c.lineJoin = "round";
       if (state === "fixation") { c.lineWidth = 2; c.beginPath(); c.moveTo(cx - 8, cy); c.lineTo(cx + 8, cy); c.moveTo(cx, cy - 8); c.lineTo(cx, cy + 8); c.stroke(); }
@@ -56,8 +56,6 @@ const { width } = Astro.props;
       if (state === "feedback" && note) { c.fillStyle = ink; c.font = `600 13px ${mono}`; c.textAlign = "center"; c.fillText(note, cx, cy + size * 1.5); }
       c.fillStyle = muted; c.font = `11px ${mono}`; c.textAlign = "left";
       if (state !== "idle" && state !== "over") c.fillText(`mean RT ${Math.round(s.rt)} ms · flanker effect ${Math.round(s.effect)} ms · deadline ${Math.round(deadline * 1000)} ms`, 10, H - 10);
-      if (state === "idle") banner(game, ["Eriksen flanker task", "where does the MIDDLE arrow point?", "← → keys, or tap the left or right half", "one mistake ends it · the deadline keeps shrinking"]);
-      if (state === "over") banner(game, [`Streak of ${s.n} · ${Math.round(s.rt)} ms`, `flanker effect ${Math.round(s.effect)} ms`, "press a key or tap to go again"]);
     }
 
     const next = () => {
@@ -85,19 +83,20 @@ const { width } = Astro.props;
         if (lives <= 0) {
           state = "over";
           const s = stats(), record = best("flanker", s.n);
-          gameOver(game.readout, game.pool, `<strong>Streak of ${s.n}</strong> (${note}) · mean RT ${Math.round(s.rt)} ms · flanker effect ${Math.round(s.effect)} ms${s.n >= record && s.n > 0 ? " · new best!" : ""}`);
+          gameOver(game, `${s.n} correct (last: ${note}) · mean RT ${Math.round(s.rt)} ms · flanker effect ${Math.round(s.effect)} ms${s.n >= record && s.n > 0 ? " · new best!" : ""}`);
         } else next();
       }
       draw();
       return state !== "over";
     };
     const start = () => {
-      [trials, lives, deadline] = [[], 1, 1.2];
-      game.readout.innerHTML = '<span class="hint">Respond to the middle arrow only</span>';
+      [trials, lives, deadline] = [[], 3, 1.2];
+      begin(game, "Respond to the middle arrow only");
       next();
       loop(step);
     };
     game.element.addEventListener("keydown", (event) => {
+      if (event.repeat) return;  // a held key must not answer the next trial
       const d = event.key === "ArrowLeft" || event.key === "a" ? -1 : event.key === "ArrowRight" || event.key === "d" ? 1 : 0;
       if (state === "idle" || state === "over") { if (event.key.length === 1 || d || event.key === "Enter") { event.preventDefault(); start(); } return; }
       if (d) { event.preventDefault(); respond(d); }

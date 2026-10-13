@@ -1,7 +1,7 @@
 ---
-// Pong against a perceptron. The right paddle is a linear model that predicts where the ball will
-// arrive from where it was hit and how it moves, and learns from every ball (least mean squares),
-// so it gets better the longer you play. First to five points wins the match; either way, a prize.
+// Pong against a perceptron. The right paddle is a linear unit that predicts where the ball will
+// arrive from where it was hit and how it moves, and learns from every ball (recursive least
+// squares): clumsy at first, nearly perfect after about ten balls. First to five points wins the match; either way, a prize.
 import Arcade from "../Arcade.astro";
 interface Props { seed: number; width: number; height: number }
 const { width } = Astro.props;
@@ -9,10 +9,10 @@ const { width } = Astro.props;
 
 <Arcade name="pong" width={width} height={Math.round(width * (width > 600 ? 0.4 : 0.9))}
   label="Perceptron Pong: move your paddle with the pointer or the arrow keys; the opponent is a perceptron that learns"
-  hint="Move the pointer, drag, or use ↑ ↓" />
+  rules={["Perceptron Pong", "Your opponent is a perceptron: a linear model that learns from every ball.", "First to 5 points wins the match. Beat it while it is still learning.", "Move the pointer, drag, or use ↑ ↓."]} />
 
 <script>
-  import { banner, gameOver, loop, setup, type Game } from "../../lib/game";
+  import { begin, gameOver, loop, setup, type Game } from "../../lib/game";
 
   for (const figure of document.querySelectorAll<HTMLElement>(".fig.pong")) {
     const game: Game = setup(figure, () => draw());
@@ -21,8 +21,11 @@ const { width } = Astro.props;
     let state: "idle" | "running" | "over" = "idle";
     let me = H / 2, ai = H / 2, aim = H / 2, bx = W / 2, by = H / 2, vx = 0, vy = 0, points = 0, theirs = 0, epochs = 0, loss = 0.25, keys = 0;
     const MATCH = 5;
-    // The perceptron: weights on [where the ball was hit, where it would arrive without bounces, 1].
-    let w = [Math.random() * 0.4, Math.random() * 0.4, 0.3 + Math.random() * 0.2], features = [0.5, 0.5, 1], trail: number[][] = [];
+    // The perceptron: weights on [where the ball was hit, where it would arrive without bounces,
+    // where it would arrive with bounces folded in, 1]. It starts naive and learns fast.
+    const naive = () => [0.2 + Math.random() * 0.3, Math.random() * 0.3, 0, 0.2 + Math.random() * 0.2];
+    const identity = () => [0, 1, 2, 3].map((i) => [0, 1, 2, 3].map((j) => (i === j ? 10 : 0)));
+    let w = naive(), P = identity(), features = [0.5, 0.5, 0.5, 1], trail: number[][] = [];
     const norm = (y: number) => (y - top) / (bottom - top);
 
     function draw() {
@@ -48,8 +51,6 @@ const { width } = Astro.props;
       c.fillText(`you ${points} : ${theirs} perceptron`, W / 2, 21);
       c.fillStyle = muted; c.font = `11px ${mono}`; c.textAlign = "left";
       c.fillText(`first to ${MATCH}`, 10, 20);
-      if (state === "idle") banner(game, ["Perceptron Pong", "a linear model that learns from every ball", `first to ${MATCH} points wins · beat it while it is young`, "move the pointer, drag, or ↑ ↓"]);
-      if (state === "over") banner(game, [points >= MATCH ? `You beat the perceptron ${points}:${theirs}` : `The perceptron won ${theirs}:${points}`, "click or press a key for a rematch"]);
     }
 
     // Serve towards the player, a bit faster every time.
@@ -61,19 +62,26 @@ const { width } = Astro.props;
     // When the ball leaves my paddle: the perceptron predicts where it will arrive.
     const predict = () => {
       const t = (aiX - bx) / vx;
-      features = [norm(by), norm(by + vy * t), 1];
+      // Bounces off the walls fold the straight-line arrival back into the court.
+      const straight = norm(by + vy * t), f = ((straight % 2) + 2) % 2;
+      features = [norm(by), straight, f <= 1 ? f : 2 - f, 1];
       aim = top + Math.max(0, Math.min(1, features.reduce((s, f, i) => s + f * w[i], 0))) * (bottom - top);
     };
     const learn = (arrived: number) => {
       const error = norm(arrived) - features.reduce((s, f, i) => s + f * w[i], 0);
-      w = w.map((wi, i) => wi + 0.35 * error * features[i]);
+      // Recursive least squares, forgetting slowly (λ = 0.97).
+      const x = features, Px = P.map((row) => row.reduce((sum, v, j) => sum + v * x[j], 0));
+      const gain = Px.map((v) => v / (0.97 + x.reduce((sum, xi, i) => sum + xi * Px[i], 0)));
+      const xP = x.map((_, j) => x.reduce((sum, xi, i) => sum + xi * P[i][j], 0));
+      w = w.map((wi, i) => wi + gain[i] * error);
+      P = P.map((row, i) => row.map((v, j) => (v - gain[i] * xP[j]) / 0.97));
       epochs += 1;
       loss = loss * 0.8 + 0.2 * error * error;
     };
     const end = () => {
       state = "over";
       const won = points >= MATCH;
-      gameOver(game.readout, game.pool, `<strong>${won ? `You beat the perceptron ${points}:${theirs}` : `The perceptron won ${theirs}:${points}`}</strong> after ${epochs} epochs of learning · its weights: ${w.map((v) => v.toFixed(2)).join(", ")}`);
+      gameOver(game, `<strong>${won ? `You beat the perceptron ${points}:${theirs}` : `The perceptron won ${theirs}:${points}`}</strong> after ${epochs} epochs of learning · its weights: ${w.map((v) => v.toFixed(2)).join(", ")}`);
     };
     const step = (dt: number) => {
       if (keys) me += keys * dt * H * 1.4;
@@ -105,8 +113,8 @@ const { width } = Astro.props;
     };
     const start = () => {
       [state, points, theirs, epochs, loss] = ["running", 0, 0, 0, 0.25];
-      w = [Math.random() * 0.4, Math.random() * 0.4, 0.3 + Math.random() * 0.2];
-      game.readout.innerHTML = `<span class="hint">First to ${MATCH} · score while the perceptron is still learning</span>`;
+      [w, P] = [naive(), identity()];
+      begin(game, `First to ${MATCH} · score while the perceptron is still learning`);
       serve(-1);
       loop(step);
     };

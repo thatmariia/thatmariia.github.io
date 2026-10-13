@@ -9,10 +9,10 @@ const { width } = Astro.props;
 
 <Arcade name="sieve" width={width} height={Math.round(width * (width > 600 ? 0.36 : 0.8))}
   label="Sieve: falling numbers; click a prime, or type it and press Enter, before it lands"
-  hint="Zap the primes · click or type them" />
+  rules={["Sieve of Eratosthenes", "Numbers fall: zap the primes before they land, by clicking them or typing them and pressing Enter.", "Zapping a composite or letting a prime land costs a life. You have 3."]} />
 
 <script>
-  import { banner, best, corners, escape, gameOver, loop, setup, type Game } from "../../lib/game";
+  import { begin, best, corners, escape, gameOver, loop, setup, type Game } from "../../lib/game";
 
   const factors = (n: number) => {
     const out: number[] = [];
@@ -55,8 +55,6 @@ const { width } = Astro.props;
       corners(game, "sieve", `${score} primes · lives ${"●".repeat(lives)}${"○".repeat(3 - lives)}`);
       c.font = `600 12px ${mono}`; c.textAlign = "left"; c.fillStyle = typed ? ink : muted;
       c.fillText(`> ${typed}${state === "running" ? "_" : ""}`, 10, H - 9);
-      if (state === "idle") banner(game, ["Sieve of Eratosthenes", "zap the primes before they land", "3 lives: composites zapped and primes landed cost one"], H * 0.4);
-      if (state === "over") banner(game, [`Sieve broken at ${score} primes`, "click or press a key to sieve again"], H * 0.4);
     }
 
     const end = (message: string) => {
@@ -64,7 +62,7 @@ const { width } = Astro.props;
       if (lives > 0) { readout.innerHTML = message; return; }
       state = "over";
       const record = best("sieve", score);
-      gameOver(readout, game.pool, `${message} · <strong>${score} primes</strong>${score >= record && score > 0 ? " · new best!" : ""}`);
+      gameOver(game, `${message} · <strong>${score} primes</strong>${score >= record && score > 0 ? " · new best!" : ""}`);
     };
     const zap = (d: Drop) => {
       if (prime(d.n)) {
@@ -116,7 +114,7 @@ const { width } = Astro.props;
     };
     const start = () => {
       [state, drops, sparks, lives, score, spawn, typed, lastPrime, clock] = ["running", [], [], 3, 0, 0.3, "", 0, 0];
-      readout.innerHTML = '<span class="hint">Zap the primes · composites cost a life, and so do landed primes</span>';
+      begin(game, "Zap the primes · composites cost a life, and so do landed primes");
       loop(step);
     };
     element.addEventListener("pointerdown", (event) => {

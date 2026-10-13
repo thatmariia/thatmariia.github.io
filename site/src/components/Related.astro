@@ -32,7 +32,7 @@ const [shown, folded] = long ? [sorted.slice(0, 5), sorted.slice(5)] : [sorted, 
       </li>
     ))}
     {folded.length > 0 && (
-      <li class="more">
+      <li class="fold">
         <details>
           <summary class="pill tiny">+{folded.length} more</summary>
           <ul class="related">

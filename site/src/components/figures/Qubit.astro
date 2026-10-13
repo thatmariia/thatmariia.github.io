@@ -9,10 +9,10 @@ const { width } = Astro.props;
 
 <Arcade name="qubit" width={width} height={Math.round(width * (width > 600 ? 0.42 : 1))}
   label="Qubit: apply the gates X, Y, Z, H and S with keys or buttons to move the state on the Bloch sphere to the target in the fewest gates"
-  hint="Gates: X Y Z H S (keys or buttons)" />
+  rules={["One qubit", "The arrow is the qubit's state on the Bloch sphere; the ring is the target.", "Apply gates (X Y Z H S, keys or buttons) to move the arrow onto the ring.", "Each gate's letter marks where it would take the arrow. Use the fewest gates."]} />
 
 <script>
-  import { banner, best, corners, gameOver, inside, loop, pills, pointer, setup, type Button, type Game } from "../../lib/game";
+  import { begin, best, corners, gameOver, inside, loop, pills, pointer, setup, type Button, type Game } from "../../lib/game";
 
   type State = [number, number, number];  // a pole of the Bloch sphere: ±x, ±y or ±z
   const GATES: Record<string, (s: State) => State> = {
@@ -52,6 +52,19 @@ const { width } = Astro.props;
       c.fillStyle = muted; c.font = `11px ${mono}`; c.textAlign = "center";
       for (const p of POLES) { const [x, y] = project(p.map((v) => v * 1.22)); c.fillText(NAMES[p.join()], x, y + 4); }
       if (state !== "idle") {
+        // Where each gate would take the state, marked with the gate's letter(s).
+        if (state === "running") {
+          const where = new Map<string, string[]>();
+          for (const [gate, g] of Object.entries(GATES)) { const to = g(qubit).join(); where.set(to, [...(where.get(to) ?? []), gate]); }
+          c.font = `600 10px ${mono}`;
+          for (const [to, gates] of where) {
+            const [x, y] = project(to.split(",").map((v) => Number(v) * 0.8));
+            const label = gates.join(" "), w = c.measureText(label).width + 10;
+            c.fillStyle = bg; c.strokeStyle = muted; c.lineWidth = 1;
+            c.beginPath(); c.roundRect(x - w / 2, y - 8, w, 16, 8); c.fill(); c.stroke();
+            c.fillStyle = muted; c.textAlign = "center"; c.fillText(label, x, y + 3.5);
+          }
+        }
         // Target: a ring; state: an arrow from the centre.
         const [tx, ty] = project(target);
         c.lineWidth = 2; c.beginPath(); c.arc(tx, ty, 9, 0, Math.PI * 2); c.stroke();
@@ -68,8 +81,6 @@ const { width } = Astro.props;
       }
       buttons = state === "running" ? pills(game, Object.keys(GATES), H - 42) : [];
       corners(game, "qubit", `${solved} solved`);
-      if (state === "idle") banner(game, ["One qubit, five gates", "move the state (arrow) to the target (ring)", "X Y Z flip around their axes · H swaps x and z", "S turns a quarter around z · fewest gates only"], H * 0.45);
-      if (state === "over") banner(game, [note, "press a key or tap to try again"], H * 0.45);
     }
 
     const next = () => {
@@ -79,7 +90,7 @@ const { width } = Astro.props;
     const end = (why: string) => {
       state = "over"; note = why;
       const record = best("qubit", solved);
-      gameOver(game.readout, game.pool, `<strong>${why}</strong> · ${solved} targets reached${solved >= record && solved > 0 ? " · new best!" : ""}`);
+      gameOver(game, `<strong>${why}</strong> · ${solved} targets reached${solved >= record && solved > 0 ? " · new best!" : ""}`);
     };
     const apply = (gate: string) => {
       if (state !== "running") return;
@@ -97,7 +108,7 @@ const { width } = Astro.props;
     };
     const start = () => {
       [qubit, solved] = [[0, 0, 1], 0];
-      game.readout.innerHTML = '<span class="hint">Reach the ring in the fewest gates</span>';
+      begin(game, "Reach the ring in the fewest gates");
       next();
       loop(step);
     };

@@ -1,6 +1,7 @@
 ---
 // The trouble with tribbles: exponential growth. Every tribble doubles after a random while (and the
-// doubling time keeps shrinking); click one, or press Space, to beam it over to the Klingons. When
+// doubling time keeps shrinking), and more keep arriving from Station K-7. Click one, or press
+// Space, to beam it over to the Klingons; each beam takes transporter power, which recharges. When
 // the cargo bay is full, it is over, with one of the website's items as the prize.
 import Arcade from "../Arcade.astro";
 interface Props { seed: number; width: number; height: number }
@@ -9,10 +10,10 @@ const { width } = Astro.props;
 
 <Arcade name="tribbles" width={width} height={Math.round(width * (width > 600 ? 0.38 : 0.85))}
   label="Tribbles: they multiply exponentially; click them, or press Space, to beam them away before the cargo bay fills up"
-  hint="Click a tribble (or Space) to beam it away" />
+  rules={["The Trouble with Tribbles", "They are born pregnant: the population doubles every few seconds, and more keep arriving.", "Click one (or press Space) to beam it to the Klingons. Each beam uses transporter power.", "Don't let the cargo bay fill up."]} />
 
 <script>
-  import { banner, best, corners, gameOver, loop, pointer, setup, type Game } from "../../lib/game";
+  import { begin, best, corners, gameOver, loop, pointer, setup, type Game } from "../../lib/game";
 
   const CAPACITY = 64;
   for (const figure of document.querySelectorAll<HTMLElement>(".fig.tribbles")) {
@@ -20,7 +21,8 @@ const { width } = Astro.props;
     const { W, H } = game, [bx, by, bw, bh] = [12, 32, W - 24, H - 44];
     type Tribble = { x: number; y: number; vx: number; vy: number; r: number; birth: number; seed: number };
     let state: "idle" | "running" | "over" = "idle";
-    let tribbles: Tribble[] = [], beams: { x: number; y: number; age: number }[] = [], time = 0, beamed = 0, cooldown = 0;
+    let tribbles: Tribble[] = [], beams: { x: number; y: number; age: number }[] = [], time = 0, beamed = 0, cooldown = 0, power = 100, arrival = 4, note = "", noteLeft = 0;
+    const COST = 16;
     const doubling = () => Math.max(1.5, 4.2 - time / 25);
     const born = (x: number, y: number): Tribble => ({
       x, y, vx: (Math.random() - 0.5) * 30, vy: (Math.random() - 0.5) * 30, r: 7 + Math.random() * 4,
@@ -58,18 +60,30 @@ const { width } = Astro.props;
       c.lineWidth = 1; c.globalAlpha = 0.3;
       c.beginPath(); c.moveTo(bx + bw - 110, by + bh - 14); c.lineTo(bx + bw - 14, by + bh - 14); c.stroke();
       c.globalAlpha = 1;
-      corners(game, "tribbles", `${tribbles.length} tribbles · ${beamed} beamed`);
-      if (state === "idle") banner(game, ["The Trouble with Tribbles", "they are born pregnant: N doubles every few seconds", "click one (or space) to beam it to the Klingons", `don't let the cargo bay reach ${CAPACITY}`]);
-      if (state === "over") banner(game, [`Cargo bay full after ${time.toFixed(0)} s`, "click or press a key to try again"]);
+      // Transporter power, top left of the bay.
+      c.lineWidth = 3; c.globalAlpha = power >= COST ? 1 : 0.35;
+      c.beginPath(); c.moveTo(bx + 14, by + 14); c.lineTo(bx + 14 + 96 * (power / 100), by + 14); c.stroke();
+      c.globalAlpha = 1; c.fillStyle = muted; c.font = `10px ${mono}`; c.textAlign = "left"; c.fillText("transporter power", bx + 14, by + 30);
+      if (noteLeft > 0) { c.fillStyle = ink; c.font = `600 12px ${mono}`; c.textAlign = "center"; c.fillText(note, W / 2, by + 20); }
+      corners(game, "tribbles", `${tribbles.length} tribbles · ${time.toFixed(0)} s`);
     }
 
     const beam = (t: Tribble) => {
+      if (power < COST) { [note, noteLeft] = ["transporter recharging", 0.8]; return; }
+      power -= COST;
       tribbles = tribbles.filter((o) => o !== t);
       beams.push({ x: t.x, y: t.y, age: 0 });
       beamed += 1;
     };
     const step = (dt: number) => {
-      time += dt; cooldown -= dt;
+      time += dt; cooldown -= dt; noteLeft -= dt;
+      power = Math.min(100, power + dt * 22);
+      // More tribbles arrive from Station K-7, faster and faster.
+      arrival -= dt;
+      if (arrival <= 0) {
+        tribbles.push(born(bx + 20 + Math.random() * (bw - 40), by + 20));
+        [note, noteLeft, arrival] = ["+1 from Station K-7", 1, Math.max(0.9, 4.5 - time / 15)];
+      }
       for (const t of [...tribbles]) {
         t.x += t.vx * dt; t.y += t.vy * dt;
         t.vx += (Math.random() - 0.5) * 60 * dt; t.vy += (Math.random() - 0.5) * 60 * dt;
@@ -87,15 +101,15 @@ const { width } = Astro.props;
       if (tribbles.length >= CAPACITY) {
         state = "over";
         const record = best("tribbles", Math.round(time));
-        gameOver(game.readout, game.pool, `<strong>The cargo bay is full</strong> after ${time.toFixed(0)} s · ${beamed} tribbles beamed to the Klingons${Math.round(time) >= record ? " · new best!" : ""}`);
+        gameOver(game, `The cargo bay is full after ${time.toFixed(0)} s · ${beamed} tribbles beamed to the Klingons${Math.round(time) >= record ? " · new best!" : ""}`);
       }
       draw();
       return state === "running";
     };
     const start = () => {
-      [state, time, beamed, beams] = ["running", 0, 0, []];
+      [state, time, beamed, beams, power, arrival, noteLeft] = ["running", 0, 0, [], 100, 4, 0];
       tribbles = [born(W / 2, H / 2), born(W / 2 + 20, H / 2 - 10)];
-      game.readout.innerHTML = '<span class="hint">Beam them to the Klingons before they fill the bay</span>';
+      begin(game, "Beam them to the Klingons before they fill the bay");
       loop(step);
     };
     game.element.addEventListener("pointerdown", (event) => {

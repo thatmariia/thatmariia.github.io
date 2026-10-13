@@ -2,21 +2,23 @@
 // The figure at the top of a page. A page names the figures that suit its data; while choosing,
 // pill buttons (plain radio inputs, no JavaScript) switch between them when there is more than one.
 import Bits from "./figures/Bits.astro";
+import Cleft from "./figures/Cleft.astro";
 import Collaborators from "./figures/Collaborators.astro";
-import Corsi from "./figures/Corsi.astro";
-import Dijkstra from "./figures/Dijkstra.astro";
 import Fireworks from "./figures/Fireworks.astro";
 import Flanker from "./figures/Flanker.astro";
+import FlappyIon from "./figures/FlappyIon.astro";
+import Fusion from "./figures/Fusion.astro";
 import GrowthCone from "./figures/GrowthCone.astro";
 import KobayashiMaru from "./figures/KobayashiMaru.astro";
-import Logic from "./figures/Logic.astro";
+import MirrorNeurons from "./figures/MirrorNeurons.astro";
 import NeuralNet from "./figures/NeuralNet.astro";
 import Orrery from "./figures/Orrery.astro";
+import PatchClamp from "./figures/PatchClamp.astro";
 import PerceptronPong from "./figures/PerceptronPong.astro";
 import Qubit from "./figures/Qubit.astro";
-import Rotation from "./figures/Rotation.astro";
 import Saltatory from "./figures/Saltatory.astro";
 import Sieve from "./figures/Sieve.astro";
+import SpikeSorting from "./figures/SpikeSorting.astro";
 import Spiral from "./figures/Spiral.astro";
 import Topo from "./figures/Topo.astro";
 import Travels from "./figures/Travels.astro";
@@ -31,11 +33,13 @@ const FIGURES = {
   pong: { label: "Perceptron Pong", Figure: PerceptronPong, seed: 1 },
   tribbles: { label: "Tribbles", Figure: Tribbles, seed: 1 },
   kobayashi: { label: "Kobayashi Maru", Figure: KobayashiMaru, seed: 1 },
-  corsi: { label: "Corsi blocks", Figure: Corsi, seed: 1 },
-  rotation: { label: "Mental rotation", Figure: Rotation, seed: 1 },
+  mirror: { label: "Mirror neurons", Figure: MirrorNeurons, seed: 1 },
   bits: { label: "Bits", Figure: Bits, seed: 1 },
-  logic: { label: "Logic", Figure: Logic, seed: 1 },
-  dijkstra: { label: "Dijkstra", Figure: Dijkstra, seed: 1 },
+  fusion: { label: "Fusion", Figure: Fusion, seed: 1 },
+  flappy: { label: "Flappy K⁺", Figure: FlappyIon, seed: 1 },
+  patch: { label: "Patch clamp", Figure: PatchClamp, seed: 1 },
+  sorting: { label: "Spike sorting", Figure: SpikeSorting, seed: 1 },
+  cleft: { label: "Cleft", Figure: Cleft, seed: 1 },
   qubit: { label: "Qubit", Figure: Qubit, seed: 1 },
   spiral: { label: "Spiral explorer", Figure: Spiral, seed: 2 },
   collaborators: { label: "Collaborators", Figure: Collaborators, seed: 7 },
@@ -69,3 +73,13 @@ const visible = options.map(({ key }) => `.figure:has(input[value="${key}"]:chec
   ))}
   <style is:inline set:html={visible} />
 </figure>
+
+<script>
+  // Choosing a game hands it the keyboard, so arrow keys play instead of switching figures.
+  for (const input of document.querySelectorAll<HTMLInputElement>(".figure-options input")) {
+    input.addEventListener("change", () => {
+      const canvas = [...document.querySelectorAll<HTMLCanvasElement>(`.option[data-option="${input.value}"] canvas`)].find((c) => c.offsetWidth > 0);
+      canvas?.focus({ preventScroll: true });
+    });
+  }
+</script>

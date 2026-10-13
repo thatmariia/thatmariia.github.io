@@ -9,10 +9,10 @@ const { width } = Astro.props;
 
 <Arcade name="growthcone" width={width} height={Math.round(width * (width > 600 ? 0.4 : 0.95))}
   label="Growth cone: steer a growing axon to neurotrophins with the arrow keys or by tapping, avoiding repellents, the edges and the axon itself"
-  hint="Arrow keys, or tap where to turn" />
+  rules={["Axon guidance", "Steer the growth cone to neurotrophins ✦ to grow the axon: arrow keys, or tap where to turn.", "Avoid repellents ⊗, the edge and your own axon. 3 lives.", "It starts slow and speeds up as the axon grows."]} />
 
 <script>
-  import { banner, best, corners, gameOver, loop, setup, type Game } from "../../lib/game";
+  import { begin, best, corners, gameOver, loop, setup, type Game } from "../../lib/game";
 
   for (const figure of document.querySelectorAll<HTMLElement>(".fig.growthcone")) {
     const game: Game = setup(figure, () => draw());
@@ -69,16 +69,14 @@ const { width } = Astro.props;
         }
       }
       corners(game, "growthcone", `${eaten} BDNF · lives ${"●".repeat(lives)}${"○".repeat(3 - lives)}`);
-      if (state === "idle") banner(game, ["Axon guidance", "steer the growth cone to neurotrophins ✦", "avoid repellents ⊗, the edge and your axon · 3 lives", "arrow keys, or tap where to turn"]);
-      if (state === "over") banner(game, [`Collapsed three times · ${eaten} neurotrophins`, "press a key or tap to grow again"]);
     }
 
     const step = (dt: number) => {
       pulse += dt;
       clock += dt;
-      const interval = Math.max(0.048, 0.115 - eaten * 0.004);
+      const interval = Math.max(0.055, 0.17 - eaten * 0.0022);
       sema -= dt;
-      if (sema <= 0) { repellents.push(free()); sema = Math.max(2.5, 7 - eaten * 0.2); }
+      if (sema <= 0) { repellents.push(free()); sema = Math.max(3, 9 - eaten * 0.15); }
       while (clock >= interval && state === "running") {
         clock -= interval;
         const next = queued.shift();
@@ -98,14 +96,14 @@ const { width } = Astro.props;
           }
           state = "over";
           const record = best("growthcone", eaten);
-          gameOver(game.readout, game.pool, `<strong>Third growth cone collapse</strong>, on ${hit} · ${eaten} neurotrophins${eaten >= record && eaten > 0 ? " · new best!" : ""}`);
+          gameOver(game, `<strong>Third growth cone collapse</strong>, on ${hit} · ${eaten} neurotrophins${eaten >= record && eaten > 0 ? " · new best!" : ""}`);
           break;
         }
         axon.unshift(head);
         if (head[0] === food[0] && head[1] === food[1]) {
           eaten += 1;
           food = free();
-          if (eaten % 2 === 0) repellents.push(free());
+          if (eaten % 3 === 0) repellents.push(free());
         } else axon.pop();
       }
       draw();
@@ -113,9 +111,9 @@ const { width } = Astro.props;
     };
     const start = () => {
       const j = Math.floor(rows / 2);
-      [state, axon, dir, queued, repellents, clock, eaten, lives, sema] = ["running", [[4, j], [3, j], [2, j]], [1, 0], [], [], 0, 0, 3, 6];
+      [state, axon, dir, queued, repellents, clock, eaten, lives, sema] = ["running", [[4, j], [3, j], [2, j]], [1, 0], [], [], 0, 0, 3, 9];
       food = free();
-      game.readout.innerHTML = '<span class="hint">Grow towards the neurotrophins ✦ · avoid repellents ⊗</span>';
+      begin(game, "Grow towards the neurotrophins ✦ · avoid repellents ⊗");
       loop(step);
     };
     const turn = (d: Cell) => { if (queued.length < 3) queued.push(d); };

@@ -208,7 +208,7 @@ a.pill:hover, .pill.solid, .pill[aria-current="page"] { background: var(--ink); 
 .games { display: flex; flex-direction: column; }
 .games .slot { flex: 1; min-height: 0; display: flex; }
 .games .slot > .fig { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-.games .stage { flex: 1; min-height: 0; container-type: size; display: flex; justify-content: center; }
+.games .stage { flex: 1; min-height: 0; container-type: size; display: flex; justify-content: center; align-items: flex-start; }  /* no stretching: the canvas keeps its proportions */
 .games .stage canvas { width: min(100cqw, 100cqh * var(--ratio)); height: auto; }
 .games .bar { flex: none; }
 .games .picker { position: relative; display: flex; justify-content: flex-end; margin: 0 0 14px; }

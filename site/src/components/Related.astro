@@ -1,0 +1,12 @@
+---
+import { titles, type Link } from "../lib/data";
+interface Props { related?: string[]; links?: Link[] }
+const { related = [], links = [] } = Astro.props;
+---
+
+{(related.length > 0 || links.length > 0) && (
+  <ul class="related">
+    {related.map((id) => <li><a href={`#${id}`}><span aria-hidden="true">↔</span> {titles[id]}</a></li>)}
+    {links.map((link) => <li><a href={link.url}><span aria-hidden="true">↗</span> {link.label}</a></li>)}
+  </ul>
+)}

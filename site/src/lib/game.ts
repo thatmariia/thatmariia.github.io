@@ -60,8 +60,8 @@ export function setup(figure: HTMLElement, redraw: () => void) {
     colours: () => ({ ink: style.getPropertyValue("--ink").trim(), bg: style.getPropertyValue("--bg").trim(), muted: style.getPropertyValue("--muted").trim() }),
     visible: false, resume: null as (() => void) | null,
   };
-  new IntersectionObserver(([entry]) => {
-    game.visible = entry.isIntersecting;
+  new IntersectionObserver((entries) => {
+    game.visible = entries[entries.length - 1].isIntersecting;  // the latest record counts
     if (game.visible && game.resume) { const resume = game.resume; game.resume = null; resume(); }
   }).observe(element);
   // The rules show first, and the rules pill brings them back (and away again) at any time.

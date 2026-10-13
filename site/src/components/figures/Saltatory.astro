@@ -1,20 +1,30 @@
 ---
 // Saltatory conduction as a one-button runner: you are an action potential leaping from node to
-// node along a myelinated axon. It speeds up, and new hazards join as you go: pufferfish to jump
-// (tetrodotoxin blocks sodium channels), cone snails above not to jump into (conotoxin),
-// demyelinated lesions to leap across, and box jellyfish bobbing up and down. A block ends the run,
-// with one of the website's items as the prize.
+// node along a myelinated axon. New hazards from the brain join as you go, each announced when the
+// first one appears: amyloid-β plaques, microglia above, tau tangles, demyelinated lesions,
+// bobbing astrocytes and charging inhibitory interneurons. A block ends the run, with a prize.
 import Arcade from "../Arcade.astro";
 interface Props { seed: number; width: number; height: number }
 const { width } = Astro.props;
 ---
 
 <Arcade name="saltatory" width={width} height={Math.round(width * (width > 600 ? 0.32 : 0.78))}
-  label="Saltatory: an action potential runs along an axon; press Space or tap to jump over pufferfish, but not into cone snails"
-  rules={["Saltatory conduction", "You are an action potential, leaping from node to node along a myelinated axon.", "Space or tap to jump. Jump the pufferfish (tetrodotoxin).", "New hazards join as you go; each is announced when it arrives."]} />
+  label="Saltatory: an action potential runs along an axon; press Space or tap to jump over the hazards on the axon, but not into those above"
+  rules={["Saltatory conduction", "You are an action potential, leaping from node to node along a myelinated axon.", "Space or tap to jump over amyloid-β plaques. Don't jump into what floats above.", "New hazards join as you go; each is announced and labelled when it first appears."]} />
 
 <script>
   import { begin, best, corners, gameOver, loop, setup, type Game } from "../../lib/game";
+
+  type Kind = "plaque" | "microglia" | "tangle" | "lesion" | "astrocyte" | "interneuron";
+  // Each hazard: from which node on, its label, the announcement, and what it does to the spike.
+  const KINDS: Record<Kind, { at: number; name: string; tip: string; cause: string }> = {
+    plaque: { at: 0, name: "amyloid-β plaque", tip: "", cause: "an amyloid-β plaque" },
+    microglia: { at: 10, name: "microglia", tip: "microglia above: don't jump into them", cause: "microglia (pruned!)" },
+    tangle: { at: 22, name: "tau tangle", tip: "tau tangles: tall, jump early", cause: "a tau tangle" },
+    lesion: { at: 35, name: "MS lesion", tip: "demyelinated lesions: leap across", cause: "demyelination" },
+    astrocyte: { at: 50, name: "astrocyte", tip: "astrocytes bob up and down: time it", cause: "an astrocyte" },
+    interneuron: { at: 70, name: "GABA", tip: "inhibitory interneurons charge at you", cause: "GABAergic inhibition" },
+  };
 
   for (const figure of document.querySelectorAll<HTMLElement>(".fig.saltatory")) {
     const game: Game = setup(figure, () => draw());
@@ -23,21 +33,16 @@ const { width } = Astro.props;
     const hop = H * 0.36, air = 0.6, gravity = (8 * hop) / air ** 2;
     const [slow, fast] = [W * 0.36, W * 0.85];
 
+    type Hazard = { x: number; r: number; kind: Kind; y: number; w?: number; phase?: number; seed: number; label: boolean };
     let state: "idle" | "running" | "over" = "idle";
-    let speed = slow, offset = 0, y = 0, vy = 0, nodes = 0, next = W, flash = 0;
-    type Kind = "fish" | "snail" | "urchin" | "lesion" | "jelly" | "octopus";
-    let hazards: { x: number; r: number; kind: Kind; y: number; w?: number; phase?: number }[] = [], leaps: { x: number; age: number }[] = [];
-    // New hazards join at these nodes, announced as they arrive.
-    const UNLOCK: [number, Kind, string][] = [
-      [10, "snail", "cone snails above: don't jump into them"], [22, "urchin", "sea urchins: long spines, jump early"],
-      [35, "lesion", "demyelinated lesions: leap across"], [50, "jelly", "box jellyfish: time your jumps"],
-      [70, "octopus", "blue-ringed octopus: more TTX, and it charges"],
-    ];
-    let notice = "", noticeLeft = 0;
+    let speed = slow, offset = 0, y = 0, vy = 0, nodes = 0, next = W, flash = 0, notice = "", noticeLeft = 0;
+    let hazards: Hazard[] = [], leaps: { x: number; age: number }[] = [], unlocked = new Set<Kind>(), queue: Kind[] = [], seen: Partial<Record<Kind, number>> = {};
     const metres = () => Math.round(30 + ((speed - slow) / (fast - slow)) * 90);
+    // A small deterministic wobble per hazard, so shapes stay put as they scroll.
+    const wob = (seed: number, k: number) => Math.sin(seed * 12.9898 + k * 78.233) * 0.5 + 0.5;
 
     function draw() {
-      const { context: c } = game, { ink, bg, muted } = game.colours();
+      const { context: c, mono } = game, { ink, bg, muted } = game.colours();
       c.clearRect(0, 0, W, H);
       c.lineCap = c.lineJoin = "round";
       c.strokeStyle = ink; c.lineWidth = 1.2;
@@ -53,79 +58,110 @@ const { width } = Astro.props;
         c.strokeStyle = ink;
       }
       if (state === "idle") {
-        c.fillStyle = muted; c.font = `10px ${game.mono}`; c.textAlign = "center";
+        c.fillStyle = muted; c.font = `10px ${mono}`; c.textAlign = "center";
         const node = internode * Math.ceil(runnerX / internode) + internode;
         c.fillText("myelin", node + internode / 2, axon + sheath + 14);
         c.fillText("node of Ranvier", node, axon - sheath - 8);
       }
       for (const leap of leaps) spike(c, leap.x, axon, Math.max(0, 0.35 - leap.age), 1.2);
       for (const h of hazards) {
-        if (h.kind === "lesion") lesion(c, h.x, h.w!, ink, bg, muted);
-        else ({ fish: puffer, snail, urchin, jelly, octopus } as Record<string, typeof puffer>)[h.kind](c, h.x, h.y, h.r, ink, bg);
+        c.strokeStyle = ink; c.fillStyle = bg; c.lineWidth = 1.2;
+        DRAW[h.kind](c, h, ink, bg, muted);
+        if (h.label) {
+          c.fillStyle = muted; c.font = `10px ${mono}`; c.textAlign = "center";
+          const top = h.kind === "lesion" ? axon - sheath - 8 : h.y - h.r * 1.5 - 6;
+          c.fillText(KINDS[h.kind].name, h.x + (h.w ?? 0) / 2, top);
+        }
       }
-      if (noticeLeft > 0) { c.globalAlpha = Math.min(1, noticeLeft); c.fillStyle = ink; c.font = `600 12px ${game.mono}`; c.textAlign = "center"; c.fillText(notice, W / 2, 44); c.globalAlpha = 1; }
+      if (noticeLeft > 0) { c.globalAlpha = Math.min(1, noticeLeft); c.fillStyle = ink; c.font = `600 12px ${mono}`; c.textAlign = "center"; c.fillText(notice, W / 2, 44); c.globalAlpha = 1; }
       spike(c, runnerX, axon - y, 1, 2.2);
       corners(game, "saltatory", `node ${nodes} · ${state === "idle" ? "—" : metres()} m/s`);
     }
     const spike = (c: CanvasRenderingContext2D, x: number, base: number, alpha: number, width: number) => {
       if (alpha <= 0) return;
-      c.globalAlpha = alpha; c.lineWidth = width;
+      c.globalAlpha = alpha; c.lineWidth = width; c.strokeStyle = game.colours().ink;
       c.beginPath();
       [[-16, 0], [-7, 0], [-4, -3], [-1, -26], [2, -4], [6, 5], [11, 2], [16, 0]].forEach(([dx, dy], i) => (i ? c.lineTo : c.moveTo).call(c, x + dx, base + dy));
       c.stroke();
       c.globalAlpha = 1; c.lineWidth = 1.2;
     };
-    const puffer = (c: CanvasRenderingContext2D, x: number, cy: number, r: number, ink: string, bg: string) => {
-      c.fillStyle = bg;
-      for (let k = 0; k < 12; k++) {
-        const a = (k / 12) * Math.PI * 2;
-        c.beginPath(); c.moveTo(x + Math.cos(a) * r, cy + Math.sin(a) * r); c.lineTo(x + Math.cos(a) * r * 1.35, cy + Math.sin(a) * r * 1.35); c.stroke();
-      }
-      c.beginPath(); c.moveTo(x + r * 0.9, cy); c.lineTo(x + r * 1.5, cy - r * 0.45); c.lineTo(x + r * 1.5, cy + r * 0.45); c.closePath(); c.fill(); c.stroke();
-      c.beginPath(); c.arc(x, cy, r, 0, Math.PI * 2); c.fill(); c.stroke();
-      c.fillStyle = ink; c.beginPath(); c.arc(x - r * 0.45, cy - r * 0.2, 1.6, 0, Math.PI * 2); c.fill();
-    };
-    // A cone snail: a striped cone-shaped shell with its siphon in front.
-    const snail = (c: CanvasRenderingContext2D, x: number, cy: number, r: number, ink: string, bg: string) => {
-      c.fillStyle = bg;
-      c.beginPath(); c.moveTo(x - r * 1.3, cy); c.quadraticCurveTo(x + r * 0.2, cy - r * 1.1, x + r * 1.1, cy - r * 0.5);
-      c.lineTo(x + r * 1.1, cy + r * 0.5); c.quadraticCurveTo(x + r * 0.2, cy + r * 1.1, x - r * 1.3, cy); c.fill(); c.stroke();
-      for (const u of [0.25, 0.5, 0.75]) { const sx = x - r * 1.3 + u * r * 2.4; c.beginPath(); c.moveTo(sx, cy - r * 0.8 * u - 1); c.lineTo(sx - 3, cy + r * 0.8 * u + 1); c.stroke(); }
-      c.beginPath(); c.moveTo(x - r * 1.3, cy); c.lineTo(x - r * 1.9, cy - r * 0.3); c.stroke();
+    type Painter = (c: CanvasRenderingContext2D, h: Hazard, ink: string, bg: string, muted: string) => void;
+    const DRAW: Record<Kind, Painter> = {
+      // An amyloid-β plaque: an irregular deposit with a dense core and radiating fibrils.
+      plaque: (c, h, ink) => {
+        c.beginPath();
+        for (let k = 0; k <= 14; k++) { const a = (k / 14) * Math.PI * 2, rr = h.r * (0.8 + 0.3 * wob(h.seed, k)); (k ? c.lineTo : c.moveTo).call(c, h.x + Math.cos(a) * rr, h.y + Math.sin(a) * rr); }
+        c.closePath(); c.fill(); c.stroke();
+        for (let k = 0; k < 10; k++) { const a = (k / 10) * Math.PI * 2 + h.seed; c.beginPath(); c.moveTo(h.x + Math.cos(a) * h.r * 0.35, h.y + Math.sin(a) * h.r * 0.35); c.lineTo(h.x + Math.cos(a) * h.r * 0.75, h.y + Math.sin(a) * h.r * 0.75); c.stroke(); }
+        c.fillStyle = ink; c.beginPath(); c.arc(h.x, h.y, h.r * 0.28, 0, Math.PI * 2); c.fill();
+      },
+      // Microglia: a small cell body with fine, branching processes, waving.
+      microglia: (c, h, ink) => {
+        for (let k = 0; k < 6; k++) {
+          const a = (k / 6) * Math.PI * 2 + h.seed + Math.sin(h.phase ?? 0) * 0.15, l = h.r * (1 + 0.5 * wob(h.seed, k));
+          const [mx, my] = [h.x + Math.cos(a) * l * 0.6, h.y + Math.sin(a) * l * 0.6];
+          c.beginPath(); c.moveTo(h.x, h.y); c.lineTo(mx, my); c.lineTo(h.x + Math.cos(a - 0.4) * l, h.y + Math.sin(a - 0.4) * l); c.moveTo(mx, my); c.lineTo(h.x + Math.cos(a + 0.35) * l, h.y + Math.sin(a + 0.35) * l); c.stroke();
+        }
+        c.fillStyle = ink; c.beginPath(); c.ellipse(h.x, h.y, h.r * 0.4, h.r * 0.3, h.seed, 0, Math.PI * 2); c.fill();
+      },
+      // A neurofibrillary (tau) tangle: twisted filaments in a flame shape.
+      tangle: (c, h) => {
+        for (let k = 0; k < 5; k++) {
+          c.beginPath();
+          for (let i = 0; i <= 16; i++) {
+            const u = i / 16, width = h.r * 0.7 * Math.sin(Math.PI * Math.min(1, u * 1.15));
+            const x = h.x + (k - 2) * width * 0.35 + Math.sin(u * 9 + k * 1.7 + h.seed) * width * 0.35;
+            (i ? c.lineTo : c.moveTo).call(c, x, h.y + h.r * 1.15 - u * h.r * 2.3);
+          }
+          c.stroke();
+        }
+      },
+      // A demyelinated (MS) lesion: the myelin is gone and the axon frays.
+      lesion: (c, h, ink, bg, muted) => {
+        c.fillRect(h.x, axon - sheath - 2, h.w!, 2 * sheath + 4);
+        c.strokeStyle = muted; c.setLineDash([3, 4]);
+        c.beginPath(); c.moveTo(h.x, axon); c.lineTo(h.x + h.w!, axon); c.stroke();
+        c.setLineDash([]); c.strokeStyle = ink;
+        for (const e of [h.x, h.x + h.w!]) { c.beginPath(); c.moveTo(e, axon - sheath); c.lineTo(e, axon + sheath); c.stroke(); }
+      },
+      // An astrocyte: a star of thick processes ending in feet.
+      astrocyte: (c, h, ink) => {
+        for (let k = 0; k < 8; k++) {
+          const a = (k / 8) * Math.PI * 2 + h.seed, [ex, ey] = [h.x + Math.cos(a) * h.r * 1.3, h.y + Math.sin(a) * h.r * 1.3];
+          c.lineWidth = 2.2; c.beginPath(); c.moveTo(h.x, h.y); c.lineTo(ex, ey); c.stroke();
+          c.lineWidth = 1.2; c.beginPath(); c.arc(ex, ey, 2, 0, Math.PI * 2); c.stroke();
+        }
+        c.fillStyle = ink; c.beginPath(); c.arc(h.x, h.y, h.r * 0.35, 0, Math.PI * 2); c.fill();
+      },
+      // An inhibitory interneuron, running at you: a round soma with dendrites, marked GABA.
+      interneuron: (c, h, ink, bg) => {
+        for (let k = 0; k < 4; k++) { const a = Math.PI * (1.1 + k * 0.27); c.beginPath(); c.moveTo(h.x, h.y); c.lineTo(h.x + Math.cos(a) * h.r * 1.5, h.y + Math.sin(a) * h.r * 1.5); c.stroke(); }
+        c.beginPath(); c.moveTo(h.x, h.y); c.lineTo(h.x + h.r * 1.6, h.y + h.r * 0.6); c.stroke();
+        c.fillStyle = ink; c.beginPath(); c.arc(h.x, h.y, h.r * 0.8, 0, Math.PI * 2); c.fill();
+        c.fillStyle = bg; c.font = `600 8px ${game.mono}`; c.textAlign = "center"; c.fillText("GABA", h.x, h.y + 3);
+      },
     };
 
-    // A lesion: the myelin is gone and the axon frays; landing on it blocks conduction.
-    const lesion = (c: CanvasRenderingContext2D, x: number, w: number, ink: string, bg: string, muted: string) => {
-      c.fillStyle = bg; c.fillRect(x, axon - sheath - 2, w, 2 * sheath + 4);
-      c.strokeStyle = muted; c.setLineDash([3, 4]);
-      c.beginPath(); c.moveTo(x, axon); c.lineTo(x + w, axon); c.stroke();
-      c.setLineDash([]); c.strokeStyle = ink;
-      for (const e of [x, x + w]) { c.beginPath(); c.moveTo(e, axon - sheath); c.lineTo(e, axon + sheath); c.stroke(); }
+    const spawn = () => {
+      // A newly unlocked kind comes next, announced as it appears; otherwise any unlocked kind.
+      const forced = queue.shift(), open = [...unlocked];
+      const kind = forced ?? open[Math.floor(Math.random() * open.length)], seed = Math.random() * 100;
+      if (forced && KINDS[forced].tip) [notice, noticeLeft] = [KINDS[forced].tip, 3];
+      seen[kind] = (seen[kind] ?? 0) + 1;
+      const label = seen[kind]! <= 2;
+      let extra = 0;
+      if (kind === "plaque") {
+        const r = H * (0.045 + Math.random() * 0.035);
+        hazards.push({ x: W + 30, r, kind, y: axon - r - sheath * 0.2, seed, label });
+        const more = nodes > 20 ? Math.floor(Math.random() * (nodes > 45 ? 3 : 2)) : 0;
+        for (let i = 1; i <= more; i++) hazards.push({ x: W + 30 + r * 2.4 * i, r: r * 0.85, kind, y: axon - r * 0.85 - sheath * 0.2, seed: seed + i, label: false });
+      } else if (kind === "microglia") hazards.push({ x: W + 30, r: H * 0.05, kind, y: axon - hop * (0.55 + Math.random() * 0.35), phase: 0, seed, label });
+      else if (kind === "tangle") { const r = H * 0.06; hazards.push({ x: W + 30, r, kind, y: axon - r * 1.15 - sheath * 0.2, seed, label }); }
+      else if (kind === "lesion") { extra = internode * (0.45 + Math.random() * 0.45); hazards.push({ x: W + 10, r: 0, w: extra, kind, y: axon, seed, label }); }
+      else if (kind === "astrocyte") hazards.push({ x: W + 30, r: H * 0.04, kind, y: axon - hop * 0.5, phase: Math.random() * 6, seed, label });
+      else hazards.push({ x: W + 60, r: H * 0.045, kind, y: axon - H * 0.045 - sheath * 0.2, seed, label });
+      next = speed * (air + 0.15 + Math.random() * Math.max(0.3, 1.1 - nodes * 0.008)) + extra;
     };
-    // A sea urchin: a long-spined ball (drawn at its spine radius r).
-    const urchin = (c: CanvasRenderingContext2D, x: number, cy: number, r: number, ink: string, bg: string) => {
-      const body = r / 1.5;
-      for (let k = 0; k < 18; k++) { const a = Math.PI + (k / 17) * Math.PI; c.beginPath(); c.moveTo(x + Math.cos(a) * body, cy + Math.sin(a) * body); c.lineTo(x + Math.cos(a) * r, cy + Math.sin(a) * r); c.stroke(); }
-      c.fillStyle = bg; c.beginPath(); c.arc(x, cy, body, 0, Math.PI * 2); c.fill(); c.stroke();
-    };
-    // A blue-ringed octopus: a head with rings, and curling arms.
-    const octopus = (c: CanvasRenderingContext2D, x: number, cy: number, r: number, ink: string, bg: string) => {
-      for (let k = 0; k < 4; k++) { c.beginPath(); c.moveTo(x - r * 0.6 + k * r * 0.4, cy + r * 0.3); c.quadraticCurveTo(x - r + k * r * 0.5, cy + r, x - r * 0.8 + k * r * 0.55, cy + r * 1.1); c.stroke(); }
-      c.fillStyle = bg; c.beginPath(); c.ellipse(x, cy - r * 0.1, r * 0.75, r * 0.6, 0, 0, Math.PI * 2); c.fill(); c.stroke();
-      for (const [dx, dy] of [[-0.3, -0.2], [0.25, -0.3], [0.05, 0.15]]) { c.beginPath(); c.arc(x + dx * r, cy + dy * r, r * 0.13, 0, Math.PI * 2); c.stroke(); }
-      c.fillStyle = ink; c.beginPath(); c.arc(x - r * 0.55, cy, 1.5, 0, Math.PI * 2); c.fill();
-    };
-    // A box jellyfish: a bell with trailing tentacles.
-    const jelly = (c: CanvasRenderingContext2D, x: number, cy: number, r: number, ink: string, bg: string) => {
-      c.fillStyle = bg;
-      c.beginPath(); c.arc(x, cy, r, Math.PI, 0); c.lineTo(x + r, cy + r * 0.25); c.lineTo(x - r, cy + r * 0.25); c.closePath(); c.fill(); c.stroke();
-      for (const dx of [-0.6, 0, 0.6]) {
-        c.beginPath(); c.moveTo(x + dx * r, cy + r * 0.25);
-        for (let k = 1; k <= 4; k++) c.lineTo(x + dx * r + (k % 2 ? 2 : -2), cy + r * 0.25 + k * r * 0.35);
-        c.stroke();
-      }
-    };
-
     const step = (dt: number) => {
       speed = Math.min(fast, speed + W * 0.007 * dt);
       noticeLeft -= dt;
@@ -133,6 +169,7 @@ const { width } = Astro.props;
       offset += speed * dt;
       if (Math.floor(offset / internode) > before) { nodes += 1; if (y === 0) flash = 0.12; }
       flash -= dt;
+      for (const kind of Object.keys(KINDS) as Kind[]) if (nodes >= KINDS[kind].at && !unlocked.has(kind)) { unlocked.add(kind); if (KINDS[kind].at > 0) queue.push(kind); }
       if (y > 0 || vy > 0) {
         y += vy * dt; vy -= gravity * dt;
         if (y <= 0) { y = 0; vy = 0; leaps.push({ x: runnerX, age: 0 }); flash = 0.12; }
@@ -140,31 +177,14 @@ const { width } = Astro.props;
       for (const l of leaps) { l.x -= speed * dt; l.age += dt; }
       leaps = leaps.filter((l) => l.age < 0.35);
       for (const h of hazards) {
-        h.x -= speed * (h.kind === "snail" ? 1.15 : h.kind === "octopus" ? 1.45 : 1) * dt;
-        if (h.kind === "jelly") { h.phase! += dt * 2.6; h.y = axon - sheath - h.r - (hop * 0.85) * (0.5 + 0.5 * Math.sin(h.phase!)); }
+        h.x -= speed * (h.kind === "microglia" ? 1.12 : h.kind === "interneuron" ? 1.45 : 1) * dt;
+        if (h.phase !== undefined) h.phase += dt * (h.kind === "astrocyte" ? 2.6 : 3);
+        if (h.kind === "astrocyte") h.y = axon - sheath - h.r * 1.3 - (hop * 0.85) * (0.5 + 0.5 * Math.sin(h.phase!));
       }
       hazards = hazards.filter((h) => h.x + (h.w ?? 0) > -40);
-      for (const [at, , text] of UNLOCK) if (nodes === at && notice !== text) [notice, noticeLeft] = [text, 2.5];
-      // Hazards come at random gaps that always leave room to land and take off again.
       next -= speed * dt;
-      if (next <= 0) {
-        const open = ["fish", ...UNLOCK.filter(([at]) => nodes >= at).map(([, kind]) => kind)] as Kind[];
-        const kind = open[Math.floor(Math.random() * open.length)], r = H * (0.045 + Math.random() * 0.035);
-        let extra = 0;
-        if (kind === "snail") hazards.push({ x: W + 30, r: H * 0.05, kind, y: axon - hop * (0.55 + Math.random() * 0.35) });
-        else if (kind === "lesion") { extra = internode * (0.45 + Math.random() * 0.45); hazards.push({ x: W + 10, r: 0, w: extra, kind, y: axon }); }
-        else if (kind === "jelly") hazards.push({ x: W + 30, r: H * 0.045, kind, y: axon - hop * 0.5, phase: Math.random() * 6 });
-        else if (kind === "urchin") { const u = H * 0.055; hazards.push({ x: W + 30, r: u * 1.5, kind, y: axon - u - sheath * 0.2 }); }
-        else if (kind === "octopus") { const o = H * 0.05; hazards.push({ x: W + 60, r: o, kind, y: axon - o - sheath * 0.2 }); }
-        else {
-          hazards.push({ x: W + 30, r, kind, y: axon - r - sheath * 0.2 });
-          const more = nodes > 20 ? Math.floor(Math.random() * (nodes > 45 ? 3 : 2)) : 0;
-          for (let i = 1; i <= more; i++) hazards.push({ x: W + 30 + r * 2.6 * i, r: r * 0.85, kind, y: axon - r * 0.85 - sheath * 0.2 });
-        }
-        next = speed * (air + 0.15 + Math.random() * Math.max(0.3, 1.1 - nodes * 0.008)) + extra;
-      }
+      if (next <= 0) spawn();
       // Collision with the spike (its base and its peak).
-      const CAUSE: Record<Kind, string> = { fish: "tetrodotoxin", snail: "conotoxin", urchin: "a sea urchin", lesion: "demyelination", jelly: "box jellyfish venom", octopus: "a blue-ringed octopus (tetrodotoxin)" };
       for (const h of hazards) {
         const [top, bottom] = [axon - y - 26, axon - y];
         const hit = h.kind === "lesion"
@@ -173,7 +193,7 @@ const { width } = Astro.props;
         if (hit && state === "running") {
           state = "over";
           const record = best("saltatory", nodes);
-          gameOver(game, `<strong>Conduction block at node ${nodes}</strong> by ${CAUSE[h.kind]} · ${metres()} m/s${nodes >= record && nodes > 0 ? " · new best!" : ""}`);
+          gameOver(game, `Conduction block at node ${nodes} by ${KINDS[h.kind].cause} · ${metres()} m/s${nodes >= record && nodes > 0 ? " · new best!" : ""}`);
         }
       }
       draw();
@@ -182,12 +202,13 @@ const { width } = Astro.props;
     const press = () => {
       if (state !== "running") {
         [state, speed, offset, y, vy, nodes, next, hazards, leaps, noticeLeft, notice] = ["running", slow, 0, 0, 0, 0, W * 0.5, [], [], 0, ""];
-        begin(game, "Jump the pufferfish · new hazards join as you go");
+        [unlocked, queue, seen] = [new Set(), [], {}];
+        begin(game, "Jump the plaques · new hazards join as you go");
         loop(game, step);
       } else if (y === 0) vy = Math.sqrt(2 * gravity * hop);
     };
     game.element.addEventListener("pointerdown", (event) => { event.preventDefault(); game.element.focus(); press(); });
-    game.element.addEventListener("keydown", (event) => { if (event.key === " " || event.key === "ArrowUp" || event.key === "Enter") { event.preventDefault(); press(); } });
+    game.element.addEventListener("keydown", (event) => { if (event.repeat) return; if (event.key === " " || event.key === "ArrowUp" || event.key === "Enter") { event.preventDefault(); press(); } });
     draw();
   }
 </script>

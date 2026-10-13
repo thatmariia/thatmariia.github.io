@@ -251,7 +251,7 @@ a.pill:hover, .pill.solid, .pill[aria-current="page"] { background: var(--ink); 
 .topo a text { fill: var(--ink); }
 .topo a:hover .summit { transform: scale(1.4); transform-box: fill-box; transform-origin: center; }
 .topo .border { stroke: var(--ink); stroke-width: 0.6; stroke-dasharray: 2 5; opacity: 0.35; }
-.topo .region { fill: var(--muted); font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.08em; }
+.topo .region { fill: var(--muted); font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.03em; }
 .topo .here { fill: var(--bg); stroke: var(--ink); stroke-width: 2; }
 
 

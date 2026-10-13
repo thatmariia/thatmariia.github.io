@@ -9,7 +9,7 @@ const { width } = Astro.props;
 
 <Arcade name="qubit" width={width} height={Math.round(width * (width > 600 ? 0.42 : 1))}
   label="Qubit: apply the gates X, Y, Z, H and S with keys or buttons to move the state on the Bloch sphere to the target in the fewest gates"
-  rules={["One qubit", "The arrow is the qubit's state on the Bloch sphere; the ring is the target.", "Apply gates (X Y Z H S, keys or buttons) to move the arrow onto the ring.", "Each gate's letter marks where it would take the arrow. Use the fewest gates."]} />
+  rules={["One qubit", "The arrow is a qubit's state on the Bloch sphere. Your job: turn it onto the ring.", "Gates turn the arrow: X, Y and Z half a turn around their axis, H swaps up with front, S a quarter turn around the vertical.", "No need to know that: each pill on the sphere shows where its gate sends the arrow. Use exactly the gates allowed (keys X Y Z H S or the buttons)."]} />
 
 <script>
   import { begin, best, corners, gameOver, inside, loop, pills, pointer, setup, type Button, type Game } from "../../lib/game";
@@ -36,6 +36,16 @@ const { width } = Astro.props;
     const game: Game = setup(figure, () => draw());
     const { W, H } = game, R = Math.min(W * 0.22, H * 0.28), [cx, cy] = [W / 2, H * 0.46];
     let state: "idle" | "running" | "solved" | "over" = "idle";
+    // The arrow turns smoothly from where it was to where a gate sends it.
+    let from: number[] = [0, 0, 1], turn = 1;
+    const mix = (a: number[], b: number[], e: number) => { const v = a.map((x, i) => x * (1 - e) + b[i] * e), n = Math.hypot(...v) || 1; return v.map((x) => x / n); };
+    const shown = () => {
+      const e = 1 - (1 - Math.min(1, turn)) ** 3;
+      if (from.reduce((s, x, i) => s + x * qubit[i], 0) > -0.5) return mix(from, qubit, e);
+      // Opposite poles: swing through a point a quarter turn away rather than through the centre.
+      const [a, b, c] = from, mid = mix([b * 0.8 - c * 0.5, c * 0.3 - a * 0.8, a * 0.5 - b * 0.3], [0, 0, 0], 0);
+      return e < 0.5 ? mix(from, mid, e * 2) : mix(mid, qubit, e * 2 - 1);
+    };
     let qubit: State = [0, 0, 1], target: State = [1, 0, 0], used: string[] = [], budget = 1, clock = 0, limit = 12, solved = 0, note = "", buttons: Button[] = [];
     // Oblique projection: z up, y to the right, x towards the viewer (down-left).
     const project = ([x, y, z]: number[]) => [cx + R * (y - x * 0.38), cy + R * (-z + x * 0.32)];
@@ -68,11 +78,13 @@ const { width } = Astro.props;
         // Target: a ring; state: an arrow from the centre.
         const [tx, ty] = project(target);
         c.lineWidth = 2; c.beginPath(); c.arc(tx, ty, 9, 0, Math.PI * 2); c.stroke();
-        const [qx, qy] = project(qubit), angle = Math.atan2(qy - cy, qx - cx);
+        const [qx, qy] = project(shown()), angle = Math.atan2(qy - cy, qx - cx);
         c.lineWidth = 3; c.beginPath(); c.moveTo(cx, cy); c.lineTo(qx, qy); c.stroke();
         c.fillStyle = ink; c.beginPath(); c.moveTo(qx, qy); c.lineTo(qx - 10 * Math.cos(angle - 0.4), qy - 10 * Math.sin(angle - 0.4)); c.lineTo(qx - 10 * Math.cos(angle + 0.4), qy - 10 * Math.sin(angle + 0.4)); c.fill();
         c.fillStyle = ink; c.font = `600 12px ${mono}`;
-        c.fillText(state === "solved" ? note : `${NAMES[qubit.join()]} → ${NAMES[target.join()]} in ${budget} ${budget === 1 ? "gate" : "gates"} · used ${used.join(" ") || "none"}`, W / 2, 42);
+        c.fillText(state === "solved" ? note : `move the arrow onto the ring in ${budget - used.length} more ${budget - used.length === 1 ? "gate" : "gates"}`, W / 2, 42);
+        c.fillStyle = muted; c.font = `11px ${mono}`;
+        if (state === "running") c.fillText(used.length ? `so far: ${used.join(" ")}` : "each pill shows where that gate sends the arrow", W / 2, 58);
         if (state === "running") {
           const left = Math.max(0, 1 - clock / limit);
           c.strokeStyle = muted; c.lineWidth = 2;
@@ -84,7 +96,8 @@ const { width } = Astro.props;
     }
 
     const next = () => {
-      do target = POLES[Math.floor(Math.random() * POLES.length)]; while (same(target, qubit));
+      // The first targets are one gate away; then anything goes.
+      do target = POLES[Math.floor(Math.random() * POLES.length)]; while (same(target, qubit) || (solved < 3 && distance(qubit, target) > 1));
       [budget, used, clock, limit, state] = [distance(qubit, target), [], 0, Math.max(4, 12 - solved * 0.5), "running"];
     };
     const end = (why: string) => {
@@ -94,13 +107,14 @@ const { width } = Astro.props;
     };
     const apply = (gate: string) => {
       if (state !== "running") return;
+      [from, turn] = [shown(), 0];
       qubit = GATES[gate](qubit);
       used.push(gate);
       if (same(qubit, target)) { solved += 1; [state, clock, note] = ["solved", 0, `${used.join(" ")}: optimal`]; }
       else if (used.length >= budget) end(`${used.join(" ")} is not it: ${NAMES[qubit.join()]}, not ${NAMES[target.join()]}`);
     };
     const step = (dt: number) => {
-      clock += dt;
+      clock += dt; turn += dt / 0.35;
       if (state === "running" && clock > limit) end("Decohered: out of time");
       if (state === "solved" && clock > 0.7) next();
       draw();

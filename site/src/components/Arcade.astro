@@ -9,7 +9,7 @@ const pool = items.map(({ kind, title, href }) => ({ kind, title, href }));
 
 <div class={`fig arcade ${name}`} data-width={width} data-height={height} data-rules={JSON.stringify(rules)}>
   <div class="stage">
-    <canvas tabindex="0" style={`aspect-ratio: ${width} / ${height}`} aria-label={label}></canvas>
+    <canvas tabindex="0" style={`aspect-ratio: ${width} / ${height}; --ratio: ${(width / height).toFixed(4)}`} aria-label={label}></canvas>
     <div class="overlay" aria-live="polite" hidden></div>
   </div>
   <div class="bar">

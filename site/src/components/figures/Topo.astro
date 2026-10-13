@@ -16,7 +16,7 @@ const vertical = height > width;
 const [start, end] = [firstYear * 12, now + 3];
 const f = (v: number) => v.toFixed(1);
 // (time in months, lane in 0..1) → screen; time runs left to right, or down on narrow screens.
-const [x0, x1, y0, y1] = vertical ? [44, width - 14, 30, height - 14] : [16, width - 16, 18, height - 34];
+const [x0, x1, y0, y1] = vertical ? [14, width - 14, 30, height - 14] : [16, width - 16, 18, height - 16];
 const at = (u: number, v: number): Point => vertical
   ? [x0 + v * (x1 - x0), y0 + ((u - start) / (end - start)) * (y1 - y0)]
   : [x0 + ((u - start) / (end - start)) * (x1 - x0), y0 + v * (y1 - y0)];
@@ -90,12 +90,8 @@ const levels = Array.from({ length: 11 }, (_, l) => ({ index: (l + 1) % 4 === 0,
 // Summits: the highest hill of each organisation, labelled where there is room.
 const summits = [...new Set(hills.map((h) => `${h.section} ${h.org}`))]
   .map((key) => hills.filter((h) => `${h.section} ${h.org}` === key).sort((a, b) => b.h - a.h)[0]).sort((a, b) => b.h - a.h);
-const years = Array.from({ length: Math.floor(now / 12) - firstYear + 1 }, (_, i) => firstYear + i).filter((y) => (y - firstYear) % (vertical ? 2 : 1) === 0);
-// Summit names avoid the year labels and each other.
-const placed: number[][] = years.map((yr) => {
-  const [x, y] = at(yr * 12, vertical ? 0 : 1);
-  return vertical ? [x - 40, y - 8, x - 4, y + 5] : [x - 16, y + 12, x + 16, y + 25];
-});
+// Summit names avoid each other.
+const placed: number[][] = [];
 const labelled = summits.flatMap((h) => {
   const [x, y] = at(h.u, h.v), text = shortName(h.org, vertical ? 14 : 20), w = text.length * 6.6 + 6;
   const box = [x - w / 2, y - 26, x + w / 2, y - 12];
@@ -161,9 +157,5 @@ const here = trail[trail.length - 1];
       </a>
     ))}
     <circle class="here" cx={f(here[0])} cy={f(here[1])} r="4"><title>now</title></circle>
-    {years.map((yr) => {
-      const [x, y] = at(yr * 12, vertical ? 0 : 1);
-      return vertical ? <text class="year" x={f(x - 8)} y={f(y + 3)} text-anchor="end">{yr}</text> : <text class="year" x={f(x)} y={f(y + 22)} text-anchor="middle">{yr}</text>;
-    })}
   </svg>
 </div>

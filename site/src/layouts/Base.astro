@@ -35,9 +35,7 @@ const here = Astro.url.pathname;
         {PAGES.map(([href, label]) => (
           <div class="page">
             <a class="pill" href={href} aria-current={href === here ? "page" : undefined}>{label}</a>
-            {href === here && sections.length > 0 && (
-              <ul class="subs">{sections.map((s) => <li><a href={`#${s.id}`}>{s.title}</a></li>)}</ul>
-            )}
+            {href === here && <ul class="subs">{sections.map((s) => <li><a href={`#${s.id}`}>{s.title}</a></li>)}</ul>}
           </div>
         ))}
       </nav>

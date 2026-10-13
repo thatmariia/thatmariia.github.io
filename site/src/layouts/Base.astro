@@ -3,12 +3,14 @@ import "@fontsource-variable/sora/index.css";
 import "@fontsource-variable/martian-mono/index.css";
 import "../styles/base.css";
 import "../styles/site.css";
+import type { ComponentProps } from "astro/types";
+import Figure from "../components/Figure.astro";
 import FieldLines from "../components/figures/FieldLines.astro";
 import Head from "../components/Head.astro";
 import { affiliations, data, PAGES } from "../lib/data";
 
-interface Props { title?: string; sections?: { id: string; title: string }[]; mark?: number }
-const { title, sections = [], mark = 1 } = Astro.props;
+interface Props { title?: string; sections?: { id: string; title: string }[]; mark?: number; figures?: ComponentProps<typeof Figure>["show"] }
+const { title, sections = [], mark = 1, figures } = Astro.props;
 const { profile } = data;
 const here = Astro.url.pathname;
 ---
@@ -56,9 +58,10 @@ const here = Astro.url.pathname;
       {title && (
         <header class="page-head">
           <h1>{title}</h1>
-          <FieldLines fields={["", "", ""]} seed={mark} width={180} height={84} labels={false} />
+          {!figures && <FieldLines fields={["", "", ""]} seed={mark} width={180} height={84} labels={false} />}
         </header>
       )}
+      {figures && <Figure show={figures} />}
       <slot />
     </main>
   </body>

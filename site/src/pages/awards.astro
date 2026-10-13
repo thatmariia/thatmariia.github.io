@@ -6,7 +6,7 @@ import { data, type Entry } from "../lib/data";
 const awards = data.awards as Entry[];
 ---
 
-<Base title="Awards & distinctions" figures={["fireworks", "starchart", "trophies"]}>
+<Base title="Awards & distinctions" figures={["fireworks"]}>
   <section class="block" id="awards">
     <h2>Awards & distinctions</h2>
     {awards.map((entry) => <EntryItem entry={entry} />)}

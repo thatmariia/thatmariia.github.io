@@ -194,7 +194,8 @@ a.pill:hover, .pill.solid, .pill[aria-current="page"] { background: var(--ink); 
 .game .membrane { fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linejoin: round; }
 .game .threshold { stroke: var(--ink); stroke-width: 0.8; stroke-dasharray: 3 5; opacity: 0.5; }
 .game .count, .game .prompt { fill: var(--ink); }
-.synapses .readout .pill { margin-left: 6px; cursor: pointer; }
+.arcade canvas { display: block; width: 100%; cursor: pointer; touch-action: manipulation; user-select: none; }
+.arcade canvas:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; border-radius: 8px; }
 
 .volleyball .sand { stroke: var(--ink); stroke-width: 1.4; }
 .volleyball .grain { fill: var(--ink); opacity: 0.35; }
@@ -208,26 +209,47 @@ a.pill:hover, .pill.solid, .pill[aria-current="page"] { background: var(--ink); 
 .volleyball .touch .move { fill: var(--muted); font-weight: 400; }
 .volleyball .ball .dark { fill: var(--ink); }
 .volleyball .ball .light { fill: var(--bg); }
-.volleyball .ball path { stroke: var(--ink); stroke-width: 0.6; }
-.volleyball .ball .rim { fill: none; stroke: var(--ink); stroke-width: 1.4; }
+.volleyball .ball .mid { fill: var(--ink); fill-opacity: 0.3; }
+.volleyball .ball path { stroke: var(--ink); stroke-width: 0.4; }
+.volleyball .ball .rim { fill: none; stroke: var(--ink); stroke-width: 1.1; }
 .volleyball .shadow { fill: var(--ink); opacity: 0.18; }
 
-.worldline .axis { stroke: var(--ink); stroke-width: 0.6; stroke-dasharray: 2 4; opacity: 0.3; }
-.worldline .stay { stroke: var(--ink); stroke-width: 7; stroke-linecap: round; opacity: 0.14; }
-.worldline .cone { fill: none; stroke: var(--ink); stroke-width: 0.8; stroke-dasharray: 3 3; opacity: 0.6; }
-.worldline .me { fill: none; stroke: var(--ink); stroke-width: 1.8; stroke-linejoin: round; }
-.worldline .pulse { stroke: var(--bg); stroke-width: 3.5; stroke-dasharray: 0.02 0.98; animation-duration: 8s; }
+.topo .contour { fill: none; stroke: var(--ink); stroke-width: 0.6; opacity: 0.4; }
+.topo .contour.index { stroke-width: 1.1; opacity: 0.75; }
+.topo .trail { fill: none; stroke: var(--ink); stroke-width: 1.8; stroke-dasharray: 5 4; stroke-linecap: round; }
+.topo .hiker { fill: none; stroke: var(--ink); stroke-width: 7; stroke-linecap: round; stroke-dasharray: 0.0001 0.9999; stroke-dashoffset: 1; animation: travel 24s linear infinite; }
+.topo .summit { fill: var(--ink); }
+.topo a text { fill: var(--ink); }
+.topo a:hover .summit { transform: scale(1.4); transform-box: fill-box; transform-origin: center; }
+.topo .here { fill: var(--bg); stroke: var(--ink); stroke-width: 2; }
 
-.braid .strand { fill: none; stroke: var(--ink); stroke-width: 1.3; stroke-linejoin: round; }
-.braid .pulse { stroke-width: 3; stroke-dasharray: 0.03 0.97; animation-duration: 6s; }
+.feynman .fermion line { stroke: var(--ink); stroke-width: 1.4; }
+.feynman .arrow { fill: none; stroke: var(--ink); stroke-width: 1.4; stroke-linejoin: round; }
+.feynman .vertex { fill: var(--ink); }
+.feynman .gluon { fill: none; stroke: var(--ink); stroke-width: 0.9; opacity: 0.6; }
+.feynman .photon { fill: none; stroke: var(--ink); stroke-width: 0.8; opacity: 0.55; }
+.feynman .quantum { fill: none; stroke: var(--ink); stroke-width: 2.4; stroke-linecap: round; stroke-dasharray: 0.12 0.88; stroke-dashoffset: 1; animation: travel 2.2s linear infinite; }
+.feynman .leg { fill: var(--bg); stroke: var(--ink); stroke-width: 1.1; }
+.feynman a:hover .photon { opacity: 1; stroke-width: 1.4; }
+.feynman .fermion text { fill: var(--ink); }
+.feynman .time { fill: none; stroke: var(--ink); stroke-width: 1; opacity: 0.5; }
 
-.piano .play { margin-bottom: 8px; cursor: pointer; background: var(--bg); color: var(--ink); }
-.piano .play:hover { background: var(--ink); color: var(--bg); }
-.piano .row { stroke: var(--ink); stroke-width: 0.6; opacity: 0.2; }
-.piano .note { fill: var(--ink); opacity: 0.8; stroke: var(--bg); stroke-width: 1; }
-.piano .note:hover { opacity: 1; }
-.piano .click { stroke: var(--ink); stroke-width: 1.4; }
-.piano .cursor { stroke: var(--ink); stroke-width: 1.5; opacity: 0.7; }
+.neuralnet .dense { fill: none; stroke: var(--ink); stroke-width: 0.4; opacity: 0.07; }
+.neuralnet .weight { fill: none; stroke: var(--ink); opacity: 0.35; }
+.neuralnet .signal { fill: none; stroke: var(--ink); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 0.04 0.96; stroke-dashoffset: 1; animation: travel 3.3s linear infinite; }
+.neuralnet circle { fill: color-mix(in srgb, var(--ink) calc(var(--a) * 100%), var(--bg)); stroke: var(--ink); stroke-width: 1.3; animation: fire 3.3s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.neuralnet .unit text { fill: var(--ink); }
+.neuralnet .layer { fill: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-size: 9.5px; }
+@keyframes fire { 0%, 70%, 100% { transform: scale(1); } 80% { transform: scale(1.3); } }
+
+.eeg .grid { stroke: var(--ink); stroke-width: 0.5; opacity: 0.15; }
+.eeg .trace { fill: none; stroke: var(--ink); stroke-width: 1; stroke-linejoin: round; }
+.eeg .ghost { opacity: 0.15; }
+.eeg .sweep-window { transform-box: fill-box; transform-origin: left; animation: reveal var(--sweep) linear infinite; }
+.eeg .playhead { stroke: var(--ink); stroke-width: 1; opacity: 0.5; animation: sweep var(--sweep) linear infinite; }
+.eeg .scale { fill: none; stroke: var(--ink); stroke-width: 1.4; }
+@keyframes reveal { from { transform: scaleX(0); } }
+@keyframes sweep { to { transform: translateX(calc(var(--span) * 1px)); } }
 
 .fireworks .ground { stroke: var(--ink); stroke-width: 1.2; }
 .fireworks .post { stroke: var(--ink); stroke-width: 0.6; stroke-dasharray: 1 3; }
@@ -241,52 +263,6 @@ a.pill:hover, .pill.solid, .pill[aria-current="page"] { background: var(--ink); 
 .fireworks a:hover .sparks { stroke-width: 2; }
 @keyframes launch { 0% { stroke-dashoffset: 1; opacity: 1; } 10% { stroke-dashoffset: 0; opacity: 1; } 24%, 100% { stroke-dashoffset: 0; opacity: 0; } }
 @keyframes burst { 0%, 10% { transform: scale(0.1); opacity: 0; } 11% { opacity: 1; } 30% { transform: scale(1); opacity: 0.9; } 44%, 100% { transform: scale(1.1) translateY(6px); opacity: 0; } }
-
-.starchart .grid { fill: none; stroke: var(--ink); stroke-width: 0.6; opacity: 0.15; }
-.starchart .dust { fill: var(--ink); opacity: 0.35; }
-.starchart .figure-line { stroke: var(--ink); stroke-width: 0.8; opacity: 0.5; }
-.starchart .dim circle { fill: var(--bg); stroke: var(--ink); stroke-width: 1.2; }
-.starchart .bright circle { fill: var(--ink); }
-.starchart .bright path { stroke: var(--ink); stroke-width: 1; stroke-linecap: round; }
-.starchart .dim, .starchart .bright { animation: twinkle 3s ease-in-out infinite; }
-.starchart a:hover circle { fill: var(--ink); }
-.starchart text { fill: var(--ink); }
-@keyframes twinkle { 50% { opacity: 0.45; } }
-
-.trophies .parallel { fill: none; stroke: var(--ink); stroke-width: 0.7; opacity: 0.35; }
-.trophies .meridians path { fill: none; stroke: var(--ink); stroke-width: 1; }
-.trophies .meridians .back { opacity: 0.2; }
-.trophies a text { fill: var(--ink); }
-.trophies a .year { fill: var(--muted); }
-.trophies a:hover .parallel { opacity: 0.8; }
-
-.synapses .board { display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 1fr; gap: 10px; }
-.synapses[data-pairs="4"] .board { grid-template-columns: repeat(2, 1fr); }
-.synapses .card {
-  position: relative; border: 1px solid var(--ink); border-radius: 18px; background: var(--bg); color: var(--ink);
-  font: inherit; font-size: 0.8rem; line-height: 1.3; padding: 10px 12px; cursor: pointer; text-align: left; overflow: hidden;
-  transition: transform 0.35s, background-color 0.3s, color 0.3s;
-}
-.synapses .card .back { position: absolute; inset: 6px; border-radius: 13px; background-image: radial-gradient(var(--ink) 1.1px, transparent 1.6px); background-size: 12px 12px; opacity: 0.35; }
-.synapses .card .front { display: none; }
-.synapses .card .front .xref-kind { display: inline-block; margin-bottom: 6px; }
-.synapses .card.up .back { display: none; }
-.synapses .card.up .front { display: block; animation: appear 0.4s; }
-.synapses .card.matched { background: var(--ink); color: var(--bg); cursor: default; }
-.synapses .card.matched .xref-kind { border-color: var(--bg); }
-.synapses .card:not(.up):hover { transform: translateY(-2px); }
-.synapses .card:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
-
-.when .question { min-height: 3.4em; font-size: 0.95rem; font-weight: 600; }
-.when .question .xref-kind { margin-right: 6px; }
-.when svg { cursor: crosshair; }
-.when .hit { fill: transparent; }
-.when .axis { stroke: var(--ink); stroke-width: 1.4; }
-.when .tick { stroke: var(--ink); stroke-width: 1; }
-.when .guess { stroke: var(--ink); stroke-width: 2; stroke-dasharray: 3 3; }
-.when .truth { stroke: var(--ink); stroke-width: 2.6; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw 0.6s ease-out forwards; }
-.when .truth-label { fill: var(--ink); font-weight: 700; animation: appear 0.6s; }
-.when .readout .pill { margin-left: 6px; cursor: pointer; }
 
 .mark .line { opacity: 0.75; animation-duration: 1.2s; }
 .mark .dot { fill: var(--bg); stroke: var(--ink); stroke-width: 1.2; }

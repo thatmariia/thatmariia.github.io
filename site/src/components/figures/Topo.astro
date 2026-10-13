@@ -1,10 +1,12 @@
 ---
-// Path as a topographic map. Every role is a hill on its organisation's lane, centred on when it
-// happened: as wide as it lasted and as high as it lasted and produced (linked outputs and events).
+// Path as a topographic map. Time runs along the map; across it lie regions, one per kind of role
+// (and an unnamed one for studies, which shape the land without labels).
+// Every role is a hill in its region (each organisation on its own line there), centred on when it
+// happened, as wide as it lasted and as high as it lasted and produced (linked outputs and events).
 // Contour lines trace the landscape (every fourth one bolder), summits carry the organisations, and
-// my trail winds through time across the hills, with a hiker walking it.
-import { dated, firstYear, now, roleEntries, shortName } from "../../lib/career";
-import { refs } from "../../lib/data";
+// my trail winds through the regions over time, with a hiker walking it.
+import { dated, firstYear, month, now, roleEntries, shortName } from "../../lib/career";
+import { data, pathSections, refs, type Entry } from "../../lib/data";
 import { smooth } from "../../lib/figure";
 import type { Point } from "../../lib/random";
 interface Props { seed: number; width: number; height: number }
@@ -14,19 +16,27 @@ const vertical = height > width;
 const [start, end] = [firstYear * 12, now + 3];
 const f = (v: number) => v.toFixed(1);
 // (time in months, lane in 0..1) → screen; time runs left to right, or down on narrow screens.
-const [x0, x1, y0, y1] = vertical ? [44, width - 14, 18, height - 14] : [16, width - 16, 18, height - 34];
+const [x0, x1, y0, y1] = vertical ? [44, width - 14, 30, height - 14] : [16, width - 16, 18, height - 34];
 const at = (u: number, v: number): Point => vertical
   ? [x0 + v * (x1 - x0), y0 + ((u - start) / (end - start)) * (y1 - y0)]
   : [x0 + ((u - start) / (end - start)) * (x1 - x0), y0 + v * (y1 - y0)];
 
-// Organisations get lanes spread by the golden ratio; each role is a Gaussian hill on its lane.
-const orgs = [...new Set([...roleEntries].sort((a, b) => a.from - b.from).map((r) => r.org))];
-const lane = (org: string) => 0.1 + 0.8 * ((orgs.indexOf(org) * 0.618034 + 0.3) % 1);
+// Regions: one band per kind of role; within a band, each organisation has its own line.
+// Studies shape the land too, in a last, unnamed band.
+const regions = pathSections.filter((p) => roleEntries.some((r) => r.section === p.id));
+const band = 1 / (regions.length + 1);
+const studies = (data.education as Entry[]).flatMap((e) => e.periods.filter((p) => p.start && month(p.start) <= now)
+  .map((p, i) => ({ from: month(p.start!), to: Math.min(now, month(p.end ?? p.start!) + 6), v: band * (regions.length + 0.5) + band * 0.3 * ((i * 0.618034) % 1 - 0.5) })));
+const lane = (section: string, org: string) => {
+  const r = regions.findIndex((p) => p.id === section), orgs = [...new Set(roleEntries.filter((e) => e.section === section).sort((a, b) => a.from - b.from).map((e) => e.org))];
+  return band * (r + 0.5) + (orgs.length > 1 ? band * 0.56 * (((orgs.indexOf(org) * 0.618034) % 1) - 0.5) : 0);
+};
 const hills = roleEntries.map((r) => {
   const months = r.to - r.from, linked = r.related.filter((id) => id in dated).length;
-  return { ...r, u: (r.from + r.to) / 2, v: lane(r.org), su: Math.max(5, months / 2.4), sv: 0.075, h: Math.sqrt(months + 1) * (1 + 0.12 * linked) };
+  return { ...r, months, linked, u: (r.from + r.to) / 2, v: lane(r.section, r.org), su: Math.max(5, months / 2.4), sv: band * 0.22, h: Math.sqrt(months + 1) * (1 + 0.12 * linked) };
 });
-const z = (u: number, v: number) => hills.reduce((s, h) => s + h.h * Math.exp(-(((u - h.u) / h.su) ** 2 + ((v - h.v) / h.sv) ** 2) / 2), 0);
+const land = [...hills, ...studies.map((s) => ({ ...s, u: (s.from + s.to) / 2, su: Math.max(5, (s.to - s.from) / 2.4), sv: band * 0.22, h: Math.sqrt(s.to - s.from + 1) }))];
+const z = (u: number, v: number) => land.reduce((s, h) => s + h.h * Math.exp(-(((u - h.u) / h.su) ** 2 + ((v - h.v) / h.sv) ** 2) / 2), 0);
 
 // Sample the landscape on a grid and trace contour lines with marching squares.
 const [nu, nv] = vertical ? [110, 56] : [180, 64];
@@ -76,8 +86,14 @@ const contour = (level: number) => {
 const levels = Array.from({ length: 11 }, (_, l) => ({ index: (l + 1) % 4 === 0, lines: contour(top * ((l + 1) / 12) ** 1.8) }));
 
 // Summits: the highest hill of each organisation, labelled where there is room.
-const summits = orgs.map((org) => hills.filter((h) => h.org === org).sort((a, b) => b.h - a.h)[0]).sort((a, b) => b.h - a.h);
-const placed: number[][] = [];
+const summits = [...new Set(hills.map((h) => `${h.section} ${h.org}`))]
+  .map((key) => hills.filter((h) => `${h.section} ${h.org}` === key).sort((a, b) => b.h - a.h)[0]).sort((a, b) => b.h - a.h);
+const years = Array.from({ length: Math.floor(now / 12) - firstYear + 1 }, (_, i) => firstYear + i).filter((y) => (y - firstYear) % (vertical ? 2 : 1) === 0);
+// Summit names avoid the year labels and each other.
+const placed: number[][] = years.map((yr) => {
+  const [x, y] = at(yr * 12, vertical ? 0 : 1);
+  return vertical ? [x - 40, y - 8, x - 4, y + 5] : [x - 16, y + 12, x + 16, y + 25];
+});
 const labelled = summits.flatMap((h) => {
   const [x, y] = at(h.u, h.v), text = shortName(h.org, vertical ? 14 : 20), w = text.length * 6.6 + 6;
   const box = [x - w / 2, y - 26, x + w / 2, y - 12];
@@ -88,7 +104,7 @@ const labelled = summits.flatMap((h) => {
 // The trail: where I was at each month, the lanes of the roles I held weighted by height, smoothed.
 let lastV = 0.5;
 const raw = Array.from({ length: Math.ceil((now - start) / 2) + 1 }, (_, k) => {
-  const t = start + k * 2, active = hills.filter((h) => h.from <= t && t <= h.to);
+  const t = start + k * 2, active = land.filter((h) => h.from <= t && t <= h.to);
   if (active.length) lastV = active.reduce((s, h) => s + h.v * h.h, 0) / active.reduce((s, h) => s + h.h, 0);
   return [t, lastV] as Point;
 });
@@ -96,18 +112,25 @@ const trail = raw.map(([t], k) => {
   const window = raw.slice(Math.max(0, k - 3), k + 4);
   return at(t, window.reduce((s, p) => s + p[1], 0) / window.length);
 });
-const years = Array.from({ length: Math.floor(now / 12) - firstYear + 1 }, (_, i) => firstYear + i).filter((y) => (y - firstYear) % (vertical ? 2 : 1) === 0);
 const here = trail[trail.length - 1];
 ---
 
 <div class="fig topo">
-  <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`Path since ${firstYear} as a topographic map: every role a hill, with my trail across them`}>
+  <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`Path since ${firstYear} as a topographic map: every role a hill in the region of its kind, with my trail across them`}>
+    {regions.map((_, r) => {
+      const [a, b] = [at(start, band * (r + 1)), at(end, band * (r + 1))];
+      return <line class="border" x1={f(a[0])} y1={f(a[1])} x2={f(b[0])} y2={f(b[1])} />;
+    })}
+    {regions.map((p, r) => {
+      const [x, y] = vertical ? at(start, band * (r + 0.5)) : at(start, band * r);
+      return vertical ? <text class="region" x={f(x)} y={f(y - 4)} text-anchor="middle">{p.title}</text> : <text class="region" x={f(x + 2)} y={f(y + 11)}>{p.title}</text>;
+    })}
     {levels.map((l) => l.lines.map((line) => <path class:list={["contour", { index: l.index }]} d={smooth(line.points, line.closed)} />))}
     <path class="trail" d={smooth(trail)} />
     <path class="hiker" d={smooth(trail)} pathLength="1" />
     {labelled.map(({ h, x, y, text }) => (
       <a href={h.id && refs[h.id] ? refs[h.id].href : `/path/#${h.section}`}>
-        <title>{h.org} · {h.role}</title>
+        <title>{h.org} · {h.role} · {h.months} months{h.linked ? ` · ${h.linked} linked outputs and events` : ""}</title>
         <path class="summit" d={`M${f(x - 4)},${f(y + 2)} L${f(x)},${f(y - 5)} L${f(x + 4)},${f(y + 2)}Z`} />
         {text && <text x={f(x)} y={f(y - 12)} text-anchor="middle">{text}</text>}
       </a>

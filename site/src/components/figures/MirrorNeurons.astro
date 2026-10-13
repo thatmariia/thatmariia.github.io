@@ -1,0 +1,133 @@
+---
+// Mirror neurons: mental rotation (Shepard & Metzler, 1971) with neuron morphologies. Is the neuron
+// on the right the one on the left, rotated (same), or its mirror image? Answer with ← / → (or the
+// buttons) before the deadline, which keeps shrinking. Mistakes cost a life (of 3). Reaction time
+// per degree of rotation is measured, as in the original, and there is a prize.
+import Arcade from "../Arcade.astro";
+interface Props { seed: number; width: number; height: number }
+const { width } = Astro.props;
+---
+
+<Arcade name="mirror" width={width} height={Math.round(width * (width > 600 ? 0.42 : 0.95))}
+  label="Mirror neurons: decide whether the right neuron is the left one rotated, or its mirror image; left arrow for same, right arrow for mirror"
+  rules={["Mirror neurons", "Is the neuron on the right the left one rotated, or its mirror image?", "← same · → mirror (or the buttons). The deadline keeps shrinking.", "Mistakes cost a life. You have 3. Your ms per degree of rotation is measured."]} />
+
+<script>
+  import { begin, best, corners, gameOver, inside, loop, pills, pointer, setup, type Button, type Game } from "../../lib/game";
+
+  type Branch = { x1: number; y1: number; x2: number; y2: number; w: number; axon?: boolean };
+  // A pyramidal-ish neuron: an apical dendrite, a few basal dendrites branching at random, and an
+  // axon with a collateral. Random asymmetry makes the mirror image different from any rotation.
+  const neuron = (): Branch[] => {
+    const out: Branch[] = [];
+    const grow = (x: number, y: number, angle: number, length: number, depth: number, w: number) => {
+      const [x2, y2] = [x + Math.cos(angle) * length, y + Math.sin(angle) * length];
+      out.push({ x1: x, y1: y, x2, y2, w });
+      if (depth <= 0) return;
+      const split = 0.35 + Math.random() * 0.45, tilt = (Math.random() - 0.5) * 0.5;
+      grow(x2, y2, angle - split + tilt, length * (0.62 + Math.random() * 0.25), depth - 1, w * 0.7);
+      if (Math.random() < 0.85) grow(x2, y2, angle + split * (0.6 + Math.random()) + tilt, length * (0.5 + Math.random() * 0.3), depth - 1, w * 0.7);
+    };
+    grow(0, -0.12, -Math.PI / 2 + (Math.random() - 0.5) * 0.4, 0.42, 3, 2.6);
+    const basal = 2 + Math.floor(Math.random() * 3);
+    for (let k = 0; k < basal; k++) grow(0, 0.05, Math.PI * (0.15 + 0.7 * ((k + Math.random() * 0.6) / basal)), 0.2 + Math.random() * 0.15, 2, 2);
+    const axon = Math.PI / 2 + (Math.random() - 0.5) * 0.5, [ax, ay] = [Math.cos(axon) * 0.75, 0.1 + Math.sin(axon) * 0.75];
+    out.push({ x1: 0, y1: 0.1, x2: ax, y2: ay, w: 1, axon: true });
+    const c = 0.35 + Math.random() * 0.25, side = Math.random() < 0.5 ? -1 : 1;
+    out.push({ x1: ax * c, y1: 0.1 + (ay - 0.1) * c, x2: ax * c + side * 0.3, y2: 0.1 + (ay - 0.1) * c + 0.15, w: 0.8, axon: true });
+    return out;
+  };
+
+  for (const figure of document.querySelectorAll<HTMLElement>(".fig.mirror")) {
+    const game: Game = setup(figure, () => draw());
+    const { W, H } = game, scale = Math.min(W * 0.2, H * 0.36);
+    let state: "idle" | "trial" | "feedback" | "over" = "idle";
+    let cell = neuron(), angle = 0, mirror = false, clock = 0, deadline = 4.5, score = 0, lives = 3, note = "", buttons: Button[] = [];
+    let results: { angle: number; rt: number }[] = [];
+
+    const drawNeuron = (c: CanvasRenderingContext2D, cx: number, cy: number, rotate: number, flip: boolean, ink: string) => {
+      c.save(); c.translate(cx, cy); c.rotate((rotate * Math.PI) / 180); if (flip) c.scale(-1, 1);
+      c.strokeStyle = ink; c.lineCap = "round";
+      for (const b of cell) {
+        c.lineWidth = b.w; c.setLineDash(b.axon ? [5, 3] : []);
+        c.beginPath(); c.moveTo(b.x1 * scale, b.y1 * scale); c.lineTo(b.x2 * scale, b.y2 * scale); c.stroke();
+      }
+      c.setLineDash([]); c.fillStyle = ink;
+      c.beginPath(); c.moveTo(0, -0.16 * scale); c.lineTo(0.09 * scale, 0.07 * scale); c.lineTo(-0.09 * scale, 0.07 * scale); c.closePath(); c.fill();
+      c.restore();
+    };
+    const slope = () => {
+      const r = results.map((p) => ({ a: Math.min(p.angle, 360 - p.angle), t: p.rt * 1000 }));
+      if (r.length < 3) return 0;
+      const [ma, mt] = [r.reduce((s, p) => s + p.a, 0) / r.length, r.reduce((s, p) => s + p.t, 0) / r.length];
+      const den = r.reduce((s, p) => s + (p.a - ma) ** 2, 0);
+      return den ? r.reduce((s, p) => s + (p.a - ma) * (p.t - mt), 0) / den : 0;
+    };
+
+    function draw() {
+      const { context: c, mono } = game, { ink, muted } = game.colours();
+      c.clearRect(0, 0, W, H);
+      corners(game, "mirror", `${score} correct · lives ${"●".repeat(lives)}${"○".repeat(3 - lives)}`);
+      if (state === "trial" || state === "feedback") {
+        drawNeuron(c, W * 0.28, H * 0.45, 0, false, ink);
+        drawNeuron(c, W * 0.72, H * 0.45, angle, mirror, ink);
+        if (state === "trial") {
+          const left = Math.max(0, 1 - clock / deadline);
+          c.strokeStyle = muted; c.lineWidth = 2;
+          c.beginPath(); c.moveTo(W / 2 - W * 0.3 * left, H * 0.82); c.lineTo(W / 2 + W * 0.3 * left, H * 0.82); c.stroke();
+        } else { c.fillStyle = ink; c.font = `600 12px ${mono}`; c.textAlign = "center"; c.fillText(note, W / 2, H * 0.84); }
+      }
+      buttons = state === "trial" ? pills(game, ["← same", "mirror →"], H - 40) : [];
+    }
+
+    const next = () => {
+      cell = neuron();
+      [angle, mirror, clock, state] = [Math.floor(Math.random() * 12) * 30, Math.random() < 0.5, 0, "trial"];
+    };
+    const miss = (why: string) => {
+      lives -= 1;
+      [note, state, clock] = [why, "feedback", 0];
+      if (lives <= 0) {
+        state = "over";
+        const record = best("mirror", score);
+        gameOver(game, `${score} correct (last: ${why}) · ${Math.round(slope())} ms per degree of rotation${score >= record && score > 0 ? " · new best!" : ""}`);
+      }
+    };
+    const answer = (saysMirror: boolean) => {
+      if (state !== "trial") return;
+      if (saysMirror === mirror) {
+        results.push({ angle, rt: clock });
+        score += 1;
+        deadline = Math.max(1.4, deadline * 0.95);
+        [note, state, clock] = [`${Math.round(clock * 1000)} ms`, "feedback", 0];
+      } else miss(mirror ? "it was the mirror image" : "it was the same neuron");
+    };
+    const step = (dt: number) => {
+      clock += dt;
+      if (state === "trial" && clock > deadline) miss("too slow");
+      if (state === "feedback" && clock > 0.6) next();
+      draw();
+      return state !== "over";
+    };
+    const start = () => {
+      [score, lives, deadline, results] = [0, 3, 4.5, []];
+      begin(game, "← same · → mirror");
+      next();
+      loop(game, step);
+    };
+    game.element.addEventListener("keydown", (event) => {
+      if (event.repeat) return;
+      if (state === "idle" || state === "over") { if (event.key.length === 1 || event.key === "Enter" || event.key.startsWith("Arrow")) { event.preventDefault(); start(); } return; }
+      if (event.key === "ArrowLeft" || event.key === "s") { event.preventDefault(); answer(false); }
+      if (event.key === "ArrowRight" || event.key === "m") { event.preventDefault(); answer(true); }
+    });
+    game.element.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      game.element.focus();
+      if (state === "idle" || state === "over") return start();
+      const at = pointer(game, event), b = buttons.findIndex((button) => inside(button, at));
+      if (b >= 0) answer(b === 1);
+    });
+    draw();
+  }
+</script>

@@ -1,0 +1,20 @@
+---
+// The frame of a canvas game: the canvas with a card over it (rules first, results and the prize
+// at the end), a line under it, a pill to bring the rules back, and the website's items as prizes.
+import { items } from "../lib/data";
+interface Props { name: string; width: number; height: number; label: string; rules: string[] }
+const { name, width, height, label, rules } = Astro.props;
+const pool = items.map(({ kind, title, href }) => ({ kind, title, href }));
+---
+
+<div class={`fig arcade ${name}`} data-width={width} data-height={height} data-rules={JSON.stringify(rules)}>
+  <div class="stage">
+    <canvas tabindex="0" style={`aspect-ratio: ${width} / ${height}`} aria-label={label}></canvas>
+    <div class="overlay" aria-live="polite" hidden></div>
+  </div>
+  <div class="bar">
+    <div class="readout" aria-live="polite"></div>
+    <button class="pill tiny rules" type="button">rules</button>
+  </div>
+  <script is:inline type="application/json" set:html={JSON.stringify(pool)} />
+</div>

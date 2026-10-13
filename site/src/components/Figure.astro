@@ -2,28 +2,20 @@
 // The figure at the top of a page. A page names the figures that suit its data; while choosing,
 // pill buttons (plain radio inputs, no JavaScript) switch between them when there is more than one.
 import Collaborators from "./figures/Collaborators.astro";
-import EEG from "./figures/EEG.astro";
-import Feynman from "./figures/Feynman.astro";
 import Fireworks from "./figures/Fireworks.astro";
-import NeuralNet from "./figures/NeuralNet.astro";
-import NeuronGame from "./figures/NeuronGame.astro";
-import Saltatory from "./figures/Saltatory.astro";
-import Sieve from "./figures/Sieve.astro";
+import Games from "./figures/Games.astro";
+import Orrery from "./figures/Orrery.astro";
 import Spiral from "./figures/Spiral.astro";
 import Topo from "./figures/Topo.astro";
 import Travels from "./figures/Travels.astro";
 import Volleyball from "./figures/Volleyball.astro";
 
 const FIGURES = {
-  game: { label: "Neuron burst", Figure: NeuronGame, seed: 1 },
-  saltatory: { label: "Saltatory", Figure: Saltatory, seed: 1 },
-  sieve: { label: "Sieve", Figure: Sieve, seed: 1 },
-  spiral: { label: "Spiral explorer", Figure: Spiral, seed: 2 },
+  game: { label: "Game", Figure: Games, seed: 1 },
+  spiral: { label: "Spiral", Figure: Spiral, seed: 2 },
   collaborators: { label: "Collaborators", Figure: Collaborators, seed: 7 },
   topo: { label: "Topographic map", Figure: Topo, seed: 1 },
-  feynman: { label: "Feynman diagram", Figure: Feynman, seed: 1 },
-  neuralnet: { label: "Neural network", Figure: NeuralNet, seed: 1 },
-  eeg: { label: "EEG", Figure: EEG, seed: 5 },
+  orrery: { label: "Orrery", Figure: Orrery, seed: 1 },
   travels: { label: "Travels", Figure: Travels, seed: 2 },
   fireworks: { label: "Fireworks", Figure: Fireworks, seed: 6 },
   volleyball: { label: "Volleyball", Figure: Volleyball, seed: 3 },
@@ -51,3 +43,13 @@ const visible = options.map(({ key }) => `.figure:has(input[value="${key}"]:chec
   ))}
   <style is:inline set:html={visible} />
 </figure>
+
+<script>
+  // Choosing a game hands it the keyboard, so arrow keys play instead of switching figures.
+  for (const input of document.querySelectorAll<HTMLInputElement>(".figure-options input")) {
+    input.addEventListener("change", () => {
+      const canvas = [...document.querySelectorAll<HTMLCanvasElement>(`.option[data-option="${input.value}"] canvas`)].find((c) => c.offsetWidth > 0);
+      canvas?.focus({ preventScroll: true });
+    });
+  }
+</script>

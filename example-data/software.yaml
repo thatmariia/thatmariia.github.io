@@ -1,0 +1,8 @@
+- id: eeg-model
+  title: Macro EEG model
+  authors: [A. Example, B. Coauthor]
+  year: 2024
+  venue: Zenodo
+  doi: 10.5281/zenodo.0000001
+  links:
+    - {label: Code, url: "https://github.com/example/eeg-model"}

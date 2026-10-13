@@ -1,0 +1,7 @@
+- title: Example University
+  location: Utrecht, NL
+  periods:
+    - title: Teaching Assistant
+      unit: Calculus
+      start: 2021-02
+      end: 2021-06

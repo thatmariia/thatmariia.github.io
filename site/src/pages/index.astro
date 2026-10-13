@@ -17,6 +17,6 @@ const recent = [data.publications, data.preprints, ...outputSections.map((s) => 
   <section class="block">
     <h2>Recent work</h2>
     {recent.map((work) => <WorkItem work={work} />)}
-    <a class="pill more" href="/publications/">All publications →</a>
+    <a class="pill more" href="/outputs/">All outputs →</a>
   </section>
 </Base>

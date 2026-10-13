@@ -28,7 +28,7 @@ PUBLIC = {
     # Education is shown as field names only: no institutions, levels, years or notes.
     "education": fields("id", periods=fields("title")),
     **{name: ENTRY for name in [
-        "research", "teaching", "leadership", "service", "awards", "funding", "events", "outreach", "other",
+        "research", "teaching", "leadership", "service", "awards", "funding", "events", "outreach", "other", "beyond",
     ]},
     **{name: WORK for name in [
         "publications", "preprints", "software", "datasets", "posters", "presentations", "reports", "websites", "theses",

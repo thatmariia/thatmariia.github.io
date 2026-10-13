@@ -45,18 +45,18 @@ const KIND: Record<string, string> = {
   posters: "Poster", presentations: "Presentation", reports: "Report", websites: "Website", theses: "Thesis",
   education: "Education", research: "Position", teaching: "Teaching", leadership: "Leadership",
   service: "Service", awards: "Award", funding: "Funding", events: "Event", outreach: "Outreach", other: "Experience",
+  beyond: "Beyond science",
 };
 
 /** The site's pages, and which page each content section lives on. */
 export const PAGES = [
-  ["/", "Home"], ["/publications/", "Publications"], ["/open-science/", "Open science"], ["/path/", "Path"], ["/events/", "Events"],
+  ["/", "Home"], ["/outputs/", "Outputs"], ["/path/", "Path"], ["/events/", "Events"], ["/awards/", "Awards"], ["/beyond/", "Beyond science"],
 ] as const;
 export const PAGE_OF: Record<string, string> = {
-  publications: "/publications/", preprints: "/publications/",
-  software: "/open-science/", datasets: "/open-science/", posters: "/open-science/", presentations: "/open-science/",
-  reports: "/open-science/", websites: "/open-science/", theses: "/open-science/",
+  publications: "/outputs/", preprints: "/outputs/", software: "/outputs/", datasets: "/outputs/", posters: "/outputs/",
+  presentations: "/outputs/", reports: "/outputs/", websites: "/outputs/", theses: "/outputs/",
   education: "/path/", research: "/path/", teaching: "/path/", leadership: "/path/", service: "/path/",
-  awards: "/path/", funding: "/path/", other: "/path/", events: "/events/", outreach: "/events/",
+  awards: "/awards/", funding: "/path/", other: "/path/", events: "/events/", outreach: "/events/", beyond: "/beyond/",
 };
 
 export const outputSections = ["software", "datasets", "posters", "presentations", "reports", "websites", "theses"]
@@ -103,8 +103,8 @@ export const isUpcoming = (e: Entry) => (e.periods[0].start ?? "") > today;
 
 export const pathSections = (
   [
-    ["research", "Research", data.research], ["teaching", "Teaching", data.teaching],
-    ["leadership", "Leadership", data.leadership], ["service", "Service", data.service], ["awards", "Awards", data.awards],
+    ["research", "Research", data.research],
+    ["teaching", "Teaching", data.teaching], ["leadership", "Leadership", data.leadership], ["service", "Service", data.service],
     ["funding", "Funding", data.funding], ["other", "Other", data.other],
   ] as [string, string, Entry[]][]
 ).map(([id, title, items]) => ({ id, title, items })).filter((s) => s.items.length);

@@ -7,6 +7,7 @@ from pydantic import ValidationError
 
 from folio.content import load
 from folio.export import LeakError, export
+from folio.external import external
 from folio.sync import sync
 
 
@@ -20,6 +21,9 @@ def main() -> None:
     export_.add_argument("output", type=Path, help="e.g. site/src/data/public.json")
     sync_ = commands.add_parser("sync", help="add new works from Zenodo, Crossref and ORCID")
     sync_.add_argument("content", type=Path)
+    external_ = commands.add_parser("external", help="fetch public outside data for the website figures")
+    external_.add_argument("content", type=Path)
+    external_.add_argument("output", type=Path, help="e.g. site/src/data/external.json")
     args = parser.parse_args()
 
     try:
@@ -35,6 +39,8 @@ def main() -> None:
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n")
         print(f"wrote {args.output}")
+    elif args.command == "external":
+        external(content, args.output)
     elif args.command == "sync":
         sync(args.content, content)
         try:

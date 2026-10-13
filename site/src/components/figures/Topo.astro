@@ -32,7 +32,8 @@ const lane = (section: string, org: string) => {
   const r = regions.findIndex((p) => p.id === section), orgs = [...new Set(roleEntries.filter((e) => e.section === section).sort((a, b) => a.from - b.from).map((e) => e.org))];
   return band * (r + 1.5) + (orgs.length > 1 ? band * 0.56 * (((orgs.indexOf(org) * 0.618034) % 1) - 0.5) : 0);
 };
-const hills = roleEntries.map((r) => {
+// Only roles that have started (one added ahead of time appears once it begins).
+const hills = roleEntries.filter((r) => r.from <= now).map((r) => {
   const months = r.to - r.from, linked = r.related.filter((id) => id in dated).length;
   return { ...r, months, linked, u: (r.from + r.to) / 2, v: lane(r.section, r.org), su: Math.max(5, months / 2.4), sv: band * 0.22, h: Math.sqrt(months + 1) * (1 + 0.12 * linked) };
 });

@@ -1,0 +1,74 @@
+---
+// The games, one at a time: a random one on each visit, and a menu to pick another. Only the shown
+// game is on screen, so only it can run (the others stay paused).
+import Bits from "./Bits.astro";
+import Cleft from "./Cleft.astro";
+import FlappyIon from "./FlappyIon.astro";
+import Flanker from "./Flanker.astro";
+import Fusion from "./Fusion.astro";
+import GrowthCone from "./GrowthCone.astro";
+import KobayashiMaru from "./KobayashiMaru.astro";
+import MirrorNeurons from "./MirrorNeurons.astro";
+import PatchClamp from "./PatchClamp.astro";
+import PerceptronPong from "./PerceptronPong.astro";
+import Qubit from "./Qubit.astro";
+import Saltatory from "./Saltatory.astro";
+import Sieve from "./Sieve.astro";
+import SpikeSorting from "./SpikeSorting.astro";
+import Tribbles from "./Tribbles.astro";
+interface Props { seed: number; width: number; height: number }
+const props = Astro.props;
+
+const GAMES = [
+  { key: "kobayashi", label: "Kobayashi Maru", Game: KobayashiMaru },
+  { key: "tribbles", label: "Tribbles", Game: Tribbles },
+  { key: "saltatory", label: "Saltatory", Game: Saltatory },
+  { key: "fusion", label: "Fusion", Game: Fusion },
+  { key: "flappy", label: "Flappy K⁺", Game: FlappyIon },
+  { key: "patch", label: "Patch clamp", Game: PatchClamp },
+  { key: "sorting", label: "Spike sorting", Game: SpikeSorting },
+  { key: "cleft", label: "Cleft", Game: Cleft },
+  { key: "bits", label: "Bits", Game: Bits },
+  { key: "mirror", label: "Mirror neurons", Game: MirrorNeurons },
+  { key: "qubit", label: "Qubit", Game: Qubit },
+  { key: "sieve", label: "Sieve", Game: Sieve },
+  { key: "growthcone", label: "Growth cone", Game: GrowthCone },
+  { key: "flanker", label: "Flanker", Game: Flanker },
+  { key: "pong", label: "Perceptron Pong", Game: PerceptronPong },
+];
+---
+
+<div class="games">
+  <div class="picker">
+    <button class="pill choose" type="button" aria-haspopup="true" aria-expanded="false">{GAMES[0].label} ▾</button>
+    <div class="menu" hidden>
+      {GAMES.map((g) => <button class="pill" type="button" data-key={g.key}>{g.label}</button>)}
+    </div>
+  </div>
+  {GAMES.map(({ key, label, Game }, i) => (
+    <div class="slot" data-key={key} data-label={label} hidden={i !== 0}><Game {...props} /></div>
+  ))}
+</div>
+
+<script>
+  // One random game per visit, the same for the wide and narrow layouts.
+  const decks = [...document.querySelectorAll<HTMLElement>(".games")];
+  const slots = (deck: HTMLElement) => [...deck.querySelectorAll<HTMLElement>(".slot")];
+  const first = decks.length ? slots(decks[0])[Math.floor(Math.random() * slots(decks[0]).length)].dataset.key! : "";
+  for (const deck of decks) {
+    const choose = deck.querySelector<HTMLButtonElement>(".choose")!, menu = deck.querySelector<HTMLElement>(".menu")!;
+    const show = (key: string, focus = false) => {
+      for (const slot of slots(deck)) slot.hidden = slot.dataset.key !== key;
+      const slot = slots(deck).find((s) => s.dataset.key === key)!;
+      choose.textContent = `${slot.dataset.label} ▾`;
+      for (const b of menu.querySelectorAll<HTMLElement>("button")) b.classList.toggle("on", b.dataset.key === key);
+      if (focus) slot.querySelector("canvas")?.focus({ preventScroll: true });
+    };
+    const open = (on: boolean) => { menu.hidden = !on; choose.setAttribute("aria-expanded", String(on)); };
+    choose.addEventListener("click", () => open(menu.hidden));
+    for (const b of menu.querySelectorAll<HTMLButtonElement>("button")) b.addEventListener("click", () => { show(b.dataset.key!, true); open(false); });
+    document.addEventListener("click", (event) => { if (!deck.querySelector(".picker")!.contains(event.target as Node)) open(false); });
+    deck.addEventListener("keydown", (event) => { if (event.key === "Escape") open(false); });
+    show(first);
+  }
+</script>

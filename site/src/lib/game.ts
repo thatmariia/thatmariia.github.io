@@ -58,7 +58,12 @@ export function setup(figure: HTMLElement, redraw: () => void) {
     pool: JSON.parse(figure.querySelector("script[type='application/json']")!.textContent!) as Item[],
     mono: style.getPropertyValue("--mono").trim() || "monospace",
     colours: () => ({ ink: style.getPropertyValue("--ink").trim(), bg: style.getPropertyValue("--bg").trim(), muted: style.getPropertyValue("--muted").trim() }),
+    visible: false, resume: null as (() => void) | null,
   };
+  new IntersectionObserver(([entry]) => {
+    game.visible = entry.isIntersecting;
+    if (game.visible && game.resume) { const resume = game.resume; game.resume = null; resume(); }
+  }).observe(element);
   // The rules show first, and the rules pill brings them back (and away again) at any time.
   show(game, rulesCard(game), "rules");
   let previous: [string, string] | null = null;
@@ -76,10 +81,12 @@ export function setup(figure: HTMLElement, redraw: () => void) {
   return game;
 }
 
-/** Run step(dt) every frame for as long as it returns true. */
-export function loop(step: (dt: number) => boolean) {
+/** Run step(dt) every frame for as long as it returns true; paused while the game is not on screen
+ * (another option chosen, or scrolled away), resumed when it is back. */
+export function loop(game: Game, step: (dt: number) => boolean) {
   let last = 0;
   const frame = (time: number) => {
+    if (!game.visible) { last = 0; game.resume = () => requestAnimationFrame(frame); return; }
     const dt = Math.min(0.04, (time - (last || time)) / 1000);
     last = time;
     if (step(dt)) requestAnimationFrame(frame);

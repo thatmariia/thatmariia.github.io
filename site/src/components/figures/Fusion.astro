@@ -96,7 +96,7 @@ const { width } = Astro.props;
       [state, grid, energy, pops] = ["running", Array.from({ length: N }, () => Array(N).fill(-1)), 0, []];
       spawn(); spawn();
       begin(game, "Slide to fuse · reach iron");
-      loop(step);
+      loop(game, step);
     };
     const KEYS: Record<string, [number, number]> = { ArrowUp: [-1, 0], ArrowDown: [1, 0], ArrowLeft: [0, -1], ArrowRight: [0, 1], w: [-1, 0], s: [1, 0], a: [0, -1], d: [0, 1] };
     game.element.addEventListener("keydown", (event) => {

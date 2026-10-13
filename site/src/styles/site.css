@@ -197,6 +197,17 @@ a.pill:hover, .pill.solid, .pill[aria-current="page"] { background: var(--ink); 
 .fig .readout .hint { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; }
 
 .arcade canvas { display: block; width: 100%; cursor: pointer; touch-action: manipulation; user-select: none; }
+.games .picker { position: relative; display: flex; justify-content: flex-end; margin: -6px 0 8px; }
+.games .choose { cursor: pointer; background: var(--bg); color: var(--ink); }
+.games .choose:hover, .games .choose[aria-expanded="true"] { background: var(--ink); color: var(--bg); }
+.games .menu {
+  position: absolute; right: 0; top: calc(100% + 6px); z-index: 5; display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end;
+  width: min(30rem, 92vw); padding: 12px; background: var(--bg); border: 1px solid var(--ink); border-radius: 22px;
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--ink) 14%, transparent);
+}
+.games .menu[hidden], .games .slot[hidden] { display: none; }
+.games .menu .pill { cursor: pointer; background: var(--bg); color: var(--ink); }
+.games .menu .pill:hover, .games .menu .pill.on { background: var(--ink); color: var(--bg); }
 .arcade .stage { position: relative; }
 .arcade .overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 12px; pointer-events: none; }
 .arcade .overlay[hidden] { display: none; }
@@ -243,18 +254,6 @@ a.pill:hover, .pill.solid, .pill[aria-current="page"] { background: var(--ink); 
 .topo .region { fill: var(--muted); font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.08em; }
 .topo .here { fill: var(--bg); stroke: var(--ink); stroke-width: 2; }
 
-.neuralnet .edge { fill: none; stroke: var(--ink); stroke-width: 0.5; opacity: 0.12; }
-.neuralnet .edge.weighted { opacity: 0.55; }
-.neuralnet .bias-edge { fill: none; stroke: var(--ink); stroke-width: 0.5; stroke-dasharray: 2 3; opacity: 0.15; }
-.neuralnet .bias rect { fill: var(--bg); stroke: var(--ink); stroke-width: 1; }
-.neuralnet .bias text { fill: var(--ink); font-size: 9px; }
-.neuralnet .signal { fill: none; stroke: var(--ink); stroke-width: 4; stroke-linecap: round; stroke-dasharray: 0.001 0.999; stroke-dashoffset: 1; animation: travel 3.3s linear infinite; }
-.neuralnet circle { fill: color-mix(in srgb, var(--ink) calc(var(--a) * 100%), var(--bg)); stroke: var(--ink); stroke-width: 1.3; animation: fire 3.3s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
-.neuralnet .unit text { fill: var(--ink); }
-.neuralnet .unit .sigma { fill: var(--ink); stroke: none; font-size: 9px; pointer-events: none; }
-.neuralnet .unit .sigma.on { fill: var(--bg); }
-.neuralnet .layer { fill: var(--muted); font-size: 9.5px; letter-spacing: 0.04em; }
-@keyframes fire { 0%, 70%, 100% { transform: scale(1); } 80% { transform: scale(1.3); } }
 
 .orrery .orbit { fill: none; stroke: var(--ink); stroke-width: 0.6; stroke-dasharray: 2 4; opacity: 0.4; }
 .orrery .orbit-label { fill: var(--muted); font-size: 9px; }

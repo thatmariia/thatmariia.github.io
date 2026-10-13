@@ -104,7 +104,7 @@ const { width } = Astro.props;
       [state, seals, lost] = ["running", 0, 0];
       reset();
       begin(game, "Lower gently onto the soma");
-      loop(step);
+      loop(game, step);
     };
     game.element.addEventListener("keydown", (event) => {
       if (state !== "running") { if (event.key.length === 1 || event.key === "Enter" || event.key.startsWith("Arrow")) { event.preventDefault(); start(); } return; }

@@ -110,7 +110,7 @@ const { width } = Astro.props;
       [state, time, beamed, beams, power, arrival, noteLeft] = ["running", 0, 0, [], 100, 4, 0];
       tribbles = [born(W / 2, H / 2), born(W / 2 + 20, H / 2 - 10)];
       begin(game, "Beam them to the Klingons before they fill the bay");
-      loop(step);
+      loop(game, step);
     };
     game.element.addEventListener("pointerdown", (event) => {
       event.preventDefault();

@@ -107,7 +107,7 @@ const { width } = Astro.props;
       if (state !== "running") {
         [state, y, vy, walls, next, score, lives, hurt, time] = ["running", H / 2, 0, [], W * 0.3, 0, 3, 0, 0];
         begin(game, "Space or tap to flap · take the K⁺ channels");
-        loop(step);
+        loop(game, step);
         return;
       }
       vy = -H * 0.62;

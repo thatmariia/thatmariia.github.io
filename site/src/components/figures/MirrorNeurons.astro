@@ -113,7 +113,7 @@ const { width } = Astro.props;
       [score, lives, deadline, results] = [0, 3, 4.5, []];
       begin(game, "← same · → mirror");
       next();
-      loop(step);
+      loop(game, step);
     };
     game.element.addEventListener("keydown", (event) => {
       if (event.repeat) return;

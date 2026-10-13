@@ -110,7 +110,7 @@ const { width } = Astro.props;
       [qubit, solved] = [[0, 0, 1], 0];
       begin(game, "Reach the ring in the fewest gates");
       next();
-      loop(step);
+      loop(game, step);
     };
     game.element.addEventListener("keydown", (event) => {
       if (state === "idle" || state === "over") { if (event.key.length === 1 || event.key === "Enter") { event.preventDefault(); start(); } return; }

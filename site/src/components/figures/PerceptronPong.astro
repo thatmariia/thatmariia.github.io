@@ -116,7 +116,7 @@ const { width } = Astro.props;
       [w, P] = [naive(), identity()];
       begin(game, `First to ${MATCH} · score while the perceptron is still learning`);
       serve(-1);
-      loop(step);
+      loop(game, step);
     };
     const follow = (event: PointerEvent) => {
       const rect = game.element.getBoundingClientRect();

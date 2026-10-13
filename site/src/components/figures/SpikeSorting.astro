@@ -110,7 +110,7 @@ const { width } = Astro.props;
     const start = () => {
       [state, waves, blade, sorting, score, lives, spawn, time, noteLeft] = ["running", [], [], UNITS[Math.floor(Math.random() * 3)], 0, 3, 0.5, 0, 0];
       begin(game, "Swipe through your unit's spikes only");
-      loop(step);
+      loop(game, step);
     };
     game.element.addEventListener("pointerdown", (event) => {
       event.preventDefault();

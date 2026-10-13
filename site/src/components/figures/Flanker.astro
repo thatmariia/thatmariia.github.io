@@ -93,7 +93,7 @@ const { width } = Astro.props;
       [trials, lives, deadline] = [[], 3, 1.2];
       begin(game, "Respond to the middle arrow only");
       next();
-      loop(step);
+      loop(game, step);
     };
     game.element.addEventListener("keydown", (event) => {
       if (event.repeat) return;  // a held key must not answer the next trial

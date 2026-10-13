@@ -183,7 +183,7 @@ const { width } = Astro.props;
       if (state !== "running") {
         [state, speed, offset, y, vy, nodes, next, hazards, leaps, noticeLeft, notice] = ["running", slow, 0, 0, 0, 0, W * 0.5, [], [], 0, ""];
         begin(game, "Jump the pufferfish · new hazards join as you go");
-        loop(step);
+        loop(game, step);
       } else if (y === 0) vy = Math.sqrt(2 * gravity * hop);
     };
     game.element.addEventListener("pointerdown", (event) => { event.preventDefault(); game.element.focus(); press(); });

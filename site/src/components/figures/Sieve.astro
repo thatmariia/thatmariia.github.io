@@ -115,7 +115,7 @@ const { width } = Astro.props;
     const start = () => {
       [state, drops, sparks, lives, score, spawn, typed, lastPrime, clock] = ["running", [], [], 3, 0, 0.3, "", 0, 0];
       begin(game, "Zap the primes · composites cost a life, and so do landed primes");
-      loop(step);
+      loop(game, step);
     };
     element.addEventListener("pointerdown", (event) => {
       element.focus();

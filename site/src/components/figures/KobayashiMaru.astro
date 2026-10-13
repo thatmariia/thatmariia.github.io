@@ -102,7 +102,7 @@ const { width } = Astro.props;
       [state, x, shields, wave, destroyed, time, kirk, typed, bolts, torpedoes, blasts] = ["running", W / 2, 100, 0, 0, 0, false, "", [], [], []];
       spawn();
       begin(game, "The scenario cannot be won. Probably.");
-      loop(step);
+      loop(game, step);
     };
     game.element.addEventListener("keydown", (event) => {
       if (state !== "running") { if (event.key.length === 1 || event.key === "Enter") { event.preventDefault(); start(); } return; }

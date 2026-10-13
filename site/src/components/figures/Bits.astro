@@ -76,7 +76,7 @@ const { width } = Astro.props;
       [state, bits, solved] = ["running", Array(8).fill(0), 0];
       begin(game, "Flip the bits to make the number");
       next();
-      loop(step);
+      loop(game, step);
     };
     game.element.addEventListener("pointerdown", (event) => {
       event.preventDefault();

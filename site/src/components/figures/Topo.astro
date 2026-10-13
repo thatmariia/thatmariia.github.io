@@ -4,7 +4,7 @@
 // Every role is a hill in its region (each organisation on its own line there), centred on when it
 // happened, as wide as it lasted and as high as it lasted and produced (linked outputs and events).
 // Contour lines trace the landscape (every fourth one bolder), summits carry the organisations, and
-// my trail climbs over every role's summit in time order, with a hiker walking it.
+// my trail goes from place to place along the land, circling each hill, with a hiker walking it.
 import { dated, firstYear, month, now, roleEntries, shortName } from "../../lib/career";
 import { data, pathSections, refs, type Entry } from "../../lib/data";
 import { smooth } from "../../lib/figure";
@@ -101,14 +101,59 @@ const labelled = summits.flatMap((h) => {
   placed.push(box);
   return [{ h, x, y, text }];
 });
-// The trail: it climbs over the summit of every role's hill, in the order the roles' middles
-// fall in time, from the first role to now (studies shape the land; the trail keeps to roles).
-const stops = [...hills].sort((a, b) => a.u - b.u || a.v - b.v);
-const trail = [
-  at(Math.min(start, stops[0].from), stops[0].v),
-  ...stops.map((h) => at(h.u, h.v)),
-  at(now, stops[stops.length - 1].v),
-];
+// The trail: a hiker going from place to place in time order (each role's hill, by when its middle
+// falls, taking the nearest of those within a year). On the way it bends along the contour lines where the land is steep, rather than
+// climbing straight; at each place it circles the hill, spiralling up to the summit. (Studies
+// shape the land; the trail keeps to roles.)
+const toUV = ([x, y]: Point): [number, number] => vertical
+  ? [start + ((y - y0) / (y1 - y0)) * (end - start), (x - x0) / (x1 - x0)]
+  : [start + ((x - x0) / (x1 - x0)) * (end - start), (y - y0) / (y1 - y0)];
+const elevation = (p: Point) => z(...toUV(p));
+const slope = (p: Point): Point => [(elevation([p[0] + 1, p[1]]) - elevation([p[0] - 1, p[1]])) / 2, (elevation([p[0], p[1] + 1]) - elevation([p[0], p[1] - 1])) / 2];
+const steep = (top / Math.min(x1 - x0, y1 - y0)) * 2;
+// Order: always among the places whose time comes within a year of the earliest left, the nearest.
+const left = [...hills].sort((a, b) => a.u - b.u), stops: typeof hills = [];
+let from = at(start, left[0].v);
+while (left.length) {
+  const soon = left.filter((h) => h.u <= left[0].u + 12);
+  const next = soon.sort((a, b) => Math.hypot(...at(a.u, a.v).map((c, i) => c - from[i]) as [number, number]) - Math.hypot(...at(b.u, b.v).map((c, i) => c - from[i]) as [number, number]))[0];
+  stops.push(next);
+  left.splice(left.indexOf(next), 1);
+  from = at(next.u, next.v);
+}
+const walk: Point[] = [at(start, stops[0].v)];
+const go = (target: Point, near: number) => {
+  let p = walk[walk.length - 1];
+  for (let n = 0; n < 600; n++) {
+    const [dx, dy] = [target[0] - p[0], target[1] - p[1]], d = Math.hypot(dx, dy);
+    if (d < near) break;
+    const [gx, gy] = slope(p), g = Math.hypot(gx, gy);
+    let [mx, my] = [dx / d, dy / d];
+    if (g > 0 && d > near * 2) {
+      // Follow the contour (perpendicular to the slope) more, the steeper it is.
+      let [tx, ty] = [-gy / g, gx / g];
+      if (tx * mx + ty * my < 0) [tx, ty] = [-tx, -ty];
+      const w = 0.85 * Math.min(1, g / steep);
+      [mx, my] = [mx * (1 - w) + tx * w, my * (1 - w) + ty * w];
+      const m = Math.hypot(mx, my) || 1;
+      [mx, my] = [mx / m, my / m];
+    }
+    p = [Math.max(x0, Math.min(x1, p[0] + mx * 3)), Math.max(y0, Math.min(y1, p[1] + my * 3))];
+    walk.push(p);
+  }
+};
+stops.forEach((h, k) => {
+  const summit = at(h.u, h.v), ring = Math.max(7, Math.min(30, 5 + Math.sqrt(h.months) * 3));
+  go(summit, ring);
+  // Circle the hill, spiralling up to its summit (alternately clockwise and anticlockwise).
+  const p = walk[walk.length - 1], a0 = Math.atan2(p[1] - summit[1], p[0] - summit[0]), sign = k % 2 ? 1 : -1, r0 = Math.hypot(p[0] - summit[0], p[1] - summit[1]);
+  for (let i = 1; i <= 48; i++) {
+    const u = i / 48, a = a0 + sign * u * Math.PI * 2.6, r = r0 * (1 - 0.8 * u);
+    walk.push([summit[0] + Math.cos(a) * r, summit[1] + Math.sin(a) * r]);
+  }
+});
+go(at(now, stops[stops.length - 1].v), 2);
+const trail = walk.filter((_, k) => k % 3 === 0 || k === walk.length - 1);
 const here = trail[trail.length - 1];
 ---
 

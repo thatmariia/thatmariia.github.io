@@ -22,14 +22,15 @@ const at = (u: number, v: number): Point => vertical
   : [x0 + ((u - start) / (end - start)) * (x1 - x0), y0 + v * (y1 - y0)];
 
 // Regions: one band per kind of role; within a band, each organisation has its own line.
-// Studies shape the land too, in a last, unnamed band.
-const regions = pathSections.filter((p) => roleEntries.some((r) => r.section === p.id));
+// Research and teaching sit in the middle of the map; studies take the unnamed band at the edge.
+const ORDER = ["leadership", "research", "teaching", "service", "other"];
+const regions = ORDER.map((id) => pathSections.find((p) => p.id === id)!).filter((p) => p && roleEntries.some((r) => r.section === p.id));
 const band = 1 / (regions.length + 1);
 const studies = (data.education as Entry[]).flatMap((e) => e.periods.filter((p) => p.start && month(p.start) <= now)
-  .map((p, i) => ({ from: month(p.start!), to: Math.min(now, month(p.end ?? p.start!) + 6), v: band * (regions.length + 0.5) + band * 0.3 * ((i * 0.618034) % 1 - 0.5) })));
+  .map((p, i) => ({ from: month(p.start!), to: Math.min(now, month(p.end ?? p.start!) + 6), v: band * 0.5 + band * 0.3 * ((i * 0.618034) % 1 - 0.5) })));
 const lane = (section: string, org: string) => {
   const r = regions.findIndex((p) => p.id === section), orgs = [...new Set(roleEntries.filter((e) => e.section === section).sort((a, b) => a.from - b.from).map((e) => e.org))];
-  return band * (r + 0.5) + (orgs.length > 1 ? band * 0.56 * (((orgs.indexOf(org) * 0.618034) % 1) - 0.5) : 0);
+  return band * (r + 1.5) + (orgs.length > 1 ? band * 0.56 * (((orgs.indexOf(org) * 0.618034) % 1) - 0.5) : 0);
 };
 const hills = roleEntries.map((r) => {
   const months = r.to - r.from, linked = r.related.filter((id) => id in dated).length;
@@ -145,7 +146,7 @@ const here = trail[trail.length - 1];
       return <line class="border" x1={f(a[0])} y1={f(a[1])} x2={f(b[0])} y2={f(b[1])} />;
     })}
     {regions.map((p, r) => {
-      const [x, y] = vertical ? at(start, band * (r + 0.5)) : at(start, band * r);
+      const [x, y] = vertical ? at(start, band * (r + 1.5)) : at(start, band * (r + 1));
       return vertical ? <text class="region" x={f(x)} y={f(y - 4)} text-anchor="middle">{p.title}</text> : <text class="region" x={f(x + 2)} y={f(y + 11)}>{p.title}</text>;
     })}
     {levels.map((l) => l.lines.map((line) => <path class:list={["contour", { index: l.index }]} d={smooth(line.points, line.closed)} />))}

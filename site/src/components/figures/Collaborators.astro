@@ -1,0 +1,117 @@
+---
+// Recurring collaborators (at least two distinct shared works) as neurons projecting onto me.
+// Distance from the centre shows how many works we share (closer is more, on labelled rings);
+// direction groups people into communities found from who co-authors with whom. Spikes travel
+// inwards along the axons, more often for closer collaborators. Hover shows names.
+import { myWorks } from "../../lib/career";
+import { isMe } from "../../lib/data";
+import { random, type Point } from "../../lib/random";
+interface Props { seed: number; width: number; height: number }
+const { seed, width, height } = Astro.props;
+
+// The same person can be written differently ("A. Mendes", "A.I. da Silva Mendes"): key on the
+// first initial and the last word of the surname, and show the most common spelling.
+const key = (name: string) => (isMe(name) ? "me" : `${name[0]} ${name.split(/[\s.]+/).filter(Boolean).at(-1)}`);
+// A preprint and its dataset can share a title and authors: count each title once.
+const distinct = [...new Map(myWorks.map((w) => [w.title.toLowerCase(), w])).values()];
+const spellings = new Map<string, Map<string, number>>();
+const shared = new Map<string, number>();
+for (const work of distinct) {
+  for (const author of new Set(work.authors.map(key))) shared.set(author, (shared.get(author) ?? 0) + 1);
+  for (const author of work.authors) {
+    const counts = spellings.get(key(author)) ?? new Map();
+    spellings.set(key(author), counts.set(author, (counts.get(author) ?? 0) + 1));
+  }
+}
+const people = [...shared].filter(([k, n]) => k !== "me" && n >= 2).sort((a, b) => b[1] - a[1]).map(([k]) => k);
+const name = (k: string) => [...spellings.get(k)!].sort((a, b) => b[1] - a[1])[0][0];
+
+// Communities by label propagation over co-authorship between collaborators.
+const together = (a: string, b: string) => distinct.filter((w) => {
+  const keys = new Set(w.authors.map(key));
+  return keys.has(a) && keys.has(b);
+}).length;
+const label = new Map(people.map((p) => [p, p]));
+for (let round = 0; round < 20; round++) {
+  for (const p of people) {
+    const votes = new Map<string, number>();
+    for (const q of people) if (q !== p && together(p, q)) votes.set(label.get(q)!, (votes.get(label.get(q)!) ?? 0) + together(p, q));
+    const best = [...votes].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0];
+    if (best) label.set(p, best[0]);
+  }
+}
+const groups = [...new Set(people.map((p) => label.get(p)!))]
+  .map((l) => people.filter((p) => label.get(p) === l))
+  .sort((a, b) => b.length - a.length);
+
+// Angles: one sector per community, sized by its members, with gaps between communities.
+const [cx, cy] = [width / 2, height / 2], outer = Math.min(width, height) / 2 - 40, inner = outer * 0.42;
+const gap = 0.35, total = 2 * Math.PI - gap * groups.length;
+const maxShared = Math.max(...people.map((p) => shared.get(p)!));
+const radiusFor = (n: number) => inner + (outer - inner) * (1 - Math.log(n - 1) / Math.log(maxShared - 1 || 2));
+let angle = -Math.PI / 2;
+const neurons = groups.flatMap((group) => {
+  const step = (total * group.length) / people.length / group.length;
+  return group.map((p, i) => {
+    const a = angle + step * (i + 0.5);
+    if (i === group.length - 1) angle += step * group.length + gap;
+    const r = radiusFor(shared.get(p)!);
+    return { p, a, at: [cx + r * Math.cos(a), cy + r * Math.sin(a)] as Point, n: shared.get(p)! };
+  });
+});
+
+const uniform = random(seed);
+const f = (v: number) => v.toFixed(1);
+// A stylised pyramidal neuron: triangular soma pointing away from me, an apical dendrite with a
+// small tuft outwards, two basal dendrites, and an axon curving in to my dendrites.
+const drawn = neurons.map(({ p, a, at: [x, y], n }) => {
+  const [ux, uy] = [Math.cos(a), Math.sin(a)], [nx, ny] = [-uy, ux], s = 4 + n * 0.45;
+  const soma = `M${f(x + ux * s * 1.3)},${f(y + uy * s * 1.3)} L${f(x - ux * s * 0.7 + nx * s * 0.8)},${f(y - uy * s * 0.7 + ny * s * 0.8)} L${f(x - ux * s * 0.7 - nx * s * 0.8)},${f(y - uy * s * 0.7 - ny * s * 0.8)} Z`;
+  const tip = [x + ux * s * 4.2, y + uy * s * 4.2], bend = (uniform() - 0.5) * s;
+  let dendrites = `M${f(x + ux * s * 1.3)},${f(y + uy * s * 1.3)} Q${f(x + ux * s * 2.8 + nx * bend)},${f(y + uy * s * 2.8 + ny * bend)} ${f(tip[0])},${f(tip[1])}`;
+  for (const spread of [-0.7, 0, 0.7]) {
+    const b = a + spread;
+    dendrites += ` M${f(tip[0])},${f(tip[1])} q${f(Math.cos(b) * s * 0.9 + nx * spread * 2)},${f(Math.sin(b) * s * 0.9 + ny * spread * 2)} ${f(Math.cos(b) * s * 1.6)},${f(Math.sin(b) * s * 1.6)}`;
+  }
+  for (const side of [-1, 1]) {
+    const [bx, by] = [x - ux * s * 0.7 + nx * s * 0.8 * side, y - uy * s * 0.7 + ny * s * 0.8 * side];
+    dendrites += ` M${f(bx)},${f(by)} q${f(nx * side * s * 1.4 - ux * s * 0.4)},${f(ny * side * s * 1.4 - uy * s * 0.4)} ${f(nx * side * s * 2 - ux * s * 1.6)},${f(ny * side * s * 2 - uy * s * 1.6)}`;
+  }
+  // Axon from the base of the soma to the edge of my dendritic field, curving slightly.
+  const [sx, sy] = [x - ux * s * 0.7, y - uy * s * 0.7], end = [cx + ux * 22, cy + uy * 22];
+  const mid = [(sx + end[0]) / 2 + nx * (uniform() - 0.5) * 30, (sy + end[1]) / 2 + ny * (uniform() - 0.5) * 30];
+  const axon = `M${f(sx)},${f(sy)} Q${f(mid[0])},${f(mid[1])} ${f(end[0])},${f(end[1])}`;
+  return { p, n, soma, dendrites, axon, delay: uniform() * 4 };
+});
+// Me: a round cell with dendrites all around, receiving the axons.
+const myDendrites = Array.from({ length: 10 }, (_, k) => {
+  const a = (2 * Math.PI * k) / 10 + uniform() * 0.4, l = 20 + uniform() * 6;
+  return `M${f(cx + Math.cos(a) * 7)},${f(cy + Math.sin(a) * 7)} Q${f(cx + Math.cos(a + 0.25) * l * 0.6)},${f(cy + Math.sin(a + 0.25) * l * 0.6)} ${f(cx + Math.cos(a) * l)},${f(cy + Math.sin(a) * l)}`;
+}).join(" ");
+const rings = [...new Set([2, Math.round(Math.sqrt(2 * maxShared)), maxShared])].filter((n) => n >= 2 && n <= maxShared);
+---
+
+<div class="fig collaborators">
+  <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`${people.length} recurring collaborators in ${groups.length} communities; closer means more shared works`}>
+    {rings.map((n) => (
+      <g class="ring">
+        <circle cx={f(cx)} cy={f(cy)} r={f(radiusFor(n))} />
+        <text x={f(cx)} y={f(cy + radiusFor(n) + 12)} text-anchor="middle">{n} works</text>
+      </g>
+    ))}
+    {drawn.map((d) => <path class="axon" d={d.axon} />)}
+    {drawn.map((d) => <path class="spike" d={d.axon} pathLength="1" style={`animation-duration: ${(8 / d.n).toFixed(2)}s; animation-delay: ${d.delay.toFixed(2)}s`} />)}
+    {drawn.map((d) => (
+      <g class="neuron">
+        <title>{name(d.p)} · {d.n} shared works</title>
+        <path class="dendrite" d={d.dendrites} />
+        <path class="soma" d={d.soma} />
+      </g>
+    ))}
+    <g class="neuron me">
+      <title>Me</title>
+      <path class="dendrite" d={myDendrites} />
+      <circle class="soma" cx={f(cx)} cy={f(cy)} r="8" />
+    </g>
+  </svg>
+</div>

@@ -1,0 +1,68 @@
+---
+// Activity as a spike raster: one row per kind of activity, one tick per item at its date, and the
+// smoothed rate of everything on top (like a raster with a PSTH). A playhead sweeps through the
+// years and each tick flashes as it passes. Ticks link to their items.
+import { firstYear, month, now } from "../../lib/career";
+import { data, PAGE_OF, refs, type Entry, type Work } from "../../lib/data";
+import { points, random, type Point } from "../../lib/random";
+interface Props { seed: number; width: number; height: number }
+const { seed, width, height } = Astro.props;
+
+const uniform = random(seed);
+type Spike = { at: number; title: string; href: string };
+const href = (section: string, id?: string) => (id && refs[id] ? refs[id].href : PAGE_OF[section]);
+// Works only have a year: spread them over that year (deterministically) so they do not stack.
+const worksIn = (sections: string[]): Spike[] => sections.flatMap((section) =>
+  ((data as any)[section] as Work[]).map((w) => ({ at: w.year * 12 + Math.floor(uniform() * 12), title: w.title, href: href(section, w.id) })));
+const entriesIn = (sections: string[]): Spike[] => sections.flatMap((section) =>
+  ((data as any)[section] as Entry[]).flatMap((e) => e.periods.map((p) => ({ at: month(p.start!), title: `${e.title}${p.title ? ` · ${p.title}` : ""}`, href: href(section, e.id) }))));
+const rows = [
+  { label: "papers & preprints", spikes: worksIn(["publications", "preprints"]) },
+  { label: "software & data", spikes: worksIn(["software", "datasets", "posters", "presentations", "reports", "websites", "theses"]) },
+  { label: "talks & posters", spikes: entriesIn(["events"]) },
+  { label: "outreach", spikes: entriesIn(["outreach"]) },
+  { label: "roles", spikes: entriesIn(["research", "teaching", "leadership", "service", "other"]) },
+];
+
+const [start, end] = [firstYear * 12, now + 1];
+const [left, right] = [14, width - 14];
+const [rateTop, rateBottom] = [12, height * 0.3];
+const [rowsTop, rowsBottom] = [rateBottom + 22, height - 30];
+const rowHeight = (rowsBottom - rowsTop) / rows.length;
+const x = (m: number) => left + ((m - start) / (end - start)) * (right - left);
+
+// Smoothed rate of all spikes (Gaussian kernel, σ = 4 months), drawn as a curve on top.
+const all = rows.flatMap((r) => r.spikes.map((s) => s.at));
+const rate = Array.from({ length: end - start + 1 }, (_, k) => all.reduce((sum, at) => sum + Math.exp(-((start + k - at) ** 2) / (2 * 16)), 0));
+const peak = Math.max(...rate);
+const rateCurve: Point[] = rate.map((r, k) => [x(start + k), rateBottom - (r / peak) * (rateBottom - rateTop)]);
+const area = `${points(rateCurve)} ${right},${rateBottom} ${left},${rateBottom}`;
+
+const sweep = 14;  // seconds for the playhead to cross all years
+const years = Array.from({ length: Math.floor(now / 12) - firstYear + 1 }, (_, i) => firstYear + i)
+  .filter((y, i, all) => (y - firstYear) % (width > height ? 2 : 4) === 0 && all.at(-1)! - y >= (width > height ? 1 : 2) || y === all.at(-1));
+---
+
+<div class="fig raster" style={`--sweep: ${sweep}s; --span: ${right - left}`}>
+  <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`Activity from ${firstYear} to now as a spike raster: ${rows.map((r) => `${r.spikes.length} ${r.label}`).join(", ")}`}>
+    <polygon class="rate-area" points={area} />
+    <polyline class="rate" points={points(rateCurve)} />
+    {rows.map((row, i) => (
+      <g>
+        <text class="label" x={left} y={rowsTop + rowHeight * i + 9}>{row.label}</text>
+        {row.spikes.map((s) => (
+          <a href={s.href}>
+            <title>{s.title}</title>
+            <line class="tick" x1={x(s.at).toFixed(1)} x2={x(s.at).toFixed(1)} y1={(rowsTop + rowHeight * i + 13).toFixed(1)} y2={(rowsTop + rowHeight * (i + 1) - 4).toFixed(1)}
+              style={`animation-delay: ${(((s.at - start) / (end - start)) * sweep).toFixed(2)}s`} />
+          </a>
+        ))}
+      </g>
+    ))}
+    <line class="playhead" x1={left} x2={left} y1={rateTop} y2={rowsBottom} />
+    <line class="axis" x1={left} y1={rowsBottom + 6} x2={right} y2={rowsBottom + 6} />
+    {years.map((y, i) => (
+      <text class="tick-label" x={x(y * 12).toFixed(1)} y={rowsBottom + 22} text-anchor={i === 0 ? "start" : "middle"}>{y}</text>
+    ))}
+  </svg>
+</div>

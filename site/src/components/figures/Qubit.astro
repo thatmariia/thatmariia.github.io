@@ -34,7 +34,7 @@ const { width } = Astro.props;
 
   for (const figure of document.querySelectorAll<HTMLElement>(".fig.qubit")) {
     const game: Game = setup(figure, () => draw());
-    const { W, H } = game, R = Math.min(W * 0.22, H * 0.28), [cx, cy] = [W / 2, H * 0.46];
+    const { W, H } = game, R = Math.min(W * 0.2, (H - 144) / 2.44), [cx, cy] = [W / 2, 80 + 1.22 * R];  // the sphere and its labels fit between the explanation and the buttons
     let state: "idle" | "running" | "solved" | "over" = "idle";
     // The arrow turns smoothly from where it was to where a gate sends it.
     let from: number[] = [0, 0, 1], turn = 1;

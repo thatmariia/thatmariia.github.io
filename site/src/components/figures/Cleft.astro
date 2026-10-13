@@ -27,10 +27,11 @@ const { width } = Astro.props;
     const rowY = (r: number) => top + r * rowH + rowH / 2;
 
     const setupLanes = () => {
-      speeds = Array.from({ length: LANES }, (_, k) => (k % 2 ? -1 : 1) * W * (0.08 + Math.random() * 0.07 + level * 0.03));
+      // Speeds in hops per second and as many enzymes per hop of lane, so it plays the same on any screen.
+      speeds = Array.from({ length: LANES }, (_, k) => (k % 2 ? -1 : 1) * colW * (1.7 + Math.random() * 1.5 + level * 0.65));
       enzymes = [];
       for (let lane = 0; lane < LANES; lane++) {
-        const n = 2 + Math.floor(Math.random() * 2) + (level > 2 ? 1 : 0), w = colW * (1.2 + Math.random() * 0.9);
+        const n = Math.max(1, Math.round(cols / 9)) + Math.floor(Math.random() * 2) + (level > 2 ? 1 : 0), w = colW * (1.2 + Math.random() * 0.9);
         for (let k = 0; k < n; k++) enzymes.push({ lane, x: (k / n) * (W + w) + Math.random() * colW, w, name: Math.random() < 0.5 ? "COMT" : "MAO" });
       }
     };

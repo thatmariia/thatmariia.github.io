@@ -20,7 +20,7 @@ const { width } = Astro.props;
     const { W, H } = game, x = W * 0.22, r = 10, thick = 30;
     type Wall = { x: number; gaps: { y: number; size: number; ion: "K" | "Na" }[]; passed: boolean };
     let state: "idle" | "running" | "over" = "idle";
-    let y = H / 2, vy = 0, walls: Wall[] = [], next = 0, score = 0, lives = 3, hurt = 0, speed = W * 0.28, time = 0;
+    let y = H / 2, vy = 0, walls: Wall[] = [], next = 0, score = 0, lives = 3, hurt = 0, speed = H * 0.67, time = 0;
 
     const membrane = (c: CanvasRenderingContext2D, w: Wall, ink: string, bg: string, muted: string) => {
       // A bilayer: two rows of phospholipid heads with tails meeting in the middle.
@@ -84,12 +84,13 @@ const { width } = Astro.props;
     };
     const step = (dt: number) => {
       time += dt; hurt = Math.max(0, hurt - dt);
-      speed = W * Math.min(0.5, 0.28 + time * 0.004);
+      // Speeds and spacing in the canvas height, so walls pass at the same pace on any screen.
+      speed = H * Math.min(1.2, 0.67 + time * 0.01);
       vy += H * 1.9 * dt; y += vy * dt;
       if (y > H - r) { y = H - r; vy = 0; hit("Swept down the gradient"); }
       if (y < r) { y = r; vy = 0; }
       next -= dt * speed;
-      if (next <= 0) { spawn(); next = W * 0.48; }
+      if (next <= 0) { spawn(); next = H * 1.15; }
       for (const w of walls) {
         w.x -= speed * dt;
         if (Math.abs(w.x - x) < thick / 2 + r) {
@@ -105,7 +106,7 @@ const { width } = Astro.props;
     };
     const flap = () => {
       if (state !== "running") {
-        [state, y, vy, walls, next, score, lives, hurt, time] = ["running", H / 2, 0, [], W * 0.3, 0, 3, 0, 0];
+        [state, y, vy, walls, next, score, lives, hurt, time] = ["running", H / 2, 0, [], H * 0.7, 0, 3, 0, 0];
         begin(game, "Space or tap to flap · take the K⁺ channels");
         loop(game, step);
         return;

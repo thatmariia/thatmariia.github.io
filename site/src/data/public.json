@@ -7,6 +7,16 @@
       "M. Steeghs-Turchina",
       "M.A. Turchina"
     ],
+    "location": "The Hague, NL",
+    "walk": [
+      "Computer science",
+      "Physics",
+      "Electrical engineering",
+      "Mathematics",
+      "Machine learning",
+      "Neuroscience",
+      "Research software"
+    ],
     "links": [
       {
         "label": "GitHub",
@@ -239,9 +249,6 @@
             "Focus on Software Management Plans (research software lifecycle planning, documentation, versioning, licensing, testing, and long-term maintenance) and software metadata curation"
           ]
         }
-      ],
-      "related": [
-        "dbc-2026"
       ]
     },
     {
@@ -431,7 +438,6 @@
         }
       ],
       "related": [
-        "lumc-course-software-management",
         "bidirectional-bridge",
         "metadata-driven-infrastructure"
       ]

@@ -9,5 +9,7 @@ author_names: [A. Example, A.B. Example]
 links:
   - {label: GitHub, url: "https://github.com/example"}
   - {label: ORCID, url: "https://orcid.org/0000-0000-0000-0000"}
+location: Utrecht, NL
+walk: [Physics, Mathematics, Neuroscience]
 email: canary-email@example.invalid
 phone: "+00 CANARY 0000"

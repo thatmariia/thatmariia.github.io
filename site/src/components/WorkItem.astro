@@ -7,9 +7,11 @@ const url = workUrl(work);
 ---
 
 <article class="row work" id={work.id}>
-  <p class="meta">{STATUS[work.status] || work.year}</p>
+  <p class="meta">{work.year}</p>
   <div class="body">
-    {work.venue && <p class="venue">{work.venue}</p>}
+    {(work.venue || STATUS[work.status]) && (
+      <p class="venue">{work.venue}{STATUS[work.status] && <span class="pill tiny">{STATUS[work.status]}</span>}</p>
+    )}
     <h4 class="title">
       {url ? <a href={url} set:html={markup(work.title)} /> : <span set:html={markup(work.title)} />}
     </h4>

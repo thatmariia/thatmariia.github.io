@@ -1,0 +1,141 @@
+---
+// The Kobayashi Maru: the no-win scenario. Klingon birds-of-prey come in ever larger waves; move
+// with ← → (or drag) and fire phasers with Space (or by holding). The shields will fail, as they
+// are meant to, unless you do what Kirk did and reprogram the simulation. A prize at the end.
+import Arcade from "../Arcade.astro";
+interface Props { seed: number; width: number; height: number }
+const { width } = Astro.props;
+---
+
+<Arcade name="kobayashi" width={width} height={Math.round(width * (width > 600 ? 0.45 : 1.05))}
+  label="Kobayashi Maru: move the ship with the arrow keys or by dragging, and fire with Space or by holding; the scenario cannot be won"
+  hint="← → or drag to move · Space or hold to fire" />
+
+<script>
+  import { banner, best, corners, gameOver, loop, pointer, setup, type Game } from "../../lib/game";
+
+  for (const figure of document.querySelectorAll<HTMLElement>(".fig.kobayashi")) {
+    const game: Game = setup(figure, () => draw());
+    const { W, H } = game, shipY = H - 34;
+    type Klingon = { x: number; y: number; ty: number; hp: number; phase: number; reload: number };
+    let state: "idle" | "running" | "over" = "idle";
+    let x = W / 2, shields = 100, wave = 0, destroyed = 0, firing = false, keys = 0, cooldown = 0, time = 0, kirk = false, typed = "", message = "", messageLeft = 0;
+    let klingons: Klingon[] = [], bolts: { x: number; y: number }[] = [], torpedoes: { x: number; y: number; vx: number; vy: number }[] = [], blasts: { x: number; y: number; age: number }[] = [];
+
+    const ship = (c: CanvasRenderingContext2D, x: number, y: number, ink: string, bg: string) => {
+      // The Enterprise, from above: saucer, neck, secondary hull, two nacelles.
+      c.fillStyle = bg; c.strokeStyle = ink; c.lineWidth = 1.3;
+      for (const dx of [-13, 13]) { c.beginPath(); c.roundRect(x + dx - 2.5, y + 2, 5, 22, 2.5); c.fill(); c.stroke(); c.beginPath(); c.moveTo(x + dx * 0.4, y + 14); c.lineTo(x + dx, y + 12); c.stroke(); }
+      c.beginPath(); c.ellipse(x, y + 14, 4, 9, 0, 0, Math.PI * 2); c.fill(); c.stroke();
+      c.beginPath(); c.moveTo(x, y + 3); c.lineTo(x, y + 7); c.stroke();
+      c.beginPath(); c.ellipse(x, y - 4, 11, 9, 0, 0, Math.PI * 2); c.fill(); c.stroke();
+    };
+    const bird = (c: CanvasRenderingContext2D, k: Klingon, ink: string, bg: string) => {
+      // A bird-of-prey: swept-down wings and a head on a long neck.
+      c.fillStyle = bg; c.strokeStyle = ink; c.lineWidth = 1.3;
+      c.beginPath(); c.moveTo(k.x - 18, k.y + 6); c.lineTo(k.x - 6, k.y - 4); c.lineTo(k.x + 6, k.y - 4); c.lineTo(k.x + 18, k.y + 6); c.lineTo(k.x + 6, k.y); c.lineTo(k.x - 6, k.y); c.closePath(); c.fill(); c.stroke();
+      c.beginPath(); c.moveTo(k.x, k.y - 4); c.lineTo(k.x, k.y + 8); c.stroke();
+      c.beginPath(); c.arc(k.x, k.y + 10, 3, 0, Math.PI * 2); c.fill(); c.stroke();
+      if (k.hp > 1) { c.globalAlpha = 0.35; c.beginPath(); c.arc(k.x, k.y + 2, 22, 0, Math.PI * 2); c.stroke(); c.globalAlpha = 1; }
+    };
+
+    function draw() {
+      const { context: c, mono } = game, { ink, bg, muted } = game.colours();
+      c.clearRect(0, 0, W, H);
+      // Stars drifting by.
+      c.fillStyle = muted;
+      for (let k = 0; k < 40; k++) c.fillRect((k * 97.3) % W, ((k * 53.7 + time * (20 + (k % 3) * 15)) % (H - 30)) + 28, 1.2, 1.2);
+      for (const k of klingons) bird(c, k, ink, bg);
+      c.fillStyle = ink;
+      for (const b of bolts) c.fillRect(b.x - 1, b.y - 7, 2, 14);
+      for (const t of torpedoes) { c.beginPath(); c.arc(t.x, t.y, 3, 0, Math.PI * 2); c.fill(); }
+      for (const b of blasts) { c.globalAlpha = 1 - b.age / 0.4; c.beginPath(); c.arc(b.x, b.y, 4 + b.age * 50, 0, Math.PI * 2); c.stroke(); c.globalAlpha = 1; }
+      if (state !== "idle") ship(c, x, shipY, ink, bg);
+      if (shields > 0 && state === "running") { c.globalAlpha = shields / 250; c.beginPath(); c.ellipse(x, shipY + 6, 24, 24, 0, 0, Math.PI * 2); c.stroke(); c.globalAlpha = 1; }
+      if (messageLeft > 0) { c.fillStyle = ink; c.font = `600 12px ${mono}`; c.textAlign = "center"; c.fillText(message, W / 2, 46); }
+      corners(game, "kobayashi", `wave ${wave} · ${destroyed} destroyed · shields ${Math.max(0, Math.round(shields))}%`);
+      if (state === "idle") banner(game, ["Kobayashi Maru", "rescue the Kobayashi Maru; the Klingons will come", "← → or drag · space or hold to fire", "this scenario cannot be won. Or can it?"]);
+      if (state === "over") banner(game, [kirk ? `You cheated, like Kirk: ${destroyed} destroyed` : `Shields failed in wave ${wave}`, kirk ? "no-win scenarios do not exist" : "a test of character, not of winning", "press a key or tap to try again"]);
+    }
+
+    const spawn = () => {
+      wave += 1;
+      const n = 3 + wave * 2;
+      klingons = Array.from({ length: n }, (_, i) => ({ x: W * ((i % 6) + 1) / 7, y: -20 - Math.floor(i / 6) * 34, ty: 52 + Math.floor(i / 6) * 34, hp: kirk ? 1 : 1 + (Math.random() < Math.min(0.6, wave * 0.08) ? 1 : 0), phase: Math.random() * 6, reload: 1 + Math.random() * 2 }));
+      [message, messageLeft] = [`wave ${wave}: ${n} birds-of-prey decloaking`, 2];
+    };
+    const step = (dt: number) => {
+      time += dt; cooldown -= dt; messageLeft -= dt;
+      x = Math.max(24, Math.min(W - 24, x + keys * dt * W * 0.6));
+      if (firing && cooldown <= 0) { bolts.push({ x, y: shipY - 14 }); cooldown = 0.22; }
+      for (const b of bolts) b.y -= dt * H * 1.3;
+      bolts = bolts.filter((b) => b.y > 20);
+      for (const k of klingons) {
+        k.phase += dt;
+        // Warp in to formation, then creep closer.
+        k.y = Math.min(k.y + dt * (k.y < k.ty ? 140 : 5 + wave * 1.5), H * 0.55);
+        k.x += Math.sin(k.phase * 1.3) * dt * (30 + wave * 4);
+        k.reload -= dt;
+        if (k.reload <= 0 && k.y > 30 && !kirk) {
+          const [dx, dy] = [x - k.x, shipY - k.y], d = Math.hypot(dx, dy), v = H * (0.35 + wave * 0.02);
+          torpedoes.push({ x: k.x, y: k.y + 10, vx: (dx / d) * v, vy: (dy / d) * v });
+          k.reload = Math.max(0.7, 3 - wave * 0.15) * (0.6 + Math.random());
+        }
+        for (const b of bolts) if (Math.abs(b.x - k.x) < 16 && Math.abs(b.y - k.y) < 12) { k.hp -= 1; b.y = -99; if (k.hp <= 0) { destroyed += 1; blasts.push({ x: k.x, y: k.y, age: 0 }); } }
+      }
+      klingons = klingons.filter((k) => k.hp > 0);
+      for (const t of torpedoes) {
+        t.x += t.vx * dt; t.y += t.vy * dt;
+        if (Math.hypot(t.x - x, t.y - (shipY + 6)) < 20) { shields -= 12 + wave; blasts.push({ x: t.x, y: t.y, age: 0 }); t.y = H + 99; }
+      }
+      torpedoes = torpedoes.filter((t) => t.y < H + 10 && t.y > 0 && t.x > 0 && t.x < W);
+      for (const b of blasts) b.age += dt;
+      blasts = blasts.filter((b) => b.age < 0.4);
+      if (!klingons.length) spawn();
+      if (shields <= 0) {
+        state = "over";
+        const record = best("kobayashi", destroyed);
+        gameOver(game.readout, game.pool, `<strong>${kirk ? "Simulation reprogrammed" : "Shields failed"}</strong> in wave ${wave} · ${destroyed} birds-of-prey destroyed${destroyed >= record && destroyed > 0 ? " · new best!" : ""}`);
+      }
+      draw();
+      return state === "running";
+    };
+    const start = () => {
+      [state, x, shields, wave, destroyed, time, kirk, typed, bolts, torpedoes, blasts] = ["running", W / 2, 100, 0, 0, 0, false, "", [], [], []];
+      spawn();
+      game.readout.innerHTML = '<span class="hint">The scenario cannot be won. Probably.</span>';
+      loop(step);
+    };
+    game.element.addEventListener("keydown", (event) => {
+      if (state !== "running") { if (event.key.length === 1 || event.key === "Enter") { event.preventDefault(); start(); } return; }
+      if (event.key === "ArrowLeft") { event.preventDefault(); keys = -1; }
+      else if (event.key === "ArrowRight") { event.preventDefault(); keys = 1; }
+      else if (event.key === " ") { event.preventDefault(); firing = true; }
+      else if (event.key.length === 1) {
+        // Kirk's solution: reprogram the simulation (type "kirk").
+        typed = (typed + event.key.toLowerCase()).slice(-4);
+        if (typed === "kirk" && !kirk) {
+          kirk = true; shields = 100; torpedoes = [];
+          for (const k of klingons) k.hp = 1;
+          [message, messageLeft] = ["simulation reprogrammed: Klingon shields down", 3];
+        }
+      }
+    });
+    game.element.addEventListener("keyup", (event) => {
+      if (event.key === "ArrowLeft" || event.key === "ArrowRight") keys = 0;
+      if (event.key === " ") firing = false;
+    });
+    game.element.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      game.element.focus();
+      game.element.setPointerCapture(event.pointerId);
+      if (state !== "running") return start();
+      x = pointer(game, event)[0];
+      firing = true;
+    });
+    game.element.addEventListener("pointermove", (event) => { if (firing && event.buttons) x = pointer(game, event)[0]; });
+    for (const type of ["pointerup", "pointercancel"]) game.element.addEventListener(type, () => (firing = false));
+    game.element.addEventListener("blur", () => { firing = false; keys = 0; });
+    draw();
+  }
+</script>

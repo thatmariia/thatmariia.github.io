@@ -1,0 +1,101 @@
+---
+// Evaluate Boolean expressions against the clock: given A, B and C, is the expression true (1) or
+// false (0)? Press 1 or 0 (or the buttons). Expressions grow deeper and the deadline shrinks; one
+// mistake ends it, with one of the website's items as the prize.
+import Arcade from "../Arcade.astro";
+interface Props { seed: number; width: number; height: number }
+const { width } = Astro.props;
+---
+
+<Arcade name="logic" width={width} height={Math.round(width * (width > 600 ? 0.34 : 0.8))}
+  label="Logic: evaluate the Boolean expression for the given A, B and C; press 1 for true or 0 for false"
+  hint="Press 1 (true) or 0 (false)" />
+
+<script>
+  import { banner, best, corners, gameOver, inside, loop, pills, pointer, setup, type Button, type Game } from "../../lib/game";
+
+  type Expr = { text: string; value: (v: Record<string, boolean>) => boolean };
+  const atom = (name: string): Expr => ({ text: name, value: (v) => v[name] });
+  const BINARY: [string, (a: boolean, b: boolean) => boolean][] = [["∧", (a, b) => a && b], ["∨", (a, b) => a || b], ["⊕", (a, b) => a !== b], ["→", (a, b) => !a || b]];
+  // A random expression of the given depth.
+  const make = (depth: number): Expr => {
+    if (depth <= 0) return atom("ABC"[Math.floor(Math.random() * 3)]);
+    if (Math.random() < 0.25) { const e = make(depth - 1); return { text: `¬${e.text.length > 1 ? `(${e.text})` : e.text}`, value: (v) => !e.value(v) }; }
+    const [a, b] = [make(depth - 1 - (Math.random() < 0.4 ? 1 : 0)), make(depth - 1)], [op, f] = BINARY[Math.floor(Math.random() * BINARY.length)];
+    const wrap = (e: Expr) => (e.text.length > 2 ? `(${e.text})` : e.text);
+    return { text: `${wrap(a)} ${op} ${wrap(b)}`, value: (v) => f(a.value(v), b.value(v)) };
+  };
+
+  for (const figure of document.querySelectorAll<HTMLElement>(".fig.logic")) {
+    const game: Game = setup(figure, () => draw());
+    const { W, H } = game;
+    let state: "idle" | "trial" | "feedback" | "over" = "idle";
+    let expr = make(1), vars: Record<string, boolean> = { A: true, B: false, C: true }, clock = 0, deadline = 7, streak = 0, note = "", buttons: Button[] = [];
+
+    function draw() {
+      const { context: c, mono } = game, { ink, muted } = game.colours();
+      c.clearRect(0, 0, W, H);
+      corners(game, "logic", `streak ${streak}`);
+      if (state === "trial" || state === "feedback") {
+        c.textAlign = "center"; c.fillStyle = muted; c.font = `13px ${mono}`;
+        c.fillText(Object.entries(vars).map(([k, v]) => `${k} = ${v ? 1 : 0}`).join("   "), W / 2, H * 0.24);
+        c.fillStyle = ink;
+        let size = 22;
+        do { c.font = `600 ${size}px ${mono}`; size -= 1; } while (c.measureText(expr.text).width > W - 40 && size > 10);
+        c.fillText(expr.text, W / 2, H * 0.46);
+        if (state === "trial") {
+          const left = Math.max(0, 1 - clock / deadline);
+          c.strokeStyle = muted; c.lineWidth = 2;
+          c.beginPath(); c.moveTo(W / 2 - W * 0.3 * left, H * 0.56); c.lineTo(W / 2 + W * 0.3 * left, H * 0.56); c.stroke();
+        } else { c.font = `600 12px ${mono}`; c.fillText(note, W / 2, H * 0.6); }
+      }
+      buttons = state === "trial" ? pills(game, ["0  false", "1  true"], H - 44) : [];
+      if (state === "idle") banner(game, ["Boolean logic", "∧ and · ∨ or · ¬ not · ⊕ xor · → implies", "is the expression true? press 1 or 0", "deeper and faster · one mistake ends it"]);
+      if (state === "over") banner(game, [`Streak of ${streak}`, note, "press a key or tap to go again"]);
+    }
+
+    const next = () => {
+      expr = make(1 + Math.min(4, Math.floor(streak / 4)));
+      vars = { A: Math.random() < 0.5, B: Math.random() < 0.5, C: Math.random() < 0.5 };
+      [clock, state] = [0, "trial"];
+    };
+    const answer = (truth: boolean) => {
+      if (state !== "trial") return;
+      if (truth === expr.value(vars)) {
+        streak += 1;
+        deadline = Math.max(2.2, deadline * 0.95);
+        [note, state, clock] = [`${Math.round(clock * 1000)} ms`, "feedback", 0];
+      } else end(`it was ${expr.value(vars) ? 1 : 0}`);
+    };
+    const end = (why: string) => {
+      state = "over"; note = why;
+      const record = best("logic", streak);
+      gameOver(game.readout, game.pool, `<strong>Streak of ${streak}</strong> · ${expr.text} with ${Object.entries(vars).map(([k, v]) => `${k}=${v ? 1 : 0}`).join(", ")}: ${why}${streak >= record && streak > 0 ? " · new best!" : ""}`);
+    };
+    const step = (dt: number) => {
+      clock += dt;
+      if (state === "trial" && clock > deadline) end("too slow");
+      if (state === "feedback" && clock > 0.4) next();
+      draw();
+      return state !== "over";
+    };
+    const start = () => {
+      [streak, deadline] = [0, 7];
+      game.readout.innerHTML = '<span class="hint">1 true · 0 false</span>';
+      next();
+      loop(step);
+    };
+    game.element.addEventListener("keydown", (event) => {
+      if (state === "idle" || state === "over") { if (event.key.length === 1 || event.key === "Enter") { event.preventDefault(); start(); } return; }
+      if (event.key === "1" || event.key === "0") { event.preventDefault(); answer(event.key === "1"); }
+    });
+    game.element.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      game.element.focus();
+      if (state === "idle" || state === "over") return start();
+      const at = pointer(game, event), b = buttons.findIndex((button) => inside(button, at));
+      if (b >= 0) answer(b === 1);
+    });
+    draw();
+  }
+</script>

@@ -1,0 +1,115 @@
+---
+// The trouble with tribbles: exponential growth. Every tribble doubles after a random while (and the
+// doubling time keeps shrinking); click one, or press Space, to beam it over to the Klingons. When
+// the cargo bay is full, it is over, with one of the website's items as the prize.
+import Arcade from "../Arcade.astro";
+interface Props { seed: number; width: number; height: number }
+const { width } = Astro.props;
+---
+
+<Arcade name="tribbles" width={width} height={Math.round(width * (width > 600 ? 0.38 : 0.85))}
+  label="Tribbles: they multiply exponentially; click them, or press Space, to beam them away before the cargo bay fills up"
+  hint="Click a tribble (or Space) to beam it away" />
+
+<script>
+  import { banner, best, corners, gameOver, loop, pointer, setup, type Game } from "../../lib/game";
+
+  const CAPACITY = 64;
+  for (const figure of document.querySelectorAll<HTMLElement>(".fig.tribbles")) {
+    const game: Game = setup(figure, () => draw());
+    const { W, H } = game, [bx, by, bw, bh] = [12, 32, W - 24, H - 44];
+    type Tribble = { x: number; y: number; vx: number; vy: number; r: number; birth: number; seed: number };
+    let state: "idle" | "running" | "over" = "idle";
+    let tribbles: Tribble[] = [], beams: { x: number; y: number; age: number }[] = [], time = 0, beamed = 0, cooldown = 0;
+    const doubling = () => Math.max(1.5, 4.2 - time / 25);
+    const born = (x: number, y: number): Tribble => ({
+      x, y, vx: (Math.random() - 0.5) * 30, vy: (Math.random() - 0.5) * 30, r: 7 + Math.random() * 4,
+      birth: time - Math.log(1 - Math.random()) * doubling() * 1.44, seed: Math.random() * 10,
+    });
+
+    function draw() {
+      const { context: c, mono } = game, { ink, bg, muted } = game.colours();
+      c.clearRect(0, 0, W, H);
+      c.strokeStyle = ink; c.lineWidth = 1.2;
+      c.beginPath(); c.roundRect(bx, by, bw, bh, 14); c.stroke();
+      // Tribbles: fuzzy balls of fur.
+      for (const t of tribbles) {
+        c.fillStyle = bg;
+        c.beginPath(); c.arc(t.x, t.y, t.r, 0, Math.PI * 2); c.fill();
+        c.lineWidth = 0.9;
+        for (let k = 0; k < 22; k++) {
+          const a = (k / 22) * Math.PI * 2 + t.seed, wobble = 1 + 0.25 * Math.sin(k * 3.1 + t.seed + time * 3);
+          c.beginPath(); c.moveTo(t.x + Math.cos(a) * t.r * 0.45, t.y + Math.sin(a) * t.r * 0.45); c.lineTo(t.x + Math.cos(a) * t.r * wobble, t.y + Math.sin(a) * t.r * wobble); c.stroke();
+        }
+      }
+      // Transporter beams: a shimmering column that fades.
+      for (const b of beams) {
+        c.globalAlpha = Math.max(0, 1 - b.age / 0.6);
+        c.fillStyle = ink;
+        for (let k = 0; k < 14; k++) c.fillRect(b.x - 8 + ((k * 7.3 + b.age * 90) % 16), b.y - 14 + ((k * 5.1 + b.age * 60) % 28), 1.6, 1.6);
+        c.globalAlpha = 1;
+      }
+      // The bay's fill, and the law.
+      const fill = tribbles.length / CAPACITY;
+      c.fillStyle = muted; c.font = `11px ${mono}`; c.textAlign = "left";
+      if (state !== "idle") c.fillText(`N(t) = N₀ · 2^(t / ${doubling().toFixed(1)} s)`, bx + 10, by + bh - 10);
+      c.lineWidth = 3; c.lineCap = "round"; c.strokeStyle = ink;
+      c.beginPath(); c.moveTo(bx + bw - 110, by + bh - 14); c.lineTo(bx + bw - 110 + 96 * Math.min(1, fill), by + bh - 14); c.stroke();
+      c.lineWidth = 1; c.globalAlpha = 0.3;
+      c.beginPath(); c.moveTo(bx + bw - 110, by + bh - 14); c.lineTo(bx + bw - 14, by + bh - 14); c.stroke();
+      c.globalAlpha = 1;
+      corners(game, "tribbles", `${tribbles.length} tribbles · ${beamed} beamed`);
+      if (state === "idle") banner(game, ["The Trouble with Tribbles", "they are born pregnant: N doubles every few seconds", "click one (or space) to beam it to the Klingons", `don't let the cargo bay reach ${CAPACITY}`]);
+      if (state === "over") banner(game, [`Cargo bay full after ${time.toFixed(0)} s`, "click or press a key to try again"]);
+    }
+
+    const beam = (t: Tribble) => {
+      tribbles = tribbles.filter((o) => o !== t);
+      beams.push({ x: t.x, y: t.y, age: 0 });
+      beamed += 1;
+    };
+    const step = (dt: number) => {
+      time += dt; cooldown -= dt;
+      for (const t of [...tribbles]) {
+        t.x += t.vx * dt; t.y += t.vy * dt;
+        t.vx += (Math.random() - 0.5) * 60 * dt; t.vy += (Math.random() - 0.5) * 60 * dt;
+        if (t.x < bx + t.r || t.x > bx + bw - t.r) t.vx = -t.vx;
+        if (t.y < by + t.r || t.y > by + bh - t.r - 16) t.vy = -t.vy;
+        t.x = Math.max(bx + t.r, Math.min(bx + bw - t.r, t.x)); t.y = Math.max(by + t.r, Math.min(by + bh - t.r - 16, t.y));
+        // Doubling: each tribble has a random lifetime to its next birth (exponential, mean T/ln 2).
+        if (time >= t.birth) {
+          t.birth = time - Math.log(1 - Math.random()) * doubling() * 1.44;
+          tribbles.push(born(t.x + (Math.random() - 0.5) * 14, t.y + (Math.random() - 0.5) * 14));
+        }
+      }
+      for (const b of beams) b.age += dt;
+      beams = beams.filter((b) => b.age < 0.6);
+      if (tribbles.length >= CAPACITY) {
+        state = "over";
+        const record = best("tribbles", Math.round(time));
+        gameOver(game.readout, game.pool, `<strong>The cargo bay is full</strong> after ${time.toFixed(0)} s · ${beamed} tribbles beamed to the Klingons${Math.round(time) >= record ? " · new best!" : ""}`);
+      }
+      draw();
+      return state === "running";
+    };
+    const start = () => {
+      [state, time, beamed, beams] = ["running", 0, 0, []];
+      tribbles = [born(W / 2, H / 2), born(W / 2 + 20, H / 2 - 10)];
+      game.readout.innerHTML = '<span class="hint">Beam them to the Klingons before they fill the bay</span>';
+      loop(step);
+    };
+    game.element.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      game.element.focus();
+      if (state !== "running") return start();
+      const [x, y] = pointer(game, event);
+      const near = tribbles.map((t) => ({ t, d: Math.hypot(t.x - x, t.y - y) })).sort((a, b) => a.d - b.d)[0];
+      if (near && near.d < near.t.r + 8) beam(near.t);
+    });
+    game.element.addEventListener("keydown", (event) => {
+      if (state !== "running") { if (event.key.length === 1 || event.key === "Enter") { event.preventDefault(); start(); } return; }
+      if (event.key === " ") { event.preventDefault(); if (cooldown <= 0 && tribbles.length) { beam(tribbles[Math.floor(Math.random() * tribbles.length)]); cooldown = 0.28; } }
+    });
+    draw();
+  }
+</script>

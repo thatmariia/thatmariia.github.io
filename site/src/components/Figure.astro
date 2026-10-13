@@ -1,18 +1,26 @@
 ---
 // The figure at the top of a page. A page names the figures that suit its data; while choosing,
 // pill buttons (plain radio inputs, no JavaScript) switch between them when there is more than one.
+import Bits from "./figures/Bits.astro";
 import Collaborators from "./figures/Collaborators.astro";
+import Corsi from "./figures/Corsi.astro";
+import Dijkstra from "./figures/Dijkstra.astro";
 import Fireworks from "./figures/Fireworks.astro";
 import Flanker from "./figures/Flanker.astro";
 import GrowthCone from "./figures/GrowthCone.astro";
+import KobayashiMaru from "./figures/KobayashiMaru.astro";
+import Logic from "./figures/Logic.astro";
 import NeuralNet from "./figures/NeuralNet.astro";
 import Orrery from "./figures/Orrery.astro";
 import PerceptronPong from "./figures/PerceptronPong.astro";
+import Qubit from "./figures/Qubit.astro";
+import Rotation from "./figures/Rotation.astro";
 import Saltatory from "./figures/Saltatory.astro";
 import Sieve from "./figures/Sieve.astro";
 import Spiral from "./figures/Spiral.astro";
 import Topo from "./figures/Topo.astro";
 import Travels from "./figures/Travels.astro";
+import Tribbles from "./figures/Tribbles.astro";
 import Volleyball from "./figures/Volleyball.astro";
 
 const FIGURES = {
@@ -21,6 +29,14 @@ const FIGURES = {
   growthcone: { label: "Growth cone", Figure: GrowthCone, seed: 1 },
   flanker: { label: "Flanker", Figure: Flanker, seed: 1 },
   pong: { label: "Perceptron Pong", Figure: PerceptronPong, seed: 1 },
+  tribbles: { label: "Tribbles", Figure: Tribbles, seed: 1 },
+  kobayashi: { label: "Kobayashi Maru", Figure: KobayashiMaru, seed: 1 },
+  corsi: { label: "Corsi blocks", Figure: Corsi, seed: 1 },
+  rotation: { label: "Mental rotation", Figure: Rotation, seed: 1 },
+  bits: { label: "Bits", Figure: Bits, seed: 1 },
+  logic: { label: "Logic", Figure: Logic, seed: 1 },
+  dijkstra: { label: "Dijkstra", Figure: Dijkstra, seed: 1 },
+  qubit: { label: "Qubit", Figure: Qubit, seed: 1 },
   spiral: { label: "Spiral explorer", Figure: Spiral, seed: 2 },
   collaborators: { label: "Collaborators", Figure: Collaborators, seed: 7 },
   topo: { label: "Topographic map", Figure: Topo, seed: 1 },

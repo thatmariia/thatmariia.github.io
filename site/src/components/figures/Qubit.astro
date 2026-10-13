@@ -1,0 +1,118 @@
+---
+// One qubit on the Bloch sphere: apply gates (X, Y, Z, H, S, by key or button) to bring its state
+// to the target in the fewest possible gates, before the time runs out. Every solved target brings
+// a new one, with less time; using too many gates or running out ends it, with a prize.
+import Arcade from "../Arcade.astro";
+interface Props { seed: number; width: number; height: number }
+const { width } = Astro.props;
+---
+
+<Arcade name="qubit" width={width} height={Math.round(width * (width > 600 ? 0.42 : 1))}
+  label="Qubit: apply the gates X, Y, Z, H and S with keys or buttons to move the state on the Bloch sphere to the target in the fewest gates"
+  hint="Gates: X Y Z H S (keys or buttons)" />
+
+<script>
+  import { banner, best, corners, gameOver, inside, loop, pills, pointer, setup, type Button, type Game } from "../../lib/game";
+
+  type State = [number, number, number];  // a pole of the Bloch sphere: ±x, ±y or ±z
+  const GATES: Record<string, (s: State) => State> = {
+    X: ([x, y, z]) => [x, -y, -z], Y: ([x, y, z]) => [-x, y, -z], Z: ([x, y, z]) => [-x, -y, z],
+    H: ([x, y, z]) => [z, -y, x], S: ([x, y, z]) => [-y, x, z],
+  };
+  const NAMES: Record<string, string> = { "0,0,1": "|0⟩", "0,0,-1": "|1⟩", "1,0,0": "|+⟩", "-1,0,0": "|−⟩", "0,1,0": "|+i⟩", "0,-1,0": "|−i⟩" };
+  const POLES = Object.keys(NAMES).map((k) => k.split(",").map(Number) as State);
+  const same = (a: State, b: State) => a.every((v, i) => v === b[i]);
+  // The fewest gates from a to b (breadth-first search over the six poles).
+  const distance = (a: State, b: State) => {
+    let frontier = [a], seen = new Set([a.join()]), steps = 0;
+    while (!frontier.some((s) => same(s, b))) {
+      frontier = frontier.flatMap((s) => Object.values(GATES).map((g) => g(s))).filter((s) => !seen.has(s.join()) && seen.add(s.join()));
+      steps += 1;
+    }
+    return steps;
+  };
+
+  for (const figure of document.querySelectorAll<HTMLElement>(".fig.qubit")) {
+    const game: Game = setup(figure, () => draw());
+    const { W, H } = game, R = Math.min(W * 0.22, H * 0.28), [cx, cy] = [W / 2, H * 0.46];
+    let state: "idle" | "running" | "solved" | "over" = "idle";
+    let qubit: State = [0, 0, 1], target: State = [1, 0, 0], used: string[] = [], budget = 1, clock = 0, limit = 12, solved = 0, note = "", buttons: Button[] = [];
+    // Oblique projection: z up, y to the right, x towards the viewer (down-left).
+    const project = ([x, y, z]: number[]) => [cx + R * (y - x * 0.38), cy + R * (-z + x * 0.32)];
+
+    function draw() {
+      const { context: c, mono } = game, { ink, bg, muted } = game.colours();
+      c.clearRect(0, 0, W, H);
+      c.strokeStyle = ink; c.lineWidth = 1.2;
+      c.beginPath(); c.arc(cx, cy, R, 0, Math.PI * 2); c.stroke();
+      c.globalAlpha = 0.45; c.setLineDash([3, 4]);
+      c.beginPath(); c.ellipse(cx, cy, R, R * 0.36, 0, 0, Math.PI * 2); c.stroke();
+      for (const axis of [[1, 0, 0], [0, 1, 0], [0, 0, 1]]) { const [a, b] = [project(axis.map((v) => -v)), project(axis)]; c.beginPath(); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); c.stroke(); }
+      c.setLineDash([]); c.globalAlpha = 1;
+      c.fillStyle = muted; c.font = `11px ${mono}`; c.textAlign = "center";
+      for (const p of POLES) { const [x, y] = project(p.map((v) => v * 1.22)); c.fillText(NAMES[p.join()], x, y + 4); }
+      if (state !== "idle") {
+        // Target: a ring; state: an arrow from the centre.
+        const [tx, ty] = project(target);
+        c.lineWidth = 2; c.beginPath(); c.arc(tx, ty, 9, 0, Math.PI * 2); c.stroke();
+        const [qx, qy] = project(qubit), angle = Math.atan2(qy - cy, qx - cx);
+        c.lineWidth = 3; c.beginPath(); c.moveTo(cx, cy); c.lineTo(qx, qy); c.stroke();
+        c.fillStyle = ink; c.beginPath(); c.moveTo(qx, qy); c.lineTo(qx - 10 * Math.cos(angle - 0.4), qy - 10 * Math.sin(angle - 0.4)); c.lineTo(qx - 10 * Math.cos(angle + 0.4), qy - 10 * Math.sin(angle + 0.4)); c.fill();
+        c.fillStyle = ink; c.font = `600 12px ${mono}`;
+        c.fillText(state === "solved" ? note : `${NAMES[qubit.join()]} → ${NAMES[target.join()]} in ${budget} ${budget === 1 ? "gate" : "gates"} · used ${used.join(" ") || "none"}`, W / 2, 42);
+        if (state === "running") {
+          const left = Math.max(0, 1 - clock / limit);
+          c.strokeStyle = muted; c.lineWidth = 2;
+          c.beginPath(); c.moveTo(W / 2 - W * 0.3 * left, H - 52); c.lineTo(W / 2 + W * 0.3 * left, H - 52); c.stroke();
+        }
+      }
+      buttons = state === "running" ? pills(game, Object.keys(GATES), H - 42) : [];
+      corners(game, "qubit", `${solved} solved`);
+      if (state === "idle") banner(game, ["One qubit, five gates", "move the state (arrow) to the target (ring)", "X Y Z flip around their axes · H swaps x and z", "S turns a quarter around z · fewest gates only"], H * 0.45);
+      if (state === "over") banner(game, [note, "press a key or tap to try again"], H * 0.45);
+    }
+
+    const next = () => {
+      do target = POLES[Math.floor(Math.random() * POLES.length)]; while (same(target, qubit));
+      [budget, used, clock, limit, state] = [distance(qubit, target), [], 0, Math.max(4, 12 - solved * 0.5), "running"];
+    };
+    const end = (why: string) => {
+      state = "over"; note = why;
+      const record = best("qubit", solved);
+      gameOver(game.readout, game.pool, `<strong>${why}</strong> · ${solved} targets reached${solved >= record && solved > 0 ? " · new best!" : ""}`);
+    };
+    const apply = (gate: string) => {
+      if (state !== "running") return;
+      qubit = GATES[gate](qubit);
+      used.push(gate);
+      if (same(qubit, target)) { solved += 1; [state, clock, note] = ["solved", 0, `${used.join(" ")}: optimal`]; }
+      else if (used.length >= budget) end(`${used.join(" ")} is not it: ${NAMES[qubit.join()]}, not ${NAMES[target.join()]}`);
+    };
+    const step = (dt: number) => {
+      clock += dt;
+      if (state === "running" && clock > limit) end("Decohered: out of time");
+      if (state === "solved" && clock > 0.7) next();
+      draw();
+      return state !== "over";
+    };
+    const start = () => {
+      [qubit, solved] = [[0, 0, 1], 0];
+      game.readout.innerHTML = '<span class="hint">Reach the ring in the fewest gates</span>';
+      next();
+      loop(step);
+    };
+    game.element.addEventListener("keydown", (event) => {
+      if (state === "idle" || state === "over") { if (event.key.length === 1 || event.key === "Enter") { event.preventDefault(); start(); } return; }
+      const gate = event.key.toUpperCase();
+      if (gate in GATES) { event.preventDefault(); apply(gate); }
+    });
+    game.element.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      game.element.focus();
+      if (state === "idle" || state === "over") return start();
+      const at = pointer(game, event), b = buttons.findIndex((button) => inside(button, at));
+      if (b >= 0) apply(buttons[b].label);
+    });
+    draw();
+  }
+</script>

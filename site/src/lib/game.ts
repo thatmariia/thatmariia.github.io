@@ -85,3 +85,31 @@ export function corners(game: Game, key: string, right: string) {
   c.textAlign = "left"; c.fillStyle = muted; c.fillText(`best ${best(key)}`, 10, 20);
   c.textAlign = "right"; c.fillStyle = ink; c.fillText(right, W - 10, 20);
 }
+
+/** Where a pointer event is, in logical units. */
+export function pointer(game: Game, event: PointerEvent): [number, number] {
+  const rect = game.element.getBoundingClientRect();
+  return [((event.clientX - rect.left) / rect.width) * game.W, ((event.clientY - rect.top) / rect.height) * game.H];
+}
+
+export type Button = { label: string; x: number; y: number; w: number; h: number };
+
+/** A centred row of pill buttons (filled when on); returns where they are, for clicks. */
+export function pills(game: Game, labels: string[], y: number, on: (i: number) => boolean = () => false): Button[] {
+  const { context: c, W, mono } = game, { ink, bg } = game.colours();
+  c.font = `600 13px ${mono}`;
+  const widths = labels.map((l) => c.measureText(l).width + 28), gap = 10, h = 30;
+  let x = W / 2 - (widths.reduce((s, w) => s + w, 0) + gap * (labels.length - 1)) / 2;
+  return labels.map((label, i) => {
+    const b = { label, x, y, w: widths[i], h };
+    c.fillStyle = on(i) ? ink : bg; c.strokeStyle = ink; c.lineWidth = 1.2;
+    c.beginPath(); c.roundRect(b.x, b.y, b.w, h, h / 2); c.fill(); c.stroke();
+    c.fillStyle = on(i) ? bg : ink; c.textAlign = "center"; c.textBaseline = "middle";
+    c.fillText(label, b.x + b.w / 2, y + h / 2 + 1);
+    c.textBaseline = "alphabetic";
+    x += widths[i] + gap;
+    return b;
+  });
+}
+
+export const inside = (b: Button, [x, y]: [number, number]) => x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h;

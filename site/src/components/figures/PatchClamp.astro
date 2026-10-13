@@ -1,74 +1,92 @@
 ---
-// Lunar Lander as patch clamp: steer a glass pipette onto a drifting neuron's soma (← → or drag)
-// and hold ↓ / Space (or press) to lower it. Touch the membrane gently for a gigaseal; too fast
-// ruptures the cell, and missing the soma does too. Three lost cells end it, with a prize.
+// Patch clamp, like Lunar Lander: a micromanipulator moves the glass pipette (← → or drag) and
+// lowers it while you hold ↓ / Space (or press): slowly at first, faster the longer you hold;
+// release and it stops. Touch the top of the soma gently, then keep the tip on the drifting cell,
+// without pushing, while the seal resistance climbs to a gigaohm. Too fast, off target, pushing or
+// drifting off loses the cell; three lost cells end it, with a prize.
 import Arcade from "../Arcade.astro";
 interface Props { seed: number; width: number; height: number }
 const { width } = Astro.props;
 ---
 
 <Arcade name="patch" width={width} height={Math.round(width * (width > 600 ? 0.45 : 1.05))}
-  label="Patch clamp: move the pipette with the arrow keys or by dragging, hold down or Space to lower it, and touch the neuron gently"
-  rules={["Patch clamp", "Steer the pipette over the soma (← → or drag) and hold ↓ or Space (or press) to lower it.", "Touch the membrane gently for a gigaseal. Too fast, or off the soma, and the cell is lost.", "The cells drift faster as you go. Lose 3 and it is over."]} />
+  label="Patch clamp: move the pipette with the arrow keys or by dragging, hold down or Space to lower it, touch the neuron gently and stay with it until the seal forms"
+  rules={["Patch clamp", "Move the pipette with ← → (or drag). Hold ↓ or Space (or press) to lower it: slow at first, faster the longer you hold.", "Touch the top of the soma gently. Then follow the drifting cell, without pushing, until the seal reaches 1 GΩ.", "Too fast, off the soma, pushing or drifting off loses the cell. Lose 3 and it is over."]} />
 
 <script>
   import { begin, best, corners, gameOver, loop, pointer, setup, type Game } from "../../lib/game";
 
   for (const figure of document.querySelectorAll<HTMLElement>(".fig.patch")) {
     const game: Game = setup(figure, () => draw());
-    const { W, H } = game, safe = H * 0.09;
-    type Cell = { x: number; y: number; r: number; vx: number; dendrites: number[][] };
+    const { W, H } = game, safe = H * 0.11, vmax = H * 0.32;
+    type Cell = { x: number; y: number; r: number; vx: number; phase: number; dendrites: number[][] };
     let state: "idle" | "running" | "over" = "idle";
-    let tip = [W / 2, 40], vx = 0, vy = 0, down = false, keys = 0, target: number | null = null, cell: Cell | null = null;
-    let seals = 0, lost = 0, note = "", noteLeft = 0;
+    let tip = [W / 2, 40], vx = 0, vy = 0, held = 0, down = false, pressing = false, keys = 0, target: number | null = null, cell: Cell | null = null;
+    let sealing = false, sealDx = 0, resistance = 0, push = 0, seals = 0, lost = 0, note = "", noteLeft = 0;
 
     const newCell = (): Cell => {
-      const r = Math.min(W, H) * (0.07 + Math.random() * 0.03);
+      const r = Math.min(W, H) * (0.075 + Math.random() * 0.025);
       return {
-        x: W * (0.25 + Math.random() * 0.5), y: H * (0.68 + Math.random() * 0.12), r, vx: (Math.random() < 0.5 ? -1 : 1) * W * (0.02 + seals * 0.012),
-        dendrites: Array.from({ length: 5 }, (_, k) => [Math.PI * (0.1 + 0.8 * (k / 4)) + Math.PI + (Math.random() - 0.5) * 0.3, r * (1.6 + Math.random() * 1.4)]),
+        x: W * (0.25 + Math.random() * 0.5), y: H * (0.7 + Math.random() * 0.1), r, phase: Math.random() * 6,
+        vx: (Math.random() < 0.5 ? -1 : 1) * W * (0.015 + seals * 0.007),
+        dendrites: Array.from({ length: 5 }, (_, k) => [Math.PI * (0.15 + 0.7 * (k / 4)) + (Math.random() - 0.5) * 0.3, r * (1.5 + Math.random() * 1.2)]),
       };
     };
 
     function draw() {
       const { context: c, mono } = game, { ink, bg, muted } = game.colours();
       c.clearRect(0, 0, W, H);
-      // The microscope's field of view.
       c.strokeStyle = muted; c.lineWidth = 1; c.globalAlpha = 0.4;
       c.beginPath(); c.arc(W / 2, H / 2, Math.min(W, H) * 0.48, 0, Math.PI * 2); c.stroke();
       c.globalAlpha = 1;
       if (cell) {
+        // Dendrites hang below the soma; the soma dimples where the pipette presses.
         c.strokeStyle = ink; c.lineCap = "round";
         for (const [a, l] of cell.dendrites) {
           c.lineWidth = 2.2; c.beginPath(); c.moveTo(cell.x, cell.y); c.lineTo(cell.x + Math.cos(a) * l, cell.y + Math.sin(a) * l * 0.8); c.stroke();
-          c.lineWidth = 1.2; c.beginPath(); c.moveTo(cell.x + Math.cos(a) * l * 0.6, cell.y + Math.sin(a) * l * 0.48); c.lineTo(cell.x + Math.cos(a + 0.5) * l * 0.95, cell.y + Math.sin(a + 0.5) * l * 0.75); c.stroke();
+          c.lineWidth = 1.2; c.beginPath(); c.moveTo(cell.x + Math.cos(a) * l * 0.6, cell.y + Math.sin(a) * l * 0.48); c.lineTo(cell.x + Math.cos(a + 0.4) * l * 0.95, cell.y + Math.sin(a + 0.4) * l * 0.76); c.stroke();
         }
         c.fillStyle = bg; c.lineWidth = 1.6;
-        c.beginPath(); c.ellipse(cell.x, cell.y, cell.r, cell.r * 0.8, 0, 0, Math.PI * 2); c.fill(); c.stroke();
-        c.fillStyle = ink; c.globalAlpha = 0.25; c.beginPath(); c.arc(cell.x + cell.r * 0.2, cell.y, cell.r * 0.32, 0, Math.PI * 2); c.fill(); c.globalAlpha = 1;
+        const dimple = sealing ? 4 : 0;
+        c.beginPath();
+        for (let k = 0; k <= 40; k++) {
+          const a = (k / 40) * Math.PI * 2, [px, py] = [cell.x + Math.cos(a) * cell.r, cell.y + Math.sin(a) * cell.r * 0.8];
+          const near = Math.max(0, 1 - Math.hypot(px - tip[0], py - tip[1]) / 12);
+          (k ? c.lineTo : c.moveTo).call(c, px, py + near * dimple);
+        }
+        c.closePath(); c.fill(); c.stroke();
+        c.fillStyle = ink; c.globalAlpha = 0.25; c.beginPath(); c.arc(cell.x + cell.r * 0.2, cell.y + cell.r * 0.1, cell.r * 0.32, 0, Math.PI * 2); c.fill(); c.globalAlpha = 1;
       }
       // The pipette: a tapered glass tube coming in from the top right.
-      const [tx, ty] = tip, angle = -0.75;
-      const back = [tx + Math.cos(angle) * H * 1.4, ty + Math.sin(angle) * H * 1.4];
+      const [tx, ty] = tip, back = [tx + Math.cos(-0.75) * H * 1.4, ty + Math.sin(-0.75) * H * 1.4];
       c.strokeStyle = ink; c.lineWidth = 1.3; c.fillStyle = bg;
       c.beginPath(); c.moveTo(tx - 1.5, ty); c.lineTo(back[0] - 14, back[1] - 2); c.lineTo(back[0] + 14, back[1] + 18); c.lineTo(tx + 1.5, ty + 1); c.closePath(); c.fill(); c.stroke();
       c.globalAlpha = 0.4; c.beginPath(); c.moveTo(tx, ty); c.lineTo(back[0], back[1] + 8); c.stroke(); c.globalAlpha = 1;
-      // Descent speed against the safe speed.
+      // Meters: descent speed against safe; while sealing, the seal resistance on a log scale.
       if (state === "running") {
-        const frac = Math.min(1.5, Math.max(0, vy) / safe);
-        c.lineWidth = 3; c.lineCap = "round";
-        c.beginPath(); c.moveTo(14, H - 16); c.lineTo(14 + 90 * Math.min(1, frac / 1.5), H - 16); c.stroke();
-        c.lineWidth = 1; c.beginPath(); c.moveTo(14 + 60, H - 22); c.lineTo(14 + 60, H - 10); c.stroke();
-        c.fillStyle = muted; c.font = `10px ${mono}`; c.textAlign = "left"; c.fillText("descent · safe |", 14, H - 26);
+        c.lineCap = "round"; c.fillStyle = muted; c.font = `10px ${mono}`; c.textAlign = "left";
+        if (sealing) {
+          const frac = Math.min(1, Math.log10(Math.max(0.01, resistance) / 0.01) / 2);
+          c.fillText(`seal ${resistance < 1 ? `${Math.round(resistance * 1000)} MΩ` : `${resistance.toFixed(2)} GΩ`} · keep still on the cell`, 14, H - 26);
+          c.lineWidth = 3; c.strokeStyle = ink; c.beginPath(); c.moveTo(14, H - 16); c.lineTo(14 + 120 * frac, H - 16); c.stroke();
+        } else {
+          c.fillText("descent · safe |", 14, H - 26);
+          c.lineWidth = 3; c.strokeStyle = vy > safe ? ink : muted;
+          c.beginPath(); c.moveTo(14, H - 16); c.lineTo(14 + 120 * Math.min(1, vy / vmax), H - 16); c.stroke();
+          c.lineWidth = 1; c.strokeStyle = ink; c.beginPath(); c.moveTo(14 + 120 * (safe / vmax), H - 22); c.lineTo(14 + 120 * (safe / vmax), H - 10); c.stroke();
+        }
       }
       if (noteLeft > 0) { c.fillStyle = ink; c.font = `600 12px ${mono}`; c.textAlign = "center"; c.fillText(note, W / 2, 44); }
-      corners(game, "patch", `${seals} seals · cells ${"●".repeat(3 - lost)}${"○".repeat(lost)}`);
+      corners(game, "patch", `${seals} gigaseals · cells ${"●".repeat(3 - lost)}${"○".repeat(lost)}`);
     }
 
-    const reset = () => { [tip, vx, vy] = [[W * (0.2 + Math.random() * 0.6), 34], 0, 0]; cell = newCell(); };
+    const reset = () => {
+      [tip, vx, vy, held, sealing, resistance, push] = [[W * (0.2 + Math.random() * 0.6), 34], 0, 0, 0, false, 0, 0];
+      cell = newCell();
+    };
     const lose = (why: string) => {
       lost += 1;
-      [note, noteLeft] = [why, 1.6];
+      [note, noteLeft] = [why, 1.8];
       if (lost >= 3) {
         state = "over";
         const record = best("patch", seals);
@@ -78,32 +96,44 @@ const { width } = Astro.props;
     const step = (dt: number) => {
       noteLeft -= dt;
       if (!cell) return false;
+      cell.phase += dt;
       cell.x += cell.vx * dt;
-      if (cell.x < W * 0.15 || cell.x > W * 0.85) cell.vx = -cell.vx;
-      // Horizontal: keys push, or the pointer leads; vertical: hold to descend, release to brake.
-      if (target !== null) vx += (target - tip[0]) * 8 * dt - vx * 4 * dt; else vx += keys * W * 1.2 * dt - vx * 3 * dt;
-      vy += (down ? H * 0.35 : -H * 0.5) * dt;
-      vy = Math.max(-H * 0.12, Math.min(H * 0.6, vy));
-      tip = [Math.max(10, Math.min(W - 10, tip[0] + vx * dt)), Math.max(30, tip[1] + vy * dt)];
-      // Contact with the membrane (top of the soma ellipse) or the dish.
-      const [dx, dy] = [(tip[0] - cell.x) / cell.r, (tip[1] - cell.y) / (cell.r * 0.8)];
-      if (dx * dx + dy * dy <= 1) {
-        if (dy > -0.35 || Math.abs(dx) > 0.75) lose("Missed the soma: the cell is damaged");
-        else if (vy > safe) lose(`Too fast (${(vy / safe).toFixed(1)}× safe): the membrane ruptured`);
-        else {
+      if (cell.x < W * 0.2 || cell.x > W * 0.8) cell.vx = -cell.vx;
+      if (seals >= 3) cell.y += Math.sin(cell.phase * 1.3) * H * 0.012 * dt * 6;
+      // Horizontal: the micromanipulator eases towards the pointer, or keys push it.
+      if (target !== null) vx += (target - tip[0]) * 9 * dt - vx * 5 * dt; else vx += keys * W * 1.1 * dt - vx * 4 * dt;
+      tip[0] = Math.max(10, Math.min(W - 10, tip[0] + vx * dt));
+      if (sealing) {
+        // Sealing: stay on the cell, don't push; the resistance climbs towards a gigaohm.
+        tip[1] = cell.y - Math.sqrt(Math.max(0, 1 - (sealDx / cell.r) ** 2)) * cell.r * 0.8;
+        push = down && !pressing ? push + dt : Math.max(0, push - dt);  // a finger following the cell is not a push
+        resistance = Math.min(1.5, resistance + dt * (0.08 + resistance * 0.9));
+        if (Math.abs(tip[0] - (cell.x + sealDx)) > cell.r * 0.25) lose("The cell drifted away: the seal broke");
+        else if (push > 0.5) lose("Pushed through: the membrane ruptured");
+        else if (resistance >= 1) {
           seals += 1;
-          const ohm = (1 + 4 * (1 - Math.max(0, vy) / safe)).toFixed(1);
-          [note, noteLeft] = [`gigaseal: ${ohm} GΩ`, 1.4];
+          [note, noteLeft] = [`gigaseal: ${resistance.toFixed(1)} GΩ`, 1.5];
           reset();
         }
-      } else if (tip[1] > H - 10) lose("Hit the dish");
+      } else {
+        // Lowering: hold to descend, slow at first and faster the longer you hold; release to stop.
+        held = down ? held + dt : 0;
+        vy = down ? Math.min(vmax, H * 0.06 + held * H * 0.22) : 0;
+        tip[1] += vy * dt;
+        const [dx, dy] = [(tip[0] - cell.x) / cell.r, (tip[1] - cell.y) / (cell.r * 0.8)];
+        if (dx * dx + dy * dy <= 1) {
+          if (dy > -0.4 || Math.abs(dx) > 0.7) lose("Off the soma: the cell is damaged");
+          else if (vy > safe) lose(`Too fast (${(vy / safe).toFixed(1)}× safe): the membrane ruptured`);
+          else { [sealing, sealDx, resistance, push] = [true, tip[0] - cell.x, 0.01, 0]; [note, noteLeft] = ["contact: now hold still on the cell", 1.2]; }
+        } else if (tip[1] > H - 12) lose("Hit the bottom of the dish");
+      }
       draw();
       return state === "running";
     };
     const start = () => {
       [state, seals, lost] = ["running", 0, 0];
       reset();
-      begin(game, "Lower gently onto the soma");
+      begin(game, "Lower gently onto the soma, then follow it");
       loop(game, step);
     };
     game.element.addEventListener("keydown", (event) => {
@@ -121,10 +151,10 @@ const { width } = Astro.props;
       game.element.focus();
       game.element.setPointerCapture(event.pointerId);
       if (state !== "running") return start();
-      [target, down] = [pointer(game, event)[0], true];
+      [target, down, pressing] = [pointer(game, event)[0], true, true];
     });
     game.element.addEventListener("pointermove", (event) => { if (event.buttons) target = pointer(game, event)[0]; });
-    for (const type of ["pointerup", "pointercancel"]) game.element.addEventListener(type, () => { down = false; target = null; });
+    for (const type of ["pointerup", "pointercancel"]) game.element.addEventListener(type, () => { down = pressing = false; target = null; });
     game.element.addEventListener("blur", () => { down = false; keys = 0; });
     draw();
   }

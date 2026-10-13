@@ -232,9 +232,9 @@ const READY = (face: number) => `M0,-46 L${8 * face},-38 M0,-46 L${7 * face},-36
     const start = ball.getAttribute("transform")!.match(/([-\d.]+),([-\d.]+)/)!;
     ballAt = { x: Number(start[1]), y: Number(start[2]) };
     serve(-1);
-    new IntersectionObserver(([entry]) => {
+    new IntersectionObserver((entries) => {
       const was = running;
-      running = entry.isIntersecting;
+      running = entries[entries.length - 1].isIntersecting;
       if (running && !was) { last = 0; requestAnimationFrame(frame); }
     }).observe(figure);
   }

@@ -1,14 +1,11 @@
 ---
 // The figure at the top of a page. A page names the figures that suit its data; while choosing,
 // pill buttons (plain radio inputs, no JavaScript) switch between them when there is more than one.
-import CartPole from "./figures/CartPole.astro";
 import Collaborators from "./figures/Collaborators.astro";
-import Fireflies from "./figures/Fireflies.astro";
 import Fireworks from "./figures/Fireworks.astro";
 import Flanker from "./figures/Flanker.astro";
 import GrowthCone from "./figures/GrowthCone.astro";
 import NeuralNet from "./figures/NeuralNet.astro";
-import NeuronGame from "./figures/NeuronGame.astro";
 import Orrery from "./figures/Orrery.astro";
 import PerceptronPong from "./figures/PerceptronPong.astro";
 import Saltatory from "./figures/Saltatory.astro";
@@ -19,13 +16,10 @@ import Travels from "./figures/Travels.astro";
 import Volleyball from "./figures/Volleyball.astro";
 
 const FIGURES = {
-  game: { label: "Neuron burst", Figure: NeuronGame, seed: 1 },
   saltatory: { label: "Saltatory", Figure: Saltatory, seed: 1 },
   sieve: { label: "Sieve", Figure: Sieve, seed: 1 },
   growthcone: { label: "Growth cone", Figure: GrowthCone, seed: 1 },
   flanker: { label: "Flanker", Figure: Flanker, seed: 1 },
-  cartpole: { label: "Cart-pole", Figure: CartPole, seed: 1 },
-  fireflies: { label: "Fireflies", Figure: Fireflies, seed: 1 },
   pong: { label: "Perceptron Pong", Figure: PerceptronPong, seed: 1 },
   spiral: { label: "Spiral explorer", Figure: Spiral, seed: 2 },
   collaborators: { label: "Collaborators", Figure: Collaborators, seed: 7 },

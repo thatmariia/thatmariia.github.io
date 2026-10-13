@@ -1,8 +1,9 @@
 ---
 // Saltatory conduction as a one-button runner: you are an action potential leaping from node to
-// node along a myelinated axon. Jump over pufferfish (tetrodotoxin blocks the sodium channels on
-// the axon) but not into cone snails (conotoxin, in the water above). It speeds up; a block ends
-// the run, with one of the website's items as the prize.
+// node along a myelinated axon. It speeds up, and new hazards join as you go: pufferfish to jump
+// (tetrodotoxin blocks sodium channels), cone snails above not to jump into (conotoxin),
+// demyelinated lesions to leap across, and box jellyfish bobbing up and down. A block ends the run,
+// with one of the website's items as the prize.
 import Arcade from "../Arcade.astro";
 interface Props { seed: number; width: number; height: number }
 const { width } = Astro.props;
@@ -20,11 +21,15 @@ const { width } = Astro.props;
     const { W, H } = game;
     const axon = H * 0.72, runnerX = W * 0.14, internode = Math.max(90, W * 0.12), sheath = H * 0.07;
     const hop = H * 0.36, air = 0.6, gravity = (8 * hop) / air ** 2;
-    const [slow, fast] = [W * 0.42, W * 1.05];
+    const [slow, fast] = [W * 0.48, W * 1.35];
 
     let state: "idle" | "running" | "over" = "idle";
     let speed = slow, offset = 0, y = 0, vy = 0, nodes = 0, next = W, flash = 0;
-    let hazards: { x: number; r: number; kind: "fish" | "snail"; y: number }[] = [], leaps: { x: number; age: number }[] = [];
+    type Kind = "fish" | "snail" | "lesion" | "jelly";
+    let hazards: { x: number; r: number; kind: Kind; y: number; w?: number; phase?: number }[] = [], leaps: { x: number; age: number }[] = [];
+    // New hazards join at these nodes, announced as they arrive.
+    const UNLOCK: [number, Kind, string][] = [[12, "snail", "cone snails ahead: don't jump into them"], [30, "lesion", "demyelinated lesions: leap across"], [50, "jelly", "box jellyfish: time your jumps"]];
+    let notice = "", noticeLeft = 0;
     const metres = () => Math.round(30 + ((speed - slow) / (fast - slow)) * 90);
 
     function draw() {
@@ -50,10 +55,14 @@ const { width } = Astro.props;
         c.fillText("node of Ranvier", node, axon - sheath - 8);
       }
       for (const leap of leaps) spike(c, leap.x, axon, Math.max(0, 0.35 - leap.age), 1.2);
-      for (const h of hazards) (h.kind === "fish" ? puffer : snail)(c, h.x, h.y, h.r, ink, bg);
+      for (const h of hazards) {
+        if (h.kind === "lesion") lesion(c, h.x, h.w!, ink, bg, muted);
+        else (h.kind === "fish" ? puffer : h.kind === "snail" ? snail : jelly)(c, h.x, h.y, h.r, ink, bg);
+      }
+      if (noticeLeft > 0) { c.globalAlpha = Math.min(1, noticeLeft); c.fillStyle = ink; c.font = `600 12px ${game.mono}`; c.textAlign = "center"; c.fillText(notice, W / 2, 44); c.globalAlpha = 1; }
       spike(c, runnerX, axon - y, 1, 2.2);
       corners(game, "saltatory", `node ${nodes} · ${state === "idle" ? "—" : metres()} m/s`);
-      if (state === "idle") banner(game, ["You are an action potential", "leap node to node along the myelinated axon", "jump the pufferfish (TTX), not into cone snails", "space or tap to fire"], H * 0.34);
+      if (state === "idle") banner(game, ["You are an action potential", "leap node to node along the myelinated axon", "jump the pufferfish (TTX); more hazards join as you go", "space or tap to fire"], H * 0.34);
       if (state === "over") banner(game, [`Conduction block at node ${nodes}`, "space or tap to fire again"], H * 0.3);
     }
     const spike = (c: CanvasRenderingContext2D, x: number, base: number, alpha: number, width: number) => {
@@ -83,8 +92,28 @@ const { width } = Astro.props;
       c.beginPath(); c.moveTo(x - r * 1.3, cy); c.lineTo(x - r * 1.9, cy - r * 0.3); c.stroke();
     };
 
+    // A lesion: the myelin is gone and the axon frays; landing on it blocks conduction.
+    const lesion = (c: CanvasRenderingContext2D, x: number, w: number, ink: string, bg: string, muted: string) => {
+      c.fillStyle = bg; c.fillRect(x, axon - sheath - 2, w, 2 * sheath + 4);
+      c.strokeStyle = muted; c.setLineDash([3, 4]);
+      c.beginPath(); c.moveTo(x, axon); c.lineTo(x + w, axon); c.stroke();
+      c.setLineDash([]); c.strokeStyle = ink;
+      for (const e of [x, x + w]) { c.beginPath(); c.moveTo(e, axon - sheath); c.lineTo(e, axon + sheath); c.stroke(); }
+    };
+    // A box jellyfish: a bell with trailing tentacles.
+    const jelly = (c: CanvasRenderingContext2D, x: number, cy: number, r: number, ink: string, bg: string) => {
+      c.fillStyle = bg;
+      c.beginPath(); c.arc(x, cy, r, Math.PI, 0); c.lineTo(x + r, cy + r * 0.25); c.lineTo(x - r, cy + r * 0.25); c.closePath(); c.fill(); c.stroke();
+      for (const dx of [-0.6, 0, 0.6]) {
+        c.beginPath(); c.moveTo(x + dx * r, cy + r * 0.25);
+        for (let k = 1; k <= 4; k++) c.lineTo(x + dx * r + (k % 2 ? 2 : -2), cy + r * 0.25 + k * r * 0.35);
+        c.stroke();
+      }
+    };
+
     const step = (dt: number) => {
-      speed = Math.min(fast, speed + W * 0.022 * dt);
+      speed = Math.min(fast, speed + W * 0.032 * dt);
+      noticeLeft -= dt;
       const before = Math.floor(offset / internode);
       offset += speed * dt;
       if (Math.floor(offset / internode) > before) { nodes += 1; if (y === 0) flash = 0.12; }
@@ -95,28 +124,39 @@ const { width } = Astro.props;
       }
       for (const l of leaps) { l.x -= speed * dt; l.age += dt; }
       leaps = leaps.filter((l) => l.age < 0.35);
-      for (const h of hazards) h.x -= speed * (h.kind === "snail" ? 1.15 : 1) * dt;
-      hazards = hazards.filter((h) => h.x > -40);
+      for (const h of hazards) {
+        h.x -= speed * (h.kind === "snail" ? 1.15 : 1) * dt;
+        if (h.kind === "jelly") { h.phase! += dt * 2.6; h.y = axon - sheath - h.r - (hop * 0.85) * (0.5 + 0.5 * Math.sin(h.phase!)); }
+      }
+      hazards = hazards.filter((h) => h.x + (h.w ?? 0) > -40);
+      for (const [at, , text] of UNLOCK) if (nodes === at && notice !== text) [notice, noticeLeft] = [text, 2.5];
       // Hazards come at random gaps that always leave room to land and take off again.
       next -= speed * dt;
       if (next <= 0) {
-        const r = H * (0.045 + Math.random() * 0.035);
-        if (nodes > 8 && Math.random() < 0.3) {
-          hazards.push({ x: W + 30, r: H * 0.05, kind: "snail", y: axon - hop * (0.55 + Math.random() * 0.35) });
-        } else {
-          hazards.push({ x: W + 30, r, kind: "fish", y: axon - r - sheath * 0.2 });
-          const extra = nodes > 15 ? Math.floor(Math.random() * (nodes > 40 ? 3 : 2)) : 0;
-          for (let i = 1; i <= extra; i++) hazards.push({ x: W + 30 + r * 2.6 * i, r: r * 0.85, kind: "fish", y: axon - r * 0.85 - sheath * 0.2 });
+        const open = ["fish", ...UNLOCK.filter(([at]) => nodes >= at).map(([, kind]) => kind)] as Kind[];
+        const kind = open[Math.floor(Math.random() * open.length)], r = H * (0.045 + Math.random() * 0.035);
+        let extra = 0;
+        if (kind === "snail") hazards.push({ x: W + 30, r: H * 0.05, kind, y: axon - hop * (0.55 + Math.random() * 0.35) });
+        else if (kind === "lesion") { extra = internode * (0.45 + Math.random() * 0.45); hazards.push({ x: W + 10, r: 0, w: extra, kind, y: axon }); }
+        else if (kind === "jelly") hazards.push({ x: W + 30, r: H * 0.045, kind, y: axon - hop * 0.5, phase: Math.random() * 6 });
+        else {
+          hazards.push({ x: W + 30, r, kind, y: axon - r - sheath * 0.2 });
+          const more = nodes > 20 ? Math.floor(Math.random() * (nodes > 45 ? 3 : 2)) : 0;
+          for (let i = 1; i <= more; i++) hazards.push({ x: W + 30 + r * 2.6 * i, r: r * 0.85, kind, y: axon - r * 0.85 - sheath * 0.2 });
         }
-        next = speed * (air + 0.15 + Math.random() * 0.9);
+        next = speed * (air + 0.1 + Math.random() * 0.7) + extra;
       }
       // Collision with the spike (its base and its peak).
+      const CAUSE: Record<Kind, string> = { fish: "tetrodotoxin", snail: "conotoxin", lesion: "demyelination", jelly: "box jellyfish venom" };
       for (const h of hazards) {
-        const dx = Math.abs(h.x - runnerX), [top, bottom] = [axon - y - 26, axon - y];
-        if (dx < h.r + 9 && bottom > h.y - h.r * 1.2 && top < h.y + h.r * 1.2) {
+        const [top, bottom] = [axon - y - 26, axon - y];
+        const hit = h.kind === "lesion"
+          ? y < 1 && runnerX > h.x + 4 && runnerX < h.x + h.w! - 4
+          : Math.abs(h.x - runnerX) < h.r + 9 && bottom > h.y - h.r * 1.2 && top < h.y + h.r * 1.2;
+        if (hit && state === "running") {
           state = "over";
           const record = best("saltatory", nodes);
-          gameOver(game.readout, game.pool, `<strong>Conduction block at node ${nodes}</strong> by ${h.kind === "fish" ? "tetrodotoxin" : "conotoxin"} · ${metres()} m/s${nodes >= record && nodes > 0 ? " · new best!" : ""}`);
+          gameOver(game.readout, game.pool, `<strong>Conduction block at node ${nodes}</strong> by ${CAUSE[h.kind]} · ${metres()} m/s${nodes >= record && nodes > 0 ? " · new best!" : ""}`);
         }
       }
       draw();
@@ -124,8 +164,8 @@ const { width } = Astro.props;
     };
     const press = () => {
       if (state !== "running") {
-        [state, speed, offset, y, vy, nodes, next, hazards, leaps] = ["running", slow, 0, 0, 0, 0, W * 0.5, [], []];
-        game.readout.innerHTML = '<span class="hint">Jump the pufferfish · stay under the cone snails</span>';
+        [state, speed, offset, y, vy, nodes, next, hazards, leaps, noticeLeft, notice] = ["running", slow, 0, 0, 0, 0, W * 0.5, [], [], 0, ""];
+        game.readout.innerHTML = '<span class="hint">Jump the pufferfish · new hazards join as you go</span>';
         loop(step);
       } else if (y === 0) vy = Math.sqrt(2 * gravity * hop);
     };

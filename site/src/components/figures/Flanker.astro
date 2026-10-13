@@ -55,7 +55,7 @@ const { width } = Astro.props;
       }
       if (state === "feedback" && note) { c.fillStyle = ink; c.font = `600 13px ${mono}`; c.textAlign = "center"; c.fillText(note, cx, cy + size * 1.5); }
       c.fillStyle = muted; c.font = `11px ${mono}`; c.textAlign = "left";
-      if (state !== "idle" && state !== "over") c.fillText(`mean RT ${Math.round(s.rt)} ms · flanker effect ${Math.round(s.effect)} ms · deadline ${Math.round(deadline * 1000)} ms`, 10, H - 10);
+      if (state !== "idle" && state !== "over") c.fillText(W > 600 ? `mean RT ${Math.round(s.rt)} ms · flanker effect ${Math.round(s.effect)} ms · deadline ${Math.round(deadline * 1000)} ms` : `RT ${Math.round(s.rt)} ms · effect ${Math.round(s.effect)} ms · limit ${Math.round(deadline * 1000)}`, 10, H - 10);
     }
 
     const next = () => {

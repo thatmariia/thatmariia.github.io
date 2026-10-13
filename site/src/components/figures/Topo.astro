@@ -1,11 +1,12 @@
 ---
-// Path as a topographic map. Time runs along the map; across it lie regions, one per kind of role.
+// Path as a topographic map. Time runs along the map; across it lie regions, one per kind of role
+// (and an unnamed one for studies, which shape the land without labels).
 // Every role is a hill in its region (each organisation on its own line there), centred on when it
 // happened, as wide as it lasted and as high as it lasted and produced (linked outputs and events).
 // Contour lines trace the landscape (every fourth one bolder), summits carry the organisations, and
 // my trail winds through the regions over time, with a hiker walking it.
-import { dated, firstYear, now, roleEntries, shortName } from "../../lib/career";
-import { pathSections, refs } from "../../lib/data";
+import { dated, firstYear, month, now, roleEntries, shortName } from "../../lib/career";
+import { data, pathSections, refs, type Entry } from "../../lib/data";
 import { smooth } from "../../lib/figure";
 import type { Point } from "../../lib/random";
 interface Props { seed: number; width: number; height: number }
@@ -21,8 +22,11 @@ const at = (u: number, v: number): Point => vertical
   : [x0 + ((u - start) / (end - start)) * (x1 - x0), y0 + v * (y1 - y0)];
 
 // Regions: one band per kind of role; within a band, each organisation has its own line.
+// Studies shape the land too, in a last, unnamed band.
 const regions = pathSections.filter((p) => roleEntries.some((r) => r.section === p.id));
-const band = 1 / regions.length;
+const band = 1 / (regions.length + 1);
+const studies = (data.education as Entry[]).flatMap((e) => e.periods.filter((p) => p.start && month(p.start) <= now)
+  .map((p, i) => ({ from: month(p.start!), to: Math.min(now, month(p.end ?? p.start!) + 6), v: band * (regions.length + 0.5) + band * 0.3 * ((i * 0.618034) % 1 - 0.5) })));
 const lane = (section: string, org: string) => {
   const r = regions.findIndex((p) => p.id === section), orgs = [...new Set(roleEntries.filter((e) => e.section === section).sort((a, b) => a.from - b.from).map((e) => e.org))];
   return band * (r + 0.5) + (orgs.length > 1 ? band * 0.56 * (((orgs.indexOf(org) * 0.618034) % 1) - 0.5) : 0);
@@ -31,7 +35,8 @@ const hills = roleEntries.map((r) => {
   const months = r.to - r.from, linked = r.related.filter((id) => id in dated).length;
   return { ...r, months, linked, u: (r.from + r.to) / 2, v: lane(r.section, r.org), su: Math.max(5, months / 2.4), sv: band * 0.22, h: Math.sqrt(months + 1) * (1 + 0.12 * linked) };
 });
-const z = (u: number, v: number) => hills.reduce((s, h) => s + h.h * Math.exp(-(((u - h.u) / h.su) ** 2 + ((v - h.v) / h.sv) ** 2) / 2), 0);
+const land = [...hills, ...studies.map((s) => ({ ...s, u: (s.from + s.to) / 2, su: Math.max(5, (s.to - s.from) / 2.4), sv: band * 0.22, h: Math.sqrt(s.to - s.from + 1) }))];
+const z = (u: number, v: number) => land.reduce((s, h) => s + h.h * Math.exp(-(((u - h.u) / h.su) ** 2 + ((v - h.v) / h.sv) ** 2) / 2), 0);
 
 // Sample the landscape on a grid and trace contour lines with marching squares.
 const [nu, nv] = vertical ? [110, 56] : [180, 64];
@@ -99,7 +104,7 @@ const labelled = summits.flatMap((h) => {
 // The trail: where I was at each month, the lanes of the roles I held weighted by height, smoothed.
 let lastV = 0.5;
 const raw = Array.from({ length: Math.ceil((now - start) / 2) + 1 }, (_, k) => {
-  const t = start + k * 2, active = hills.filter((h) => h.from <= t && t <= h.to);
+  const t = start + k * 2, active = land.filter((h) => h.from <= t && t <= h.to);
   if (active.length) lastV = active.reduce((s, h) => s + h.v * h.h, 0) / active.reduce((s, h) => s + h.h, 0);
   return [t, lastV] as Point;
 });
@@ -112,7 +117,7 @@ const here = trail[trail.length - 1];
 
 <div class="fig topo">
   <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`Path since ${firstYear} as a topographic map: every role a hill in the region of its kind, with my trail across them`}>
-    {regions.slice(1).map((_, r) => {
+    {regions.map((_, r) => {
       const [a, b] = [at(start, band * (r + 1)), at(end, band * (r + 1))];
       return <line class="border" x1={f(a[0])} y1={f(a[1])} x2={f(b[0])} y2={f(b[1])} />;
     })}
@@ -136,5 +141,4 @@ const here = trail[trail.length - 1];
       return vertical ? <text class="year" x={f(x - 8)} y={f(y + 3)} text-anchor="end">{yr}</text> : <text class="year" x={f(x)} y={f(y + 22)} text-anchor="middle">{yr}</text>;
     })}
   </svg>
-  <p class="key">Each role is a hill in the region of its kind, centred on when it happened: wider the longer it lasted, higher the more it lasted and produced. <span class="glyph">▲</span> summits name the organisations; the dashed trail is where my time went, month by month.</p>
 </div>

@@ -26,7 +26,7 @@ WORK = fields("id", "title", "authors", "year", "venue", "status", "doi", "url",
 PUBLIC = {
     "profile": fields("name", "headline", "bio", "author_names", "location", "walk", links=LINK),
     # Education is shown as field names only: no institutions, levels, years or notes.
-    "education": fields("id", periods=fields("title")),
+    "education": fields("id", periods=fields("title", "start", "end")),
     **{name: ENTRY for name in [
         "research", "teaching", "leadership", "service", "awards", "funding", "events", "outreach", "other",
     ]},

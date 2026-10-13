@@ -26,10 +26,10 @@ def test_hidden_items_are_dropped(public):
     assert [e["title"] for e in public["research"]] == ["Example Institute"]
 
 
-def test_education_shows_field_names_only(public):
+def test_education_shows_fields_and_years_only(public):
     assert public["education"] == [{
         "id": "example-university",
-        "periods": [{"title": "Applied Mathematics"}],
+        "periods": [{"title": "Applied Mathematics", "start": "2019", "end": "2024"}],
         "related": ["thesis-oscillations"],
     }]
 

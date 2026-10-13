@@ -4,7 +4,7 @@
 // Every role is a hill in its region (each organisation on its own line there), centred on when it
 // happened, as wide as it lasted and as high as it lasted and produced (linked outputs and events).
 // Contour lines trace the landscape (every fourth one bolder), summits carry the organisations, and
-// my trail winds through them over time, visiting the hills I was on, with a hiker walking it.
+// my trail climbs over every role's summit in time order, with a hiker walking it.
 import { dated, firstYear, month, now, roleEntries, shortName } from "../../lib/career";
 import { data, pathSections, refs, type Entry } from "../../lib/data";
 import { smooth } from "../../lib/figure";
@@ -101,20 +101,14 @@ const labelled = summits.flatMap((h) => {
   placed.push(box);
   return [{ h, x, y, text }];
 });
-// The trail: a hiker walking at a steady pace. Every four months it heads for another of the hills
-// I was on then, going back and forth between neighbouring ones, so the trail crosses the regions
-// as my time was split between roles (studies shape the land, but the trail keeps to the roles).
-let [v, goal, turn, dir] = [0.5, 0.5, 0, 1];
-const trail = Array.from({ length: now - start + 1 }, (_, k) => {
-  const t = start + k, active = [...new Map(hills.filter((h) => h.from <= t && t <= h.to).map((h) => [h.v, h])).values()].sort((a, b) => a.v - b.v);
-  if (active.length && k % 4 === 0) {
-    if (active.length > 1 && (turn + dir < 0 || turn + dir >= active.length)) dir = -dir;
-    turn = Math.max(0, Math.min(active.length - 1, turn + (active.length > 1 ? dir : 0)));
-    goal = active[turn].v;
-  }
-  v += (goal - v) * 0.3;
-  return at(t, v);
-}).filter((_, k, all) => k % 2 === 0 || k === all.length - 1);
+// The trail: it climbs over the summit of every role's hill, in the order the roles' middles
+// fall in time, from the first role to now (studies shape the land; the trail keeps to roles).
+const stops = [...hills].sort((a, b) => a.u - b.u || a.v - b.v);
+const trail = [
+  at(Math.min(start, stops[0].from), stops[0].v),
+  ...stops.map((h) => at(h.u, h.v)),
+  at(now, stops[stops.length - 1].v),
+];
 const here = trail[trail.length - 1];
 ---
 

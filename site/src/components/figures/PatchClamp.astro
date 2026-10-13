@@ -1,0 +1,131 @@
+---
+// Lunar Lander as patch clamp: steer a glass pipette onto a drifting neuron's soma (← → or drag)
+// and hold ↓ / Space (or press) to lower it. Touch the membrane gently for a gigaseal; too fast
+// ruptures the cell, and missing the soma does too. Three lost cells end it, with a prize.
+import Arcade from "../Arcade.astro";
+interface Props { seed: number; width: number; height: number }
+const { width } = Astro.props;
+---
+
+<Arcade name="patch" width={width} height={Math.round(width * (width > 600 ? 0.45 : 1.05))}
+  label="Patch clamp: move the pipette with the arrow keys or by dragging, hold down or Space to lower it, and touch the neuron gently"
+  rules={["Patch clamp", "Steer the pipette over the soma (← → or drag) and hold ↓ or Space (or press) to lower it.", "Touch the membrane gently for a gigaseal. Too fast, or off the soma, and the cell is lost.", "The cells drift faster as you go. Lose 3 and it is over."]} />
+
+<script>
+  import { begin, best, corners, gameOver, loop, pointer, setup, type Game } from "../../lib/game";
+
+  for (const figure of document.querySelectorAll<HTMLElement>(".fig.patch")) {
+    const game: Game = setup(figure, () => draw());
+    const { W, H } = game, safe = H * 0.09;
+    type Cell = { x: number; y: number; r: number; vx: number; dendrites: number[][] };
+    let state: "idle" | "running" | "over" = "idle";
+    let tip = [W / 2, 40], vx = 0, vy = 0, down = false, keys = 0, target: number | null = null, cell: Cell | null = null;
+    let seals = 0, lost = 0, note = "", noteLeft = 0;
+
+    const newCell = (): Cell => {
+      const r = Math.min(W, H) * (0.07 + Math.random() * 0.03);
+      return {
+        x: W * (0.25 + Math.random() * 0.5), y: H * (0.68 + Math.random() * 0.12), r, vx: (Math.random() < 0.5 ? -1 : 1) * W * (0.02 + seals * 0.012),
+        dendrites: Array.from({ length: 5 }, (_, k) => [Math.PI * (0.1 + 0.8 * (k / 4)) + Math.PI + (Math.random() - 0.5) * 0.3, r * (1.6 + Math.random() * 1.4)]),
+      };
+    };
+
+    function draw() {
+      const { context: c, mono } = game, { ink, bg, muted } = game.colours();
+      c.clearRect(0, 0, W, H);
+      // The microscope's field of view.
+      c.strokeStyle = muted; c.lineWidth = 1; c.globalAlpha = 0.4;
+      c.beginPath(); c.arc(W / 2, H / 2, Math.min(W, H) * 0.48, 0, Math.PI * 2); c.stroke();
+      c.globalAlpha = 1;
+      if (cell) {
+        c.strokeStyle = ink; c.lineCap = "round";
+        for (const [a, l] of cell.dendrites) {
+          c.lineWidth = 2.2; c.beginPath(); c.moveTo(cell.x, cell.y); c.lineTo(cell.x + Math.cos(a) * l, cell.y + Math.sin(a) * l * 0.8); c.stroke();
+          c.lineWidth = 1.2; c.beginPath(); c.moveTo(cell.x + Math.cos(a) * l * 0.6, cell.y + Math.sin(a) * l * 0.48); c.lineTo(cell.x + Math.cos(a + 0.5) * l * 0.95, cell.y + Math.sin(a + 0.5) * l * 0.75); c.stroke();
+        }
+        c.fillStyle = bg; c.lineWidth = 1.6;
+        c.beginPath(); c.ellipse(cell.x, cell.y, cell.r, cell.r * 0.8, 0, 0, Math.PI * 2); c.fill(); c.stroke();
+        c.fillStyle = ink; c.globalAlpha = 0.25; c.beginPath(); c.arc(cell.x + cell.r * 0.2, cell.y, cell.r * 0.32, 0, Math.PI * 2); c.fill(); c.globalAlpha = 1;
+      }
+      // The pipette: a tapered glass tube coming in from the top right.
+      const [tx, ty] = tip, angle = -0.75;
+      const back = [tx + Math.cos(angle) * H * 1.4, ty + Math.sin(angle) * H * 1.4];
+      c.strokeStyle = ink; c.lineWidth = 1.3; c.fillStyle = bg;
+      c.beginPath(); c.moveTo(tx - 1.5, ty); c.lineTo(back[0] - 14, back[1] - 2); c.lineTo(back[0] + 14, back[1] + 18); c.lineTo(tx + 1.5, ty + 1); c.closePath(); c.fill(); c.stroke();
+      c.globalAlpha = 0.4; c.beginPath(); c.moveTo(tx, ty); c.lineTo(back[0], back[1] + 8); c.stroke(); c.globalAlpha = 1;
+      // Descent speed against the safe speed.
+      if (state === "running") {
+        const frac = Math.min(1.5, Math.max(0, vy) / safe);
+        c.lineWidth = 3; c.lineCap = "round";
+        c.beginPath(); c.moveTo(14, H - 16); c.lineTo(14 + 90 * Math.min(1, frac / 1.5), H - 16); c.stroke();
+        c.lineWidth = 1; c.beginPath(); c.moveTo(14 + 60, H - 22); c.lineTo(14 + 60, H - 10); c.stroke();
+        c.fillStyle = muted; c.font = `10px ${mono}`; c.textAlign = "left"; c.fillText("descent · safe |", 14, H - 26);
+      }
+      if (noteLeft > 0) { c.fillStyle = ink; c.font = `600 12px ${mono}`; c.textAlign = "center"; c.fillText(note, W / 2, 44); }
+      corners(game, "patch", `${seals} seals · cells ${"●".repeat(3 - lost)}${"○".repeat(lost)}`);
+    }
+
+    const reset = () => { [tip, vx, vy] = [[W * (0.2 + Math.random() * 0.6), 34], 0, 0]; cell = newCell(); };
+    const lose = (why: string) => {
+      lost += 1;
+      [note, noteLeft] = [why, 1.6];
+      if (lost >= 3) {
+        state = "over";
+        const record = best("patch", seals);
+        gameOver(game, `${why} · ${seals} gigaseals${seals >= record && seals > 0 ? " · new best!" : ""}`);
+      } else reset();
+    };
+    const step = (dt: number) => {
+      noteLeft -= dt;
+      if (!cell) return false;
+      cell.x += cell.vx * dt;
+      if (cell.x < W * 0.15 || cell.x > W * 0.85) cell.vx = -cell.vx;
+      // Horizontal: keys push, or the pointer leads; vertical: hold to descend, release to brake.
+      if (target !== null) vx += (target - tip[0]) * 8 * dt - vx * 4 * dt; else vx += keys * W * 1.2 * dt - vx * 3 * dt;
+      vy += (down ? H * 0.35 : -H * 0.5) * dt;
+      vy = Math.max(-H * 0.12, Math.min(H * 0.6, vy));
+      tip = [Math.max(10, Math.min(W - 10, tip[0] + vx * dt)), Math.max(30, tip[1] + vy * dt)];
+      // Contact with the membrane (top of the soma ellipse) or the dish.
+      const [dx, dy] = [(tip[0] - cell.x) / cell.r, (tip[1] - cell.y) / (cell.r * 0.8)];
+      if (dx * dx + dy * dy <= 1) {
+        if (dy > -0.35 || Math.abs(dx) > 0.75) lose("Missed the soma: the cell is damaged");
+        else if (vy > safe) lose(`Too fast (${(vy / safe).toFixed(1)}× safe): the membrane ruptured`);
+        else {
+          seals += 1;
+          const ohm = (1 + 4 * (1 - Math.max(0, vy) / safe)).toFixed(1);
+          [note, noteLeft] = [`gigaseal: ${ohm} GΩ`, 1.4];
+          reset();
+        }
+      } else if (tip[1] > H - 10) lose("Hit the dish");
+      draw();
+      return state === "running";
+    };
+    const start = () => {
+      [state, seals, lost] = ["running", 0, 0];
+      reset();
+      begin(game, "Lower gently onto the soma");
+      loop(game, step);
+    };
+    game.element.addEventListener("keydown", (event) => {
+      if (state !== "running") { if (event.key.length === 1 || event.key === "Enter" || event.key.startsWith("Arrow")) { event.preventDefault(); start(); } return; }
+      if (event.key === "ArrowLeft") { event.preventDefault(); keys = -1; target = null; }
+      if (event.key === "ArrowRight") { event.preventDefault(); keys = 1; target = null; }
+      if (event.key === "ArrowDown" || event.key === " ") { event.preventDefault(); down = true; }
+    });
+    game.element.addEventListener("keyup", (event) => {
+      if (event.key === "ArrowLeft" || event.key === "ArrowRight") keys = 0;
+      if (event.key === "ArrowDown" || event.key === " ") down = false;
+    });
+    game.element.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      game.element.focus();
+      game.element.setPointerCapture(event.pointerId);
+      if (state !== "running") return start();
+      [target, down] = [pointer(game, event)[0], true];
+    });
+    game.element.addEventListener("pointermove", (event) => { if (event.buttons) target = pointer(game, event)[0]; });
+    for (const type of ["pointerup", "pointercancel"]) game.element.addEventListener(type, () => { down = false; target = null; });
+    game.element.addEventListener("blur", () => { down = false; keys = 0; });
+    draw();
+  }
+</script>

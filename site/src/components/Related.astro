@@ -1,14 +1,24 @@
 ---
 // Cross-links to other items, labelled by kind, with a preview card on hover or focus (CSS only;
-// the card is visual only, the link text already names the item).
+// the card is visual only, the link text already names the item). Long lists show the most
+// important few (by kind, then most recent) and fold the rest behind a "more" pill.
+import { dated, roleEntries } from "../lib/career";
 import { refs, type Link } from "../lib/data";
 interface Props { related?: string[]; links?: Link[] }
 const { related = [], links = [] } = Astro.props;
+
+const PRIORITY = ["Publication", "Preprint", "Award", "Position", "Software", "Dataset", "Presentation", "Poster", "Thesis",
+  "Report", "Website", "Teaching", "Leadership", "Funding", "Service", "Experience", "Event", "Outreach", "Education"];
+const rank = (id: string) => { const k = PRIORITY.indexOf(refs[id].kind); return k < 0 ? PRIORITY.length : k; };
+const when = (id: string) => dated[id]?.t ?? roleEntries.find((r) => r.id === id)?.to ?? 0;
+const long = related.length > 7;
+const sorted = long ? [...related].sort((a, b) => rank(a) - rank(b) || when(b) - when(a)) : related;
+const [shown, folded] = long ? [sorted.slice(0, 5), sorted.slice(5)] : [sorted, []];
 ---
 
 {(related.length > 0 || links.length > 0) && (
   <ul class="related">
-    {related.map((id) => (
+    {shown.map((id) => (
       <li>
         <a class="xref" href={refs[id].href}>
           <span class="xref-kind">{refs[id].kind}</span>
@@ -21,6 +31,18 @@ const { related = [], links = [] } = Astro.props;
         </span>
       </li>
     ))}
+    {folded.length > 0 && (
+      <li class="fold">
+        <details>
+          <summary class="pill tiny">+{folded.length} more</summary>
+          <ul class="related">
+            {folded.map((id) => (
+              <li><a class="xref" href={refs[id].href}><span class="xref-kind">{refs[id].kind}</span><span class="xref-title">{refs[id].title}</span></a></li>
+            ))}
+          </ul>
+        </details>
+      </li>
+    )}
     {links.map((link) => <li><a class="pill tiny" href={link.url}>{link.label} ↗</a></li>)}
   </ul>
 )}

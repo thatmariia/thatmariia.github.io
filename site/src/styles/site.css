@@ -104,6 +104,12 @@ a.pill:hover, .pill.solid, .pill[aria-current="page"] { background: var(--ink); 
 .notes li::before { content: "–"; position: absolute; left: 0; color: var(--muted); }
 
 .related { gap: 6px 14px; margin-top: 8px; }
+.related > .fold { align-self: center; }
+.related .fold summary { display: inline-flex; list-style: none; cursor: pointer; }
+.related .fold summary::-webkit-details-marker { display: none; }
+.related .fold details[open] summary { display: none; }
+.related .fold:has(details[open]) { flex-basis: 100%; }
+.related .fold .related { margin-top: 0; }
 .xref { display: inline-flex; align-items: baseline; gap: 6px; font-size: 0.8rem; }
 .xref-kind {
   font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
@@ -190,11 +196,34 @@ a.pill:hover, .pill.solid, .pill[aria-current="page"] { background: var(--ink); 
 .fig .readout a { color: var(--ink); }
 .fig .readout .hint { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; }
 
-.game svg { cursor: pointer; touch-action: none; user-select: none; }
-.game .membrane { fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linejoin: round; }
-.game .threshold { stroke: var(--ink); stroke-width: 0.8; stroke-dasharray: 3 5; opacity: 0.5; }
-.game .count, .game .prompt { fill: var(--ink); }
 .arcade canvas { display: block; width: 100%; cursor: pointer; touch-action: manipulation; user-select: none; }
+.games .picker { position: relative; display: flex; justify-content: flex-end; margin: -6px 0 8px; }
+.games .choose { cursor: pointer; background: var(--bg); color: var(--ink); }
+.games .choose:hover, .games .choose[aria-expanded="true"] { background: var(--ink); color: var(--bg); }
+.games .menu {
+  position: absolute; right: 0; top: calc(100% + 6px); z-index: 5; display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end;
+  width: min(30rem, 92vw); padding: 12px; background: var(--bg); border: 1px solid var(--ink); border-radius: 22px;
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--ink) 14%, transparent);
+}
+.games .menu[hidden], .games .slot[hidden] { display: none; }
+.games .menu .pill { cursor: pointer; background: var(--bg); color: var(--ink); }
+.games .menu .pill:hover, .games .menu .pill.on { background: var(--ink); color: var(--bg); }
+.arcade .stage { position: relative; }
+.arcade .overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 12px; pointer-events: none; }
+.arcade .overlay[hidden] { display: none; }
+.arcade .card {
+  display: grid; gap: 5px; max-width: min(92%, 34rem); padding: 14px 22px; text-align: center;
+  background: var(--bg); border: 1px solid var(--ink); border-radius: 22px; font-size: 0.82rem; color: var(--muted);
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--ink) 12%, transparent);
+}
+.arcade .card strong { color: var(--ink); font-size: 0.95rem; }
+.arcade .card .prize { margin-top: 6px; color: var(--ink); }
+.arcade .card a { pointer-events: auto; color: var(--ink); }
+.arcade .card .hint { margin-top: 4px; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.arcade .bar { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.arcade .bar .rules { margin-top: 6px; cursor: pointer; background: var(--bg); color: var(--ink); }
+.arcade .bar .rules:hover { background: var(--ink); color: var(--bg); }
+.pong canvas, .fusion canvas, .patch canvas, .sorting canvas { touch-action: none; }
 .arcade canvas:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; border-radius: 8px; }
 
 .volleyball .sand { stroke: var(--ink); stroke-width: 1.4; }
@@ -221,35 +250,24 @@ a.pill:hover, .pill.solid, .pill[aria-current="page"] { background: var(--ink); 
 .topo .summit { fill: var(--ink); }
 .topo a text { fill: var(--ink); }
 .topo a:hover .summit { transform: scale(1.4); transform-box: fill-box; transform-origin: center; }
+.topo .border { stroke: var(--ink); stroke-width: 0.6; stroke-dasharray: 2 5; opacity: 0.35; }
+.topo .region { fill: var(--muted); font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.08em; }
 .topo .here { fill: var(--bg); stroke: var(--ink); stroke-width: 2; }
 
-.feynman .fermion line { stroke: var(--ink); stroke-width: 1.4; }
-.feynman .arrow { fill: none; stroke: var(--ink); stroke-width: 1.4; stroke-linejoin: round; }
-.feynman .vertex { fill: var(--ink); }
-.feynman .gluon { fill: none; stroke: var(--ink); stroke-width: 0.9; opacity: 0.6; }
-.feynman .photon { fill: none; stroke: var(--ink); stroke-width: 0.8; opacity: 0.55; }
-.feynman .quantum { fill: none; stroke: var(--ink); stroke-width: 2.4; stroke-linecap: round; stroke-dasharray: 0.12 0.88; stroke-dashoffset: 1; animation: travel 2.2s linear infinite; }
-.feynman .leg { fill: var(--bg); stroke: var(--ink); stroke-width: 1.1; }
-.feynman a:hover .photon { opacity: 1; stroke-width: 1.4; }
-.feynman .fermion text { fill: var(--ink); }
-.feynman .time { fill: none; stroke: var(--ink); stroke-width: 1; opacity: 0.5; }
 
-.neuralnet .dense { fill: none; stroke: var(--ink); stroke-width: 0.4; opacity: 0.07; }
-.neuralnet .weight { fill: none; stroke: var(--ink); opacity: 0.35; }
-.neuralnet .signal { fill: none; stroke: var(--ink); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 0.04 0.96; stroke-dashoffset: 1; animation: travel 3.3s linear infinite; }
-.neuralnet circle { fill: color-mix(in srgb, var(--ink) calc(var(--a) * 100%), var(--bg)); stroke: var(--ink); stroke-width: 1.3; animation: fire 3.3s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
-.neuralnet .unit text { fill: var(--ink); }
-.neuralnet .layer { fill: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-size: 9.5px; }
-@keyframes fire { 0%, 70%, 100% { transform: scale(1); } 80% { transform: scale(1.3); } }
+.orrery .orbit { fill: none; stroke: var(--ink); stroke-width: 0.6; stroke-dasharray: 2 4; opacity: 0.4; }
+.orrery .orbit-label { fill: var(--muted); font-size: 9px; }
+.orrery .sun { fill: var(--ink); }
+.orrery .now { fill: var(--bg); stroke: none; font-size: 9px; }
+.orrery .revolve { animation: orbit var(--period) linear infinite; }
+.orrery .moons { animation: spin var(--period) linear infinite; }
+.orrery .planet { fill: var(--bg); stroke: var(--ink); stroke-width: 1.4; }
+.orrery .planet.current { fill: var(--ink); }
+.orrery .moon { fill: var(--ink); }
+.orrery a:hover .planet { stroke-width: 2.6; }
+@keyframes orbit { from { transform: rotate(var(--phase)); } to { transform: rotate(calc(var(--phase) + 360deg)); } }
+@keyframes spin { to { transform: rotate(360deg); } }
 
-.eeg .grid { stroke: var(--ink); stroke-width: 0.5; opacity: 0.15; }
-.eeg .trace { fill: none; stroke: var(--ink); stroke-width: 1; stroke-linejoin: round; }
-.eeg .ghost { opacity: 0.15; }
-.eeg .sweep-window { transform-box: fill-box; transform-origin: left; animation: reveal var(--sweep) linear infinite; }
-.eeg .playhead { stroke: var(--ink); stroke-width: 1; opacity: 0.5; animation: sweep var(--sweep) linear infinite; }
-.eeg .scale { fill: none; stroke: var(--ink); stroke-width: 1.4; }
-@keyframes reveal { from { transform: scaleX(0); } }
-@keyframes sweep { to { transform: translateX(calc(var(--span) * 1px)); } }
 
 .fireworks .ground { stroke: var(--ink); stroke-width: 1.2; }
 .fireworks .post { stroke: var(--ink); stroke-width: 0.6; stroke-dasharray: 1 3; }
@@ -282,6 +300,8 @@ a.pill:hover, .pill.solid, .pill[aria-current="page"] { background: var(--ink); 
   }
   .page { display: contents; }
   .page .pill { font-size: 0.78rem; padding: 0.3em 0.85em; }
+  .arcade .card { font-size: 0.74rem; padding: 10px 14px; gap: 3px; }
+  .arcade .card strong { font-size: 0.84rem; }
   .subs { flex-basis: 100%; order: 10; display: flex; gap: 6px; overflow-x: auto; margin: 2px 0 0; }
   .subs a { white-space: nowrap; border: 1px solid var(--hair); border-radius: 999px; padding: 2px 10px; color: var(--ink); }
   .subs a::before { content: none; }

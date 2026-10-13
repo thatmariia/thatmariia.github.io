@@ -40,7 +40,9 @@
     {
       "periods": [
         {
-          "title": "Behavioral Data Science"
+          "title": "Behavioral Data Science",
+          "start": "2026",
+          "end": "2027"
         }
       ]
     },
@@ -48,16 +50,24 @@
       "id": "tue",
       "periods": [
         {
-          "title": "Applied Mathematics"
+          "title": "Applied Mathematics",
+          "start": "2019",
+          "end": "2024"
         },
         {
-          "title": "Artificial Intelligence Honors Program"
+          "title": "Artificial Intelligence Honors Program",
+          "start": "2019",
+          "end": "2021"
         },
         {
-          "title": "Technology Entrepreneurship Certificate Program"
+          "title": "Technology Entrepreneurship Certificate Program",
+          "start": "2019",
+          "end": "2021"
         },
         {
-          "title": "Electrical (Automotive) Engineering"
+          "title": "Electrical (Automotive) Engineering",
+          "start": "2018",
+          "end": "2019"
         }
       ],
       "related": [
@@ -81,7 +91,9 @@
       "id": "um-msp",
       "periods": [
         {
-          "title": "Natural Sciences / Physics"
+          "title": "Natural Sciences / Physics",
+          "start": "2017",
+          "end": "2018"
         }
       ],
       "related": [
@@ -91,7 +103,9 @@
     {
       "periods": [
         {
-          "title": "Competitive Programming"
+          "title": "Competitive Programming",
+          "start": "2011",
+          "end": "2015"
         }
       ]
     }

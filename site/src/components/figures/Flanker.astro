@@ -1,0 +1,113 @@
+---
+// The Eriksen flanker task as a game: respond to the middle arrow (← / →, or tap the left or
+// right half), ignoring its flankers, before the deadline, which keeps shrinking. Errors and misses
+// cost a life (of 3); the result shows your score, reaction times and flanker effect, and a prize.
+import Arcade from "../Arcade.astro";
+interface Props { seed: number; width: number; height: number }
+const { width } = Astro.props;
+---
+
+<Arcade name="flanker" width={width} height={Math.round(width * (width > 600 ? 0.32 : 0.7))}
+  label="Flanker task: press the arrow key, or tap the side, that the middle arrow points to, ignoring the arrows around it"
+  rules={["Eriksen flanker task", "Where does the MIDDLE arrow point? ← or →, or tap the left or right half.", "Ignore the arrows around it. The deadline keeps shrinking.", "A wrong answer or a timeout costs a life. You have 3."]} />
+
+<script>
+  import { begin, best, corners, gameOver, loop, setup, type Game } from "../../lib/game";
+
+  type Trial = { middle: number; flank: number | 0; shown: number; rt?: number; correct?: boolean };
+  for (const figure of document.querySelectorAll<HTMLElement>(".fig.flanker")) {
+    const game: Game = setup(figure, () => draw());
+    const { W, H } = game;
+    let state: "idle" | "fixation" | "stimulus" | "feedback" | "over" = "idle";
+    let trials: Trial[] = [], trial: Trial | null = null, clock = 0, lives = 3, deadline = 1.2, note = "";
+
+    const mean = (list: number[]) => (list.length ? list.reduce((s, v) => s + v, 0) / list.length : 0);
+    const stats = () => {
+      const done = trials.filter((t) => t.correct !== undefined), right = done.filter((t) => t.correct);
+      const rt = (kind: (t: Trial) => boolean) => mean(right.filter(kind).map((t) => t.rt!)) * 1000;
+      const congruent = rt((t) => t.flank === t.middle), incongruent = rt((t) => t.flank === -t.middle);
+      return { n: right.length, accuracy: done.length ? right.length / done.length : 0, rt: rt(() => true), effect: incongruent && congruent ? incongruent - congruent : 0 };
+    };
+    // A chevron arrow (or a dash for a neutral flanker) centred at x.
+    const arrow = (c: CanvasRenderingContext2D, x: number, y: number, d: number, size: number) => {
+      c.beginPath();
+      if (d === 0) { c.moveTo(x - size * 0.6, y); c.lineTo(x + size * 0.6, y); }
+      else { c.moveTo(x - d * size * 0.35, y - size * 0.6); c.lineTo(x + d * size * 0.35, y); c.lineTo(x - d * size * 0.35, y + size * 0.6); }
+      c.stroke();
+    };
+
+    function draw() {
+      const { context: c, mono } = game, { ink, muted } = game.colours();
+      c.clearRect(0, 0, W, H);
+      const s = stats();
+      corners(game, "flanker", `${s.n} correct · lives ${"●".repeat(lives)}${"○".repeat(3 - lives)}`);
+      const [cx, cy, size] = [W / 2, H * 0.5, Math.min(W / 9, 46)];
+      c.strokeStyle = ink; c.lineWidth = 4; c.lineCap = c.lineJoin = "round";
+      if (state === "fixation") { c.lineWidth = 2; c.beginPath(); c.moveTo(cx - 8, cy); c.lineTo(cx + 8, cy); c.moveTo(cx, cy - 8); c.lineTo(cx, cy + 8); c.stroke(); }
+      if ((state === "stimulus" || state === "feedback") && trial) {
+        for (let k = -2; k <= 2; k++) arrow(c, cx + k * size * 1.25, cy, k ? trial.flank : trial.middle, size);
+        // The deadline as a shrinking line.
+        if (state === "stimulus") {
+          c.lineWidth = 2; c.strokeStyle = muted;
+          const left = Math.max(0, 1 - clock / deadline);
+          c.beginPath(); c.moveTo(cx - (W * 0.3) * left, cy + size * 1.4); c.lineTo(cx + (W * 0.3) * left, cy + size * 1.4); c.stroke();
+        }
+      }
+      if (state === "feedback" && note) { c.fillStyle = ink; c.font = `600 13px ${mono}`; c.textAlign = "center"; c.fillText(note, cx, cy + size * 1.5); }
+      c.fillStyle = muted; c.font = `11px ${mono}`; c.textAlign = "left";
+      if (state !== "idle" && state !== "over") c.fillText(`mean RT ${Math.round(s.rt)} ms · flanker effect ${Math.round(s.effect)} ms · deadline ${Math.round(deadline * 1000)} ms`, 10, H - 10);
+    }
+
+    const next = () => {
+      const middle = Math.random() < 0.5 ? -1 : 1, roll = Math.random();
+      trial = { middle, flank: roll < 0.45 ? middle : roll < 0.9 ? -middle : 0, shown: 0 };
+      [state, clock] = ["fixation", 0];
+    };
+    const respond = (d: number) => {
+      if (state !== "stimulus" || !trial) return;
+      trial.rt = clock;
+      trial.correct = d === trial.middle;
+      trials.push(trial);
+      if (trial.correct) { note = `${Math.round(clock * 1000)} ms`; deadline = Math.max(0.33, deadline * 0.955); }
+      else { note = "wrong way"; lives -= 1; }
+      [state, clock] = ["feedback", 0];
+    };
+    const step = (dt: number) => {
+      clock += dt;
+      if (state === "fixation" && clock > 0.35 + Math.random() * 0.02) [state, clock] = ["stimulus", 0];
+      else if (state === "stimulus" && clock > deadline && trial) {
+        trial.correct = false; trials.push(trial);
+        [note, state, clock] = ["too slow", "feedback", 0];
+        lives -= 1;
+      } else if (state === "feedback" && clock > 0.45) {
+        if (lives <= 0) {
+          state = "over";
+          const s = stats(), record = best("flanker", s.n);
+          gameOver(game, `${s.n} correct (last: ${note}) · mean RT ${Math.round(s.rt)} ms · flanker effect ${Math.round(s.effect)} ms${s.n >= record && s.n > 0 ? " · new best!" : ""}`);
+        } else next();
+      }
+      draw();
+      return state !== "over";
+    };
+    const start = () => {
+      [trials, lives, deadline] = [[], 3, 1.2];
+      begin(game, "Respond to the middle arrow only");
+      next();
+      loop(game, step);
+    };
+    game.element.addEventListener("keydown", (event) => {
+      if (event.repeat) return;  // a held key must not answer the next trial
+      const d = event.key === "ArrowLeft" || event.key === "a" ? -1 : event.key === "ArrowRight" || event.key === "d" ? 1 : 0;
+      if (state === "idle" || state === "over") { if (event.key.length === 1 || d || event.key === "Enter") { event.preventDefault(); start(); } return; }
+      if (d) { event.preventDefault(); respond(d); }
+    });
+    game.element.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      game.element.focus();
+      if (state === "idle" || state === "over") return start();
+      const rect = game.element.getBoundingClientRect();
+      respond(event.clientX - rect.left < rect.width / 2 ? -1 : 1);
+    });
+    draw();
+  }
+</script>

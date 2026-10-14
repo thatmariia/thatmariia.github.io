@@ -19,6 +19,14 @@ a { text-decoration-color: var(--hair); text-underline-offset: 3px; }
 a:hover { text-decoration-color: currentColor; }
 :focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 
+:root {
+  /* The cursor is a tiny neuron, its axon terminal the tip; over links and buttons it fires. */
+  --cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Cpath d='M3 3L13.5 13.5M3 3L7.6 3.6M3 3L3.6 7.6M17.6 14.6L25 13M16.4 17.2L23.6 22M15 18.6L16.6 26M23.6 22L26.4 21.2M20.4 19.4L21.6 25' stroke='white' stroke-width='3.6' stroke-linecap='round' fill='none'/%3E%3Cpath d='M12 11L19.4 13.6L14 19.6Z' fill='white' stroke='white' stroke-width='3.6' stroke-linejoin='round'/%3E%3Cpath d='M3 3L13.5 13.5M3 3L7.6 3.6M3 3L3.6 7.6M17.6 14.6L25 13M16.4 17.2L23.6 22M15 18.6L16.6 26M23.6 22L26.4 21.2M20.4 19.4L21.6 25' stroke='black' stroke-width='1.5' stroke-linecap='round' fill='none'/%3E%3Cpath d='M12 11L19.4 13.6L14 19.6Z' fill='white' stroke='black' stroke-width='1.5' stroke-linejoin='round'/%3E%3C/svg%3E") 3 3, auto;
+  --link-cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Cpath d='M3 3L13.5 13.5M3 3L7.6 3.6M3 3L3.6 7.6M17.6 14.6L25 13M16.4 17.2L23.6 22M15 18.6L16.6 26M23.6 22L26.4 21.2M20.4 19.4L21.6 25M7.2 0.9L9.4 0.3M0.9 7.2L0.3 9.4M8 6.2L10 5.4' stroke='white' stroke-width='3.6' stroke-linecap='round' fill='none'/%3E%3Cpath d='M12 11L19.4 13.6L14 19.6Z' fill='white' stroke='white' stroke-width='3.6' stroke-linejoin='round'/%3E%3Cpath d='M3 3L13.5 13.5M3 3L7.6 3.6M3 3L3.6 7.6M17.6 14.6L25 13M16.4 17.2L23.6 22M15 18.6L16.6 26M23.6 22L26.4 21.2M20.4 19.4L21.6 25M7.2 0.9L9.4 0.3M0.9 7.2L0.3 9.4M8 6.2L10 5.4' stroke='black' stroke-width='1.5' stroke-linecap='round' fill='none'/%3E%3Cpath d='M12 11L19.4 13.6L14 19.6Z' fill='black' stroke='black' stroke-width='1.5' stroke-linejoin='round'/%3E%3C/svg%3E") 3 3, pointer;
+}
+html { cursor: var(--cursor); }
+a, button, summary, label, [role="button"] { cursor: var(--link-cursor); }
+
 /* Pills */
 
 .pill {
@@ -57,7 +65,7 @@ a.pill:hover, .pill.solid, .pill[aria-current="page"] { background: var(--ink); 
 
 .switch {
   justify-self: start; display: inline-flex; padding: 3px; gap: 2px;
-  border: 1px solid var(--ink); border-radius: 999px; background: none; color: var(--ink); font: inherit; font-size: 0.72rem; cursor: pointer;
+  border: 1px solid var(--ink); border-radius: 999px; background: none; color: var(--ink); font: inherit; font-size: 0.72rem; cursor: var(--link-cursor);
 }
 .switch span { padding: 2px 10px; border-radius: 999px; }
 .switch span:first-child, :root[data-theme="dark"] .switch span:last-child { background: var(--ink); color: var(--bg); }
@@ -106,7 +114,7 @@ a.pill:hover, .pill.solid, .pill[aria-current="page"] { background: var(--ink); 
 
 .related { gap: 6px 14px; margin-top: 8px; }
 .related > .fold { align-self: center; }
-.related .fold summary { display: inline-flex; list-style: none; cursor: pointer; }
+.related .fold summary { display: inline-flex; list-style: none; cursor: var(--link-cursor); }
 .related .fold summary::-webkit-details-marker { display: none; }
 .related .fold details[open] summary { display: none; }
 .related .fold:has(details[open]) { flex-basis: 100%; }
@@ -132,7 +140,7 @@ a.pill:hover, .pill.solid, .pill[aria-current="page"] { background: var(--ink); 
 .option { display: none; }
 .figure-options { position: absolute; top: 0; left: 0; z-index: 3; display: flex; flex-wrap: wrap; gap: 6px; border: 0; padding: 0; margin: 0; }
 .figure-options input { position: absolute; opacity: 0; pointer-events: none; }
-.figure-options label { cursor: pointer; }
+.figure-options label { cursor: var(--link-cursor); }
 .figure-options label:has(input:checked) { background: var(--ink); color: var(--bg); }
 .figure-options label:has(input:focus-visible) { outline: 2px solid var(--ink); outline-offset: 2px; }
 
@@ -149,7 +157,7 @@ a.pill:hover, .pill.solid, .pill[aria-current="page"] { background: var(--ink); 
 .fig .node {
   position: absolute; transform: translate(-50%, -50%);
   padding: 0.3em 0.9em; border: 1px solid var(--ink); border-radius: 999px;
-  background: var(--bg); color: var(--ink); font-size: 0.76rem; font-weight: 600; white-space: nowrap; cursor: default;
+  background: var(--bg); color: var(--ink); font-size: 0.76rem; font-weight: 600; white-space: nowrap; cursor: var(--cursor);
   transition: background-color 0.2s, color 0.2s;
 }
 .fig .node:hover { background: var(--ink); color: var(--bg); }
@@ -191,7 +199,7 @@ a.pill:hover, .pill.solid, .pill[aria-current="page"] { background: var(--ink); 
 .collaborators .neuron { animation: appear 1.2s ease; }
 
 
-.spiral a circle { cursor: pointer; }
+.spiral a circle { cursor: var(--link-cursor); }
 .spiral svg { overflow: hidden; }
 .spiral .cursor { fill: none; stroke: var(--ink); stroke-width: 2; pointer-events: none; }
 .fig .readout { min-height: 2.6em; margin-top: 6px; font-size: 0.82rem; color: var(--muted); }
@@ -201,7 +209,7 @@ a.pill:hover, .pill.solid, .pill[aria-current="page"] { background: var(--ink); 
 .fig .readout a { color: var(--ink); }
 .fig .readout .hint { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; }
 
-.arcade canvas { display: block; width: 100%; cursor: pointer; touch-action: manipulation; user-select: none; }
+.arcade canvas { display: block; width: 100%; cursor: var(--link-cursor); touch-action: manipulation; user-select: none; }
 .wide .games { aspect-ratio: 960 / 460; }
 .narrow .games { aspect-ratio: 400 / 560; }
 /* Games fit the same box as every other figure: the canvas takes the room left by the pills. */
@@ -212,7 +220,7 @@ a.pill:hover, .pill.solid, .pill[aria-current="page"] { background: var(--ink); 
 .games .stage canvas { width: min(100cqw, 100cqh * var(--ratio)); height: auto; }
 .games .bar { flex: none; }
 .games .picker { position: relative; display: flex; justify-content: flex-end; margin: 0 0 14px; }
-.games .choose { cursor: pointer; background: var(--bg); color: var(--ink); }
+.games .choose { cursor: var(--link-cursor); background: var(--bg); color: var(--ink); }
 .games .choose:hover, .games .choose[aria-expanded="true"] { background: var(--ink); color: var(--bg); }
 .games .menu {
   position: absolute; right: 0; top: calc(100% + 6px); z-index: 5; display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end;
@@ -220,7 +228,7 @@ a.pill:hover, .pill.solid, .pill[aria-current="page"] { background: var(--ink); 
   box-shadow: 0 10px 30px color-mix(in srgb, var(--ink) 14%, transparent);
 }
 .games .menu[hidden], .games .slot[hidden] { display: none; }
-.games .menu .pill { cursor: pointer; background: var(--bg); color: var(--ink); }
+.games .menu .pill { cursor: var(--link-cursor); background: var(--bg); color: var(--ink); }
 .games .menu .pill:hover, .games .menu .pill.on { background: var(--ink); color: var(--bg); }
 .arcade .stage { position: relative; }
 .arcade .overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 12px; pointer-events: none; }
@@ -236,7 +244,7 @@ a.pill:hover, .pill.solid, .pill[aria-current="page"] { background: var(--ink); 
 .arcade .card .hint { margin-top: 4px; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; }
 .arcade .bar { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-top: 10px; }
 .arcade .bar .readout { margin-top: 2px; }
-.arcade .bar .rules { cursor: pointer; background: var(--bg); color: var(--ink); }
+.arcade .bar .rules { cursor: var(--link-cursor); background: var(--bg); color: var(--ink); }
 .arcade .bar .rules:hover { background: var(--ink); color: var(--bg); }
 .pong canvas, .fusion canvas, .patch canvas, .sorting canvas { touch-action: none; }
 .arcade canvas:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; border-radius: 8px; }

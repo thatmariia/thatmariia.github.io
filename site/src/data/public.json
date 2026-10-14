@@ -77,6 +77,7 @@
         "hsa-confluente-advisory-board",
         "tue-student-council",
         "hsa-confluente-acquisition",
+        "tue-contest",
         "honors-academy-symposium-2020",
         "dutch-honours-conference-2019",
         "tue-outreach",
@@ -84,6 +85,7 @@
         "honors-academies-nl",
         "hsa-confluente-financial",
         "tue-engineering-student-assistant",
+        "rl-human-involvement-poster",
         "thesis-figure-ground"
       ]
     },
@@ -97,7 +99,8 @@
         }
       ],
       "related": [
-        "um-project-fair-2018"
+        "um-project-fair-2018",
+        "noise-search-poster"
       ]
     },
     {
@@ -243,7 +246,8 @@
         "transhuman-race-2021",
         "news-interviews",
         "tue-outreach",
-        "famelab-2021"
+        "famelab-2021",
+        "tactile-patterns-poster"
       ]
     },
     {
@@ -588,6 +592,29 @@
       ]
     },
     {
+      "id": "tue-contest",
+      "title": "TU/e Contest winner",
+      "location": "Eindhoven, NL",
+      "links": [
+        {
+          "label": "Contest",
+          "url": "https://www.tue.nl/en/education/tue-innovation-space/tue-contest"
+        }
+      ],
+      "periods": [
+        {
+          "unit": "TU/e innovation Space",
+          "start": "2021-06",
+          "notes": [
+            "A contest for entrepreneurial engineers with international ambitions"
+          ]
+        }
+      ],
+      "related": [
+        "tue"
+      ]
+    },
+    {
       "id": "famelab-top-3",
       "title": "Top 3, FameLab science communication competition",
       "location": "Eindhoven, NL",
@@ -771,6 +798,12 @@
       "id": "virtual-mathpsych-2024",
       "title": "Virtual MathPsych/ICCM 2024",
       "location": "Virtual",
+      "links": [
+        {
+          "label": "Video",
+          "url": "https://youtu.be/1Um_YvEy9Hw"
+        }
+      ],
       "periods": [
         {
           "start": "2024-06",
@@ -816,13 +849,20 @@
         }
       ],
       "related": [
-        "hart"
+        "hart",
+        "tactile-patterns-poster"
       ]
     },
     {
       "id": "transhuman-race-2021",
       "title": "Transhuman Race: The Symposium",
       "location": "Virtual",
+      "links": [
+        {
+          "label": "Videos",
+          "url": "https://youtube.com/playlist?list=PLEoqhcCgDWuXpN1W4WJJMpYxb-fWRy9Zu"
+        }
+      ],
       "periods": [
         {
           "start": "2021-06",
@@ -849,7 +889,8 @@
         }
       ],
       "related": [
-        "tue"
+        "tue",
+        "rl-human-involvement-poster"
       ]
     },
     {
@@ -897,7 +938,8 @@
         }
       ],
       "related": [
-        "um-msp"
+        "um-msp",
+        "noise-search-poster"
       ]
     },
     {
@@ -1681,6 +1723,60 @@
         "elixir-all-hands-2026",
         "lumc",
         "bidirectional-bridge"
+      ]
+    },
+    {
+      "id": "tactile-patterns-poster",
+      "title": "Towards a general model for the transformation of data into tactile patterns",
+      "authors": [
+        "M.A. Turchina",
+        "L. Touwen",
+        "G. Bonné",
+        "E. Ensinck"
+      ],
+      "year": 2021,
+      "venue": "Human Brain Project Summit 2021",
+      "status": "published",
+      "related": [
+        "hart",
+        "hbp-summit-2021"
+      ]
+    },
+    {
+      "id": "rl-human-involvement-poster",
+      "title": "State-of-the-art Reinforcement Learning and the Role of Human Involvement",
+      "authors": [
+        "J. Martens",
+        "M.A. Turchina",
+        "M. Meijer",
+        "L. Pirée",
+        "P. Kyriakou"
+      ],
+      "year": 2020,
+      "venue": "Review in Honors Academy, End of year symposium",
+      "status": "published",
+      "related": [
+        "tue",
+        "honors-academy-symposium-2020"
+      ]
+    },
+    {
+      "id": "noise-search-poster",
+      "title": "The impact of noise in autonomous search strategies by artificially intelligent agents",
+      "authors": [
+        "S. Fonau",
+        "P. Kruidenier",
+        "S. Mitra",
+        "F. Quinque",
+        "R. Roys",
+        "M.A. Turchina"
+      ],
+      "year": 2018,
+      "venue": "Undergraduate Project Fair, Maastricht University",
+      "status": "published",
+      "related": [
+        "um-msp",
+        "um-project-fair-2018"
       ]
     }
   ],

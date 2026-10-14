@@ -77,7 +77,6 @@
         "hsa-confluente-advisory-board",
         "tue-student-council",
         "hsa-confluente-acquisition",
-        "tue-contest",
         "honors-academy-symposium-2020",
         "dutch-honours-conference-2019",
         "tue-outreach",
@@ -241,6 +240,7 @@
         "hbp",
         "hart-advisory-board",
         "hart-cofounder",
+        "tue-contest",
         "eaisi-summit-2021",
         "hbp-summit-2021",
         "transhuman-race-2021",
@@ -595,12 +595,6 @@
       "id": "tue-contest",
       "title": "TU/e Contest winner",
       "location": "Eindhoven, NL",
-      "links": [
-        {
-          "label": "Contest",
-          "url": "https://www.tue.nl/en/education/tue-innovation-space/tue-contest"
-        }
-      ],
       "periods": [
         {
           "unit": "TU/e innovation Space",
@@ -611,7 +605,7 @@
         }
       ],
       "related": [
-        "tue"
+        "hart"
       ]
     },
     {

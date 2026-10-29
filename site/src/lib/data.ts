@@ -41,8 +41,8 @@ export const STATUS = { "in-progress": "In progress", submitted: "Submitted", pu
 
 /** What one item of each section is called, e.g. in cross-links. */
 export const KIND: Record<string, string> = {
-  publications: "Publication", preprints: "Preprint", software: "Software", datasets: "Dataset",
-  posters: "Poster", presentations: "Presentation", reports: "Report", websites: "Website", theses: "Thesis",
+  papers: "Paper", preprints: "Preprint", software: "Software", datasets: "Dataset",
+  posters: "Poster", presentations: "Presentation", reports: "Report", publications: "Publication", theses: "Thesis",
   education: "Education", research: "Position", teaching: "Teaching", leadership: "Leadership",
   service: "Service", awards: "Award", funding: "Funding", events: "Event", outreach: "Outreach", other: "Experience",
   beyond: "Beyond science",
@@ -50,16 +50,16 @@ export const KIND: Record<string, string> = {
 
 /** The site's pages, and which page each content section lives on. */
 export const PAGES = [
-  ["/", "Home"], ["/outputs/", "Outputs"], ["/path/", "Path"], ["/events/", "Events"], ["/awards/", "Awards"], ["/beyond/", "Beyond science"],
+  ["/", "Home"], ["/outputs/", "Public outputs"], ["/path/", "Path"], ["/events/", "Events"], ["/awards/", "Awards"], ["/beyond/", "Beyond science"],
 ] as const;
 export const PAGE_OF: Record<string, string> = {
-  publications: "/outputs/", preprints: "/outputs/", software: "/outputs/", datasets: "/outputs/", posters: "/outputs/",
-  presentations: "/outputs/", reports: "/outputs/", websites: "/outputs/", theses: "/outputs/",
+  papers: "/outputs/", preprints: "/outputs/", software: "/outputs/", datasets: "/outputs/", posters: "/outputs/",
+  presentations: "/outputs/", reports: "/outputs/", publications: "/outputs/", theses: "/outputs/",
   education: "/path/", research: "/path/", teaching: "/path/", leadership: "/path/", service: "/path/",
   awards: "/awards/", funding: "/path/", other: "/path/", events: "/events/", outreach: "/events/", beyond: "/beyond/",
 };
 
-export const outputSections = ["software", "datasets", "posters", "presentations", "reports", "websites", "theses"]
+export const outputSections = ["publications", "software", "datasets", "posters", "presentations", "reports", "theses"]
   .map((key) => ({ id: key, title: key[0].toUpperCase() + key.slice(1), items: (data as any)[key] as Work[] }))
   .filter((s) => s.items.length);
 
@@ -112,7 +112,7 @@ export const pathSections = (
 export const studies = (data.education as Entry[]).flatMap((e) => e.periods.map((p) => p.title!));
 export const thesisLinks = (data.education as Entry[]).flatMap((e) => e.related ?? []);
 
-const WORK_SECTIONS = ["publications", "preprints", "software", "datasets", "posters", "presentations", "reports", "websites", "theses"];
+const WORK_SECTIONS = ["papers", "preprints", "software", "datasets", "posters", "presentations", "reports", "publications", "theses"];
 /** Every output and event as a linkable item with its kind; works only have a year, events a month too. */
 export const items = [
   ...WORK_SECTIONS.flatMap((section) => ((data as any)[section] as Work[]).map((w) => ({

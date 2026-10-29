@@ -27,7 +27,7 @@ const ROLE_SECTIONS = ["research", "teaching", "leadership", "service", "other"]
 const roles = ROLE_SECTIONS.flatMap((s) => ((data as any)[s] as Entry[]).flatMap((e) => e.periods.map((p) => ({
   title: e.title!, from: month(p.start!), to: p.end === "present" ? now + 1 : p.end ? month(p.end) + 1 : month(p.start!) + 1,
 }))));
-const WORK_SECTIONS = ["publications", "preprints", "software", "datasets", "posters", "presentations", "reports", "websites", "theses"];
+const WORK_SECTIONS = ["papers", "preprints", "software", "datasets", "posters", "presentations", "reports", "publications", "theses"];
 const items = [
   ...WORK_SECTIONS.flatMap((s) => ((data as any)[s] as Work[]).map((w) => ({ t: w.year * 12 + Math.floor(uniform() * 12), title: w.title, href: href(s, w.id), kind: "output" }))),
   ...(["events", "outreach"] as const).flatMap((s) => (data[s] as Entry[]).map((e) => ({ t: month(e.periods[0].start!), title: e.title!, href: href(s, e.id), kind: "event" }))),

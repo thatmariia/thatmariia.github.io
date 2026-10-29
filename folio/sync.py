@@ -20,10 +20,12 @@ from folio.content import Content, Work
 
 HEADERS = {"User-Agent": "folio-sync (https://github.com/thatmariia/thatmariia.github.io)"}
 WORK_SECTIONS = [name for name, field in Content.model_fields.items() if field.annotation == list[Work]]
+# Only these sections show a venue (journal or server); others leave it out.
+VENUED = {"papers", "preprints"}
 # Source type -> section suggested when prompting.
 SUGGEST = {
     "software": "software", "dataset": "datasets", "poster": "posters", "presentation": "presentations",
-    "journal-article": "publications", "proceedings-article": "publications", "posted-content": "preprints",
+    "journal-article": "papers", "proceedings-article": "papers", "posted-content": "preprints",
     "preprint": "preprints", "conference-poster": "posters", "data-set": "datasets", "dissertation-thesis": "theses",
 }
 
@@ -137,6 +139,8 @@ def sync(directory: Path, content: Content) -> None:
             with skip_file.open("a") as f:
                 f.write(normalize(doi) + "\n")
         elif answer in WORK_SECTIONS:
+            if answer not in VENUED:
+                work.pop("venue", None)
             with (directory / f"{answer}.yaml").open("a") as f:
                 f.write("\n" + yaml.safe_dump([work], sort_keys=False, allow_unicode=True, width=1000, default_flow_style=None))
             print(f"  added to {answer}.yaml")

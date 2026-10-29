@@ -11,7 +11,7 @@ export const now = today.getFullYear() * 12 + today.getMonth();
 const span = (p: Period): [number, number] =>
   [month(p.start!), p.end === "present" ? now : p.end ? month(p.end) : month(p.start!)];
 
-const WORK_SECTIONS = ["publications", "preprints", "software", "datasets", "posters", "presentations", "reports", "websites", "theses"];
+const WORK_SECTIONS = ["papers", "preprints", "software", "datasets", "posters", "presentations", "reports", "publications", "theses"];
 export const works = WORK_SECTIONS.flatMap((kind) => ((data as any)[kind] as Work[]).map((w) => ({ ...w, kind })));
 export const myWorks = works.filter((w) => w.authors.some(isMe));
 

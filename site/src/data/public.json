@@ -5,7 +5,8 @@
     "bio": "My background is a random walk through physics, machine learning, computer\nscience, electrical engineering, and especially mathematics, with a focus on\nmodeling. At the University of Amsterdam I work on mathematical and\ncomputational models of EEG. At Leiden University Medical Center and ELIXIR\nI build software and infrastructure for open science, FAIR research software,\nand interoperability in bioinformatics.\n",
     "author_names": [
       "M. Steeghs-Turchina",
-      "M.A. Turchina"
+      "M.A. Turchina",
+      "M. Turchina"
     ],
     "location": "The Hague, NL",
     "walk": [
@@ -199,7 +200,8 @@
         "slow-wave-eeg",
         "ddm-brain-behavior",
         "gaussquad",
-        "macro-eeg-model"
+        "macro-eeg-model",
+        "mathpsych-2024-talk"
       ]
     },
     {
@@ -246,13 +248,16 @@
         "hart-advisory-board",
         "hart-cofounder",
         "tue-contest",
+        "hart-showcase",
         "eaisi-summit-2021",
         "hbp-summit-2021",
         "transhuman-race-2021",
         "news-interviews",
         "tue-outreach",
         "famelab-2021",
-        "tactile-patterns-poster"
+        "tactile-patterns-poster",
+        "hart-showcase-video",
+        "eaisi-summit-2021-talk"
       ]
     },
     {
@@ -579,7 +584,8 @@
         }
       ],
       "related": [
-        "virtual-mathpsych-2024"
+        "virtual-mathpsych-2024",
+        "mathpsych-2024-talk"
       ]
     },
     {
@@ -593,7 +599,8 @@
         }
       ],
       "related": [
-        "eaisi-summit-2021"
+        "eaisi-summit-2021",
+        "eaisi-summit-2021-talk"
       ]
     },
     {
@@ -794,19 +801,14 @@
       ],
       "related": [
         "uva-nunez-lab",
-        "slow-wave-eeg"
+        "slow-wave-eeg",
+        "mathpsych-2024-talk"
       ]
     },
     {
       "id": "virtual-mathpsych-2024",
       "title": "Virtual MathPsych/ICCM 2024",
       "location": "Virtual",
-      "links": [
-        {
-          "label": "Video",
-          "url": "https://youtu.be/1Um_YvEy9Hw"
-        }
-      ],
       "periods": [
         {
           "start": "2024-06",
@@ -818,7 +820,25 @@
       "related": [
         "mathpsych-talk-award",
         "uva-nunez-lab",
-        "slow-wave-eeg"
+        "slow-wave-eeg",
+        "mathpsych-2024-talk"
+      ]
+    },
+    {
+      "id": "hart-showcase",
+      "title": "Engineering a New Sense: Team HART Showcase",
+      "location": "Eindhoven, NL",
+      "periods": [
+        {
+          "start": "2021-12",
+          "notes": [
+            "Gave a **talk and demo** “Engineering a New Sense: Team HART Showcase”"
+          ]
+        }
+      ],
+      "related": [
+        "hart",
+        "hart-showcase-video"
       ]
     },
     {
@@ -835,7 +855,8 @@
       ],
       "related": [
         "eaisi-pitch-award",
-        "hart"
+        "hart",
+        "eaisi-summit-2021-talk"
       ]
     },
     {
@@ -1785,7 +1806,7 @@
       "id": "tactile-patterns-poster",
       "title": "Towards a general model for the transformation of data into tactile patterns",
       "authors": [
-        "M.A. Turchina",
+        "M. Turchina",
         "L. Touwen",
         "G. Bonné",
         "E. Ensinck"
@@ -1803,7 +1824,7 @@
       "title": "State-of-the-art Reinforcement Learning and the Role of Human Involvement",
       "authors": [
         "J. Martens",
-        "M.A. Turchina",
+        "M. Turchina",
         "M. Meijer",
         "L. Pirée",
         "P. Kyriakou"
@@ -1824,7 +1845,7 @@
         "S. Mitra",
         "F. Quinque",
         "R. Roys",
-        "M.A. Turchina"
+        "M. Turchina"
       ],
       "year": 2018,
       "status": "published",
@@ -1866,6 +1887,73 @@
       "doi": "10.5281/zenodo.20595742",
       "related": [
         "lumc"
+      ]
+    },
+    {
+      "id": "mathpsych-2024-talk",
+      "title": "Modeling EEG with axon delay times to analyze individual differences in cognition",
+      "authors": [
+        "M. Steeghs-Turchina"
+      ],
+      "year": 2024,
+      "status": "published",
+      "doi": "10.5281/zenodo.23770338",
+      "links": [
+        {
+          "label": "Video",
+          "url": "https://youtu.be/1Um_YvEy9Hw"
+        }
+      ],
+      "related": [
+        "mathpsych-talk-award",
+        "uva-nunez-lab",
+        "virtual-mathpsych-2024",
+        "mathpsych-2024"
+      ]
+    },
+    {
+      "id": "hart-showcase-video",
+      "title": "Engineering a New Sense: Team HART Showcase",
+      "authors": [
+        "M. Turchina",
+        "L. Touwen",
+        "L. Overdevest"
+      ],
+      "year": 2021,
+      "status": "published",
+      "links": [
+        {
+          "label": "Video",
+          "url": "https://youtu.be/hiOsCtigUrs"
+        },
+        {
+          "label": "Aftermovie",
+          "url": "https://youtu.be/3K9Jxhtsumc"
+        }
+      ],
+      "related": [
+        "hart",
+        "hart-showcase"
+      ]
+    },
+    {
+      "id": "eaisi-summit-2021-talk",
+      "title": "Extending human senses with AI",
+      "authors": [
+        "M. Turchina"
+      ],
+      "year": 2021,
+      "status": "published",
+      "links": [
+        {
+          "label": "Video",
+          "url": "https://www.instagram.com/tv/CXh1H4Oo4gb/"
+        }
+      ],
+      "related": [
+        "eaisi-pitch-award",
+        "hart",
+        "eaisi-summit-2021"
       ]
     }
   ],

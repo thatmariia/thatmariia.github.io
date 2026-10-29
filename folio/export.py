@@ -31,7 +31,7 @@ PUBLIC = {
         "research", "teaching", "leadership", "service", "awards", "funding", "events", "outreach", "other",
     ]},
     **{name: WORK for name in [
-        "publications", "preprints", "software", "datasets", "posters", "presentations", "reports", "websites", "theses",
+        "papers", "preprints", "software", "datasets", "posters", "presentations", "reports", "publications", "theses",
     ]},
     "beyond": fields("id", "title", "note", "since", links=LINK),
     "skills": fields("title", "levels"),

@@ -157,6 +157,7 @@
         "biotools-nar",
         "bidirectional-bridge",
         "software-quality-indicators-preprint",
+        "rs-repo-templates",
         "rs-files-templates",
         "diff-fuse",
         "rsm-schema-export-template",
@@ -166,7 +167,11 @@
         "research-smp-knowledge-model",
         "rs-metadata",
         "software-quality-indicators-data",
-        "software-curation-loop-poster"
+        "rs-suite-poster",
+        "software-curation-loop-poster",
+        "fair-lumc-dcc-poster",
+        "dbc-2026-workshop",
+        "lumc-smp-talk"
       ]
     },
     {
@@ -653,7 +658,10 @@
         }
       ],
       "related": [
-        "lumc"
+        "lumc",
+        "rs-suite-poster",
+        "software-curation-loop-poster",
+        "dbc-2026-workshop"
       ]
     },
     {
@@ -768,7 +776,8 @@
         }
       ],
       "related": [
-        "lumc"
+        "lumc",
+        "fair-lumc-dcc-poster"
       ]
     },
     {
@@ -1204,7 +1213,7 @@
       ]
     }
   ],
-  "publications": [
+  "papers": [
     {
       "id": "software-curation-loop",
       "title": "Completing the software curation loop across registries and repositories",
@@ -1486,13 +1495,33 @@
   ],
   "software": [
     {
-      "id": "rs-files-templates",
-      "title": "rs-files-templates",
+      "id": "rs-repo-templates",
+      "title": "rs-repo-templates: templates for scaffolding research software repositories from RSM metadata",
       "authors": [
-        "M. Steeghs-Turchina"
+        "M. Steeghs-Turchina",
+        "A. Niehues"
       ],
       "year": 2026,
-      "venue": "Zenodo",
+      "status": "published",
+      "doi": "10.5281/zenodo.23435214",
+      "links": [
+        {
+          "label": "Code",
+          "url": "https://github.com/LUMC-DCC/rs-repo-templates"
+        }
+      ],
+      "related": [
+        "lumc"
+      ]
+    },
+    {
+      "id": "rs-files-templates",
+      "title": "rs-files-templates: a generator for research software documentation and metadata files based on the RSM schema",
+      "authors": [
+        "M. Steeghs-Turchina",
+        "A. Niehues"
+      ],
+      "year": 2026,
       "status": "published",
       "doi": "10.5281/zenodo.23308763",
       "links": [
@@ -1507,12 +1536,11 @@
     },
     {
       "id": "diff-fuse",
-      "title": "diff-fuse",
+      "title": "diff-fuse: an interactive web tool for comparing and merging JSON documents",
       "authors": [
         "M. Steeghs-Turchina"
       ],
       "year": 2026,
-      "venue": "Zenodo",
       "status": "published",
       "doi": "10.5281/zenodo.23308203",
       "links": [
@@ -1529,10 +1557,10 @@
       "id": "rsm-schema-export-template",
       "title": "RSM Schema export template for Research SMP (for DS Wizard)",
       "authors": [
-        "M. Steeghs-Turchina"
+        "M. Steeghs-Turchina",
+        "A. Niehues"
       ],
       "year": 2026,
-      "venue": "Zenodo",
       "status": "published",
       "doi": "10.5281/zenodo.23307684",
       "related": [
@@ -1541,12 +1569,12 @@
     },
     {
       "id": "rsm-schema",
-      "title": "rsm-schema",
+      "title": "rsm-schema: the RSM metadata schema and its Python models",
       "authors": [
-        "M. Steeghs-Turchina"
+        "M. Steeghs-Turchina",
+        "A. Niehues"
       ],
       "year": 2026,
-      "venue": "Zenodo",
       "status": "published",
       "doi": "10.5281/zenodo.23307561",
       "links": [
@@ -1567,10 +1595,10 @@
       "id": "nwo-export-template",
       "title": "eScience Center / NWO export template for Research SMP (for DS Wizard)",
       "authors": [
-        "M. Steeghs-Turchina"
+        "M. Steeghs-Turchina",
+        "A. Niehues"
       ],
       "year": 2026,
-      "venue": "Zenodo",
       "status": "published",
       "doi": "10.5281/zenodo.23306970",
       "related": [
@@ -1581,10 +1609,10 @@
       "id": "questionnaire-report-template",
       "title": "Universal questionnaire report template (for DS Wizard)",
       "authors": [
-        "M. Steeghs-Turchina"
+        "M. Steeghs-Turchina",
+        "A. Niehues"
       ],
       "year": 2026,
-      "venue": "Zenodo",
       "status": "published",
       "doi": "10.5281/zenodo.23306817",
       "related": [
@@ -1599,7 +1627,6 @@
         "A. Niehues"
       ],
       "year": 2026,
-      "venue": "Zenodo",
       "status": "published",
       "doi": "10.5281/zenodo.23306613",
       "related": [
@@ -1608,12 +1635,12 @@
     },
     {
       "id": "rs-metadata",
-      "title": "rs-metadata",
+      "title": "rs-metadata: a CodeMeta profile and metadata consistency validator for research software",
       "authors": [
-        "M. Steeghs-Turchina"
+        "M. Steeghs-Turchina",
+        "A. Niehues"
       ],
       "year": 2026,
-      "venue": "Zenodo",
       "status": "published",
       "doi": "10.5281/zenodo.22902394",
       "links": [
@@ -1633,7 +1660,6 @@
         "M. Steeghs-Turchina"
       ],
       "year": 2025,
-      "venue": "Zenodo",
       "status": "published",
       "doi": "10.5281/zenodo.15468025",
       "related": [
@@ -1650,7 +1676,6 @@
         "M.D. Nunez"
       ],
       "year": 2024,
-      "venue": "Zenodo",
       "status": "published",
       "doi": "10.5281/zenodo.13594675",
       "related": [
@@ -1682,7 +1707,6 @@
         "A. Mihail"
       ],
       "year": 2025,
-      "venue": "Zenodo",
       "status": "published",
       "doi": "10.5281/zenodo.14834245",
       "related": [
@@ -1692,6 +1716,22 @@
     }
   ],
   "posters": [
+    {
+      "id": "rs-suite-poster",
+      "title": "A Metadata-driven Infrastructure Supporting FAIR and Open-Source Practices Throughout the Research Software Lifecycle",
+      "authors": [
+        "M. Steeghs-Turchina",
+        "M. Palmblad",
+        "A. Niehues"
+      ],
+      "year": 2026,
+      "status": "published",
+      "doi": "10.5281/zenodo.23736564",
+      "related": [
+        "lumc",
+        "dbc-2026"
+      ]
+    },
     {
       "id": "software-curation-loop-poster",
       "title": "Automating the software curation loop",
@@ -1709,14 +1749,36 @@
         "V. Schwämmle"
       ],
       "year": 2026,
-      "venue": "F1000Research",
       "status": "published",
       "doi": "10.7490/f1000research.1120667.1",
       "related": [
         "elixir-poster-award",
         "elixir-all-hands-2026",
         "lumc",
-        "bidirectional-bridge"
+        "bidirectional-bridge",
+        "dbc-2026"
+      ]
+    },
+    {
+      "id": "fair-lumc-dcc-poster",
+      "title": "FAIR Implementation at LUMC DCC—Enabling FAIR Practices at a University Medical Center",
+      "authors": [
+        "A. Niehues",
+        "C. Bernabé",
+        "K. Cremers",
+        "M. Steeghs-Turchina",
+        "D. van Gerwen",
+        "T. Jacobs van Goethem",
+        "M. Palmblad",
+        "M. Roos",
+        "K. van der Pal"
+      ],
+      "year": 2025,
+      "status": "published",
+      "doi": "10.5281/zenodo.17412397",
+      "related": [
+        "lumc",
+        "fairfest-2025"
       ]
     },
     {
@@ -1729,8 +1791,8 @@
         "E. Ensinck"
       ],
       "year": 2021,
-      "venue": "Human Brain Project Summit 2021",
       "status": "published",
+      "doi": "10.5281/zenodo.23768892",
       "related": [
         "hart",
         "hbp-summit-2021"
@@ -1747,7 +1809,6 @@
         "P. Kyriakou"
       ],
       "year": 2020,
-      "venue": "Review in Honors Academy, End of year symposium",
       "status": "published",
       "related": [
         "tue",
@@ -1766,7 +1827,6 @@
         "M.A. Turchina"
       ],
       "year": 2018,
-      "venue": "Undergraduate Project Fair, Maastricht University",
       "status": "published",
       "related": [
         "um-msp",
@@ -1774,18 +1834,51 @@
       ]
     }
   ],
-  "presentations": [],
-  "reports": [],
-  "websites": [
+  "presentations": [
     {
-      "id": "research-software-guidelines",
+      "id": "dbc-2026-workshop",
+      "title": "Bioinformatics Software Management and Metadata Curation",
+      "authors": [
+        "M. Steeghs-Turchina",
+        "A. Mendes",
+        "M. Palmblad",
+        "V. Schwämmle",
+        "A. Niehues"
+      ],
+      "year": 2026,
+      "status": "published",
+      "doi": "10.5281/zenodo.23760754",
+      "related": [
+        "lumc",
+        "dbc-2026"
+      ]
+    },
+    {
+      "id": "lumc-smp-talk",
+      "title": "Introducing Software Management Plans at LUMC",
+      "authors": [
+        "A. Niehues",
+        "M. Steeghs-Turchina",
+        "M. Palmblad"
+      ],
+      "year": 2026,
+      "status": "published",
+      "doi": "10.5281/zenodo.20595742",
+      "related": [
+        "lumc"
+      ]
+    }
+  ],
+  "reports": [],
+  "publications": [
+    {
+      "id": "rs-guidelines",
       "title": "Research Software Guidelines",
       "authors": [
         "M. Steeghs-Turchina",
         "A. Niehues"
       ],
       "year": 2026,
-      "venue": "Zenodo",
       "status": "published",
       "doi": "10.5281/zenodo.23189487",
       "links": [
@@ -1808,7 +1901,6 @@
         "M. Steeghs-Turchina"
       ],
       "year": 2023,
-      "venue": "Research portal TU/e",
       "status": "published",
       "url": "https://research.tue.nl/en/studentTheses/figure-ground-segregation",
       "related": [

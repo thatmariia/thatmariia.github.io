@@ -119,14 +119,14 @@ class Content(Model):
     outreach: list[Entry] = []
     other: list[Entry] = []
     beyond: list[Activity] = []  # beyond science: hobbies, sports, volunteering, courses
-    publications: list[Work] = []  # peer-reviewed articles and papers
+    papers: list[Work] = []  # peer-reviewed articles
     preprints: list[Work] = []
     software: list[Work] = []
     datasets: list[Work] = []
     posters: list[Work] = []
     presentations: list[Work] = []
     reports: list[Work] = []
-    websites: list[Work] = []
+    publications: list[Work] = []  # other published works: guidelines, documentation, websites
     theses: list[Work] = []
     skills: list[SkillGroup] = []
 

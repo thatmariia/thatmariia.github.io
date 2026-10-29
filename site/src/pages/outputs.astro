@@ -4,13 +4,13 @@ import Base from "../layouts/Base.astro";
 import { data, outputSections, type Work } from "../lib/data";
 
 const sections = [
-  { id: "papers", title: "Papers", items: data.publications as Work[] },
+  { id: "papers", title: "Papers", items: data.papers as Work[] },
   { id: "preprints", title: "Preprints", items: data.preprints as Work[] },
   ...outputSections,
 ].filter((s) => s.items.length);
 ---
 
-<Base title="Outputs" sections={sections} figures={["collaborators"]}>
+<Base title="Public outputs" sections={sections} figures={["collaborators"]}>
   {sections.map((s) => (
     <section class="block" id={s.id}>
       <h2>{s.title}</h2>

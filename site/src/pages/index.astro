@@ -3,7 +3,7 @@ import WorkItem from "../components/WorkItem.astro";
 import Base from "../layouts/Base.astro";
 import { data, markup, outputSections, type Work } from "../lib/data";
 
-const recent = [data.publications, data.preprints, ...outputSections.map((s) => s.items)]
+const recent = [data.papers, data.preprints, ...outputSections.map((s) => s.items)]
   .flat()
   .filter((w: Work) => w.status === "published")
   .sort((a: Work, b: Work) => b.year - a.year)

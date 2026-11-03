@@ -1973,12 +1973,6 @@
       "year": 2026,
       "status": "published",
       "doi": "10.5281/zenodo.23927586",
-      "links": [
-        {
-          "label": "Code",
-          "url": "https://github.com/LUMC-DCC/rs-metadata"
-        }
-      ],
       "related": [
         "lumc",
         "rs-metadata"

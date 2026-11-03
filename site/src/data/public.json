@@ -158,7 +158,6 @@
         "biotools-nar",
         "bidirectional-bridge",
         "software-quality-indicators-preprint",
-        "lumc-codemeta-profile",
         "rs-repo-templates",
         "rs-files-templates",
         "diff-fuse",
@@ -173,7 +172,8 @@
         "software-curation-loop-poster",
         "fair-lumc-dcc-poster",
         "dbc-2026-workshop",
-        "lumc-smp-talk"
+        "lumc-smp-talk",
+        "lumc-codemeta-profile"
       ]
     },
     {
@@ -1517,26 +1517,6 @@
   ],
   "software": [
     {
-      "id": "lumc-codemeta-profile",
-      "title": "LUMC CodeMeta profile",
-      "authors": [
-        "M. Steeghs-Turchina",
-        "A. Niehues"
-      ],
-      "year": 2026,
-      "status": "published",
-      "doi": "10.5281/zenodo.23927586",
-      "links": [
-        {
-          "label": "Code",
-          "url": "https://github.com/LUMC-DCC/rs-metadata"
-        }
-      ],
-      "related": [
-        "lumc"
-      ]
-    },
-    {
       "id": "rs-repo-templates",
       "title": "rs-repo-templates: templates for scaffolding research software repositories from RSM metadata",
       "authors": [
@@ -1981,24 +1961,25 @@
   "reports": [],
   "publications": [
     {
-      "id": "rs-guidelines",
-      "title": "Research Software Guidelines",
+      "id": "lumc-codemeta-profile",
+      "title": "LUMC CodeMeta profile",
       "authors": [
         "M. Steeghs-Turchina",
-        "A. Niehues"
+        "A. Niehues",
+        "M. Palmblad",
+        "T. Pronk"
       ],
       "year": 2026,
       "status": "published",
-      "doi": "10.5281/zenodo.23189487",
+      "doi": "10.5281/zenodo.23927586",
       "links": [
         {
-          "label": "Website",
-          "url": "https://lumc-dcc.github.io/rs-guidelines/"
-        },
-        {
           "label": "Code",
-          "url": "https://github.com/LUMC-DCC/rs-guidelines"
+          "url": "https://github.com/LUMC-DCC/rs-metadata"
         }
+      ],
+      "related": [
+        "lumc"
       ]
     }
   ],

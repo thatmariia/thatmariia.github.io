@@ -31,6 +31,6 @@ const JOKES = [
     card.querySelector("strong")!.textContent = jokes[Math.floor(Math.random() * jokes.length)];
     card.querySelector("button")!.addEventListener("click", () => { card.hidden = true; });
     card.querySelector("a")!.addEventListener("click", remember);
-    setTimeout(() => { if (!seen()) { card.hidden = false; remember(); } }, 45000);
+    setTimeout(() => { if (!seen()) { card.hidden = false; remember(); } }, 30000);
   }
 </script>

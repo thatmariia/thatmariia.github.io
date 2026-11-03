@@ -4,6 +4,7 @@ import "@fontsource-variable/martian-mono/index.css";
 import "../styles/base.css";
 import "../styles/site.css";
 import type { ComponentProps } from "astro/types";
+import Break from "../components/Break.astro";
 import Figure from "../components/Figure.astro";
 import FieldLines from "../components/figures/FieldLines.astro";
 import Head from "../components/Head.astro";
@@ -62,5 +63,6 @@ const here = Astro.url.pathname;
       {figures && <Figure show={figures} />}
       <slot />
     </main>
+    {here !== "/" && <Break />}
   </body>
 </html>

@@ -45,6 +45,11 @@ const visible = options.map(({ key }) => `.figure:has(input[value="${key}"]:chec
 </figure>
 
 <script>
+  // A link to a figure (like /#game, from the coffee break) chooses it.
+  const hash = location.hash.slice(1);
+  const linked = /^[a-z]+$/.test(hash) ? document.querySelector<HTMLInputElement>(`.figure-options input[value="${hash}"]`) : null;
+  if (linked) { linked.checked = true; linked.dispatchEvent(new Event("change")); }
+
   // Choosing a game hands it the keyboard, so arrow keys play instead of switching figures.
   for (const input of document.querySelectorAll<HTMLInputElement>(".figure-options input")) {
     input.addEventListener("change", () => {

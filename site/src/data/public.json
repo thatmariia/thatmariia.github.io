@@ -1981,6 +1981,27 @@
       "related": [
         "lumc"
       ]
+    },
+    {
+      "id": "rs-guidelines",
+      "title": "Research Software Guidelines",
+      "authors": [
+        "M. Steeghs-Turchina",
+        "A. Niehues"
+      ],
+      "year": 2026,
+      "status": "published",
+      "doi": "10.5281/zenodo.23189487",
+      "links": [
+        {
+          "label": "Website",
+          "url": "https://lumc-dcc.github.io/rs-guidelines/"
+        },
+        {
+          "label": "Code",
+          "url": "https://github.com/LUMC-DCC/rs-guidelines"
+        }
+      ]
     }
   ],
   "theses": [

@@ -1,21 +1,10 @@
 ---
-// A coffee-break card away from home: after a while on a page (once per visit), a joke and a way
-// to the games on the home page.
-const JOKES = [
-  "Reviewer 2 can wait.",
-  "Your p-value isn't going anywhere.",
-  "Breaks are part of the methods section.",
-  "This break was pre-registered.",
-  "Procrastination is just unfunded research.",
-  "You've read more of this page than reviewer 2 read of my paper.",
-  "The coffee machine is a core facility.",
-  "Results may vary; breaks may not.",
-];
+// A coffee-break card away from home: after a while on a page (once per visit), a way to the games
+// on the home page.
 ---
 
-<aside class="break" hidden aria-live="polite" data-jokes={JSON.stringify(JOKES)}>
-  <strong></strong>
-  <span>Take a break with a nerdy little game?</span>
+<aside class="break" hidden aria-live="polite">
+  <strong>Take a break with a nerdy little game?</strong>
   <div class="break-actions">
     <a class="pill solid" href="/#game">Play a game</a>
     <button class="pill" type="button">Back to work</button>
@@ -27,8 +16,6 @@ const JOKES = [
   const seen = () => { try { return sessionStorage.getItem("break") === "1"; } catch { return false; } };
   const remember = () => { try { sessionStorage.setItem("break", "1"); } catch {} };
   if (card && !seen()) {
-    const jokes = JSON.parse(card.dataset.jokes!) as string[];
-    card.querySelector("strong")!.textContent = jokes[Math.floor(Math.random() * jokes.length)];
     card.querySelector("button")!.addEventListener("click", () => { card.hidden = true; });
     card.querySelector("a")!.addEventListener("click", remember);
     setTimeout(() => { if (!seen()) { card.hidden = false; remember(); } }, 30000);

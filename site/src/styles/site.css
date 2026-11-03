@@ -232,6 +232,18 @@ a.pill:hover, .pill.solid, .pill[aria-current="page"] { background: var(--ink); 
 .games .menu .pill { cursor: var(--link-cursor); background: var(--bg); color: var(--ink); }
 .games .menu .pill:hover, .games .menu .pill.on { background: var(--ink); color: var(--bg); }
 .arcade .stage { position: relative; }
+.break {
+  position: fixed; right: 20px; bottom: 20px; z-index: 20; display: grid; gap: 4px; max-width: 22rem; padding: 14px 18px;
+  background: var(--bg); border: 1px solid var(--ink); border-radius: 22px; font-size: 0.82rem; color: var(--muted);
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--ink) 12%, transparent); animation: break-in 0.3s ease-out;
+}
+.break[hidden] { display: none; }
+.break strong { color: var(--ink); font-size: 0.92rem; }
+.break-actions { display: flex; gap: 8px; margin-top: 6px; }
+.break button { cursor: var(--link-cursor); font: inherit; font-size: 0.8rem; }
+@keyframes break-in { from { opacity: 0; transform: translateY(12px); } }
+@media (max-width: 640px) { .break { left: 16px; right: 16px; bottom: 16px; max-width: none; } }
+
 .arcade .overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 12px; pointer-events: none; }
 .arcade .overlay[hidden] { display: none; }
 .arcade .card {

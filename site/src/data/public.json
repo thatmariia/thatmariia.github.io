@@ -1672,7 +1672,8 @@
         }
       ],
       "related": [
-        "lumc"
+        "lumc",
+        "lumc-codemeta-profile"
       ]
     },
     {
@@ -1979,7 +1980,8 @@
         }
       ],
       "related": [
-        "lumc"
+        "lumc",
+        "rs-metadata"
       ]
     },
     {
